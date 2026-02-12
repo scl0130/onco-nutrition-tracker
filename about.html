@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About | OncoNutrition Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="site-shell">
+    <header class="top-nav site-nav">
+      <a class="brand" href="./index.html">OncoNutrition Tracker</a>
+      <nav aria-label="Primary navigation">
+        <a class="nav-link" href="./index.html">Home</a>
+        <a class="nav-link" href="./tracker.html">Tracker</a>
+        <a class="nav-link is-active" href="./about.html" aria-current="page">About</a>
+      </nav>
+    </header>
+
+    <main class="landing-page about-page">
+      <section class="feature-panel">
+        <h1>Methodology and Design Direction</h1>
+        <p class="muted">This project uses a clinical dashboard layout influenced by modern health experiences: low visual noise, strong metric hierarchy, and card-based daily guidance.</p>
+      </section>
+
+      <section class="landing-grid">
+        <article class="feature-panel">
+          <h2>Core Principles</h2>
+          <ul class="sources">
+            <li>Status-first dashboard hierarchy</li>
+            <li>Clear risk and alerts before detailed logs</li>
+            <li>Progressive disclosure for advanced controls</li>
+          </ul>
+        </article>
+        <article class="feature-panel">
+          <h2>Data and Privacy</h2>
+          <ul class="sources">
+            <li>All entries are stored in browser local storage</li>
+            <li>No account required</li>
+            <li>No backend patient data transmission in current static build</li>
+          </ul>
+        </article>
+        <article class="feature-panel">
+          <h2>Evidence</h2>
+          <p class="muted">Treatment recommendation references are visible in the tracker under Evidence Sources.</p>
+          <a class="cta" href="./tracker.html#evidence">Open Evidence Section</a>
+        </article>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>Medical disclaimer: Educational only, not medical advice. Confirm decisions with oncology and nutrition teams.</p>
+      <p><a href="./tracker.html">Open Tracker</a></p>
+    </footer>
+  </body>
+</html>

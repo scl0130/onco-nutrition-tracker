@@ -15,6 +15,7 @@ python3 -m http.server 8081
 ```
 
 Then open `http://localhost:8081`.
+Landing page is `index.html`; the interactive tracker is `tracker.html`.
 
 If refresh shows "site cannot be reached", the local server process is not running. Start it again with the command above.
 

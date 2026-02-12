@@ -61,6 +61,20 @@
   const stepTargets = document.getElementById("stepTargets");
   const stepTrack = document.getElementById("stepTrack");
   const stepReview = document.getElementById("stepReview");
+  const topNavLinks = Array.from(
+    document.querySelectorAll('.top-nav .nav-link[href^="#"]')
+  );
+  const loggingStreakNode = document.getElementById("loggingStreak");
+  const patientChecklistForm = document.getElementById("patientChecklistForm");
+  const checkHydration = document.getElementById("checkHydration");
+  const checkProteinSnack = document.getElementById("checkProteinSnack");
+  const checkSymptomsReviewed = document.getElementById("checkSymptomsReviewed");
+  const checkMovement = document.getElementById("checkMovement");
+  const checklistStatus = document.getElementById("checklistStatus");
+  const careTeamNote = document.getElementById("careTeamNote");
+  const saveCareTeamNoteButton = document.getElementById("saveCareTeamNote");
+  const careTeamNoteStatus = document.getElementById("careTeamNoteStatus");
+  const toastRegion = document.getElementById("toastRegion");
 
   const targetCalories = document.getElementById("targetCalories");
   const targetProtein = document.getElementById("targetProtein");
@@ -93,6 +107,8 @@
   const WEIGHT_HISTORY_STORAGE_KEY = "oncoNutritionWeightHistory:v1";
   const USDA_API_KEY_STORAGE_KEY = "oncoNutritionUsdaApiKey:v1";
   const USDA_DEFAULT_API_KEY = "DEMO_KEY";
+  const CHECKLIST_STORAGE_PREFIX = "oncoNutritionChecklist:v1:";
+  const CARE_NOTE_STORAGE_PREFIX = "oncoNutritionCareNote:v1:";
 
   const CURATED_ONCOLOGY_SAFE_FOODS = [
     {
@@ -227,11 +243,25 @@
     return `oncoNutritionLog:${dateStr}`;
   };
 
+  const checklistKeyForDate = (dateStr) => {
+    return `${CHECKLIST_STORAGE_PREFIX}${dateStr}`;
+  };
+
+  const careNoteKeyForDate = (dateStr) => {
+    return `${CARE_NOTE_STORAGE_PREFIX}${dateStr}`;
+  };
+
   const isoToday = () => new Date().toISOString().slice(0, 10);
 
   let isFoodLookupRunning = false;
   let selectedDate = isoToday();
   let weightHistory = [];
+  let checklistState = {
+    hydration: false,
+    proteinSnack: false,
+    symptomsReviewed: false,
+    movement: false
+  };
 
   let state = {
     profile: null,
@@ -369,6 +399,20 @@
     );
   }
 
+  function showToast(message, variant = "info") {
+    if (!toastRegion) return;
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${variant}`;
+    toast.textContent = message;
+    toastRegion.appendChild(toast);
+    window.setTimeout(() => {
+      toast.classList.add("toast-hide");
+      window.setTimeout(() => {
+        toast.remove();
+      }, 220);
+    }, 2600);
+  }
+
   function loadProfile() {
     const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
     if (!raw) return;
@@ -439,6 +483,71 @@
 
   function roundTwo(value) {
     return Math.round(value * 100) / 100;
+  }
+
+  function loadChecklist(dateStr) {
+    const raw = localStorage.getItem(checklistKeyForDate(dateStr));
+    checklistState = {
+      hydration: false,
+      proteinSnack: false,
+      symptomsReviewed: false,
+      movement: false
+    };
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      checklistState = {
+        hydration: Boolean(parsed.hydration),
+        proteinSnack: Boolean(parsed.proteinSnack),
+        symptomsReviewed: Boolean(parsed.symptomsReviewed),
+        movement: Boolean(parsed.movement)
+      };
+    } catch (_err) {
+      // Ignore malformed checklist state.
+    }
+  }
+
+  function saveChecklist(dateStr) {
+    localStorage.setItem(checklistKeyForDate(dateStr), JSON.stringify(checklistState));
+  }
+
+  function renderChecklist() {
+    if (!patientChecklistForm) return;
+    checkHydration.checked = checklistState.hydration;
+    checkProteinSnack.checked = checklistState.proteinSnack;
+    checkSymptomsReviewed.checked = checklistState.symptomsReviewed;
+    checkMovement.checked = checklistState.movement;
+    const doneCount = [
+      checklistState.hydration,
+      checklistState.proteinSnack,
+      checklistState.symptomsReviewed,
+      checklistState.movement
+    ].filter(Boolean).length;
+    checklistStatus.textContent = `${doneCount}/4 completed for ${selectedDate}.`;
+  }
+
+  function updateChecklistFromInputs() {
+    checklistState = {
+      hydration: checkHydration.checked,
+      proteinSnack: checkProteinSnack.checked,
+      symptomsReviewed: checkSymptomsReviewed.checked,
+      movement: checkMovement.checked
+    };
+    saveChecklist(selectedDate);
+    renderChecklist();
+  }
+
+  function loadCareTeamNote(dateStr) {
+    if (!careTeamNote || !careTeamNoteStatus) return;
+    careTeamNote.value = localStorage.getItem(careNoteKeyForDate(dateStr)) || "";
+    careTeamNoteStatus.textContent = "";
+  }
+
+  function saveCareTeamNote() {
+    if (!careTeamNote) return;
+    localStorage.setItem(careNoteKeyForDate(selectedDate), careTeamNote.value.trim());
+    careTeamNoteStatus.textContent = `Note saved for ${selectedDate}.`;
+    showToast("Daily note saved.", "success");
   }
 
   function cmToFeetInches(heightCm) {
@@ -799,6 +908,73 @@
     apply(stepReview, reviewDone, trackingDone);
   }
 
+  function initSectionNavigation() {
+    if (!topNavLinks.length) return;
+
+    const navSections = topNavLinks
+      .map((link) => {
+        const href = link.getAttribute("href");
+        if (!href) return null;
+        const section = document.querySelector(href);
+        if (!section) return null;
+        return { link, section };
+      })
+      .filter(Boolean);
+
+    if (!navSections.length) return;
+
+    const setActive = (id) => {
+      navSections.forEach(({ link, section }) => {
+        const active = section.id === id;
+        link.classList.toggle("is-active", active);
+        if (active) {
+          link.setAttribute("aria-current", "page");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    };
+
+    navSections.forEach(({ link, section }) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const headerHeight =
+          document.querySelector(".top-nav")?.offsetHeight || 0;
+        const top = section.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
+        window.scrollTo({ top, behavior: "smooth" });
+        setActive(section.id);
+        window.history.replaceState(null, "", `#${section.id}`);
+      });
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible.length) {
+          setActive(visible[0].target.id);
+        }
+      },
+      {
+        rootMargin: "-35% 0px -50% 0px",
+        threshold: [0.2, 0.35, 0.5]
+      }
+    );
+
+    navSections.forEach(({ section }) => observer.observe(section));
+
+    const initialHash = window.location.hash;
+    if (initialHash) {
+      const found = navSections.find(({ section }) => `#${section.id}` === initialHash);
+      if (found) {
+        setActive(found.section.id);
+        return;
+      }
+    }
+    setActive(navSections[0].section.id);
+  }
+
   function renderHistory() {
     const allDates = [];
     for (let i = 0; i < localStorage.length; i += 1) {
@@ -874,6 +1050,25 @@
     dates.sort();
     if (limit) return dates.slice(-limit);
     return dates;
+  }
+
+  function calculateLoggingStreak() {
+    if (!loggingStreakNode) return;
+    const dateSet = new Set(listLogDates());
+    if (dateSet.size === 0) {
+      loggingStreakNode.textContent = "No entries yet.";
+      return;
+    }
+    let streak = 0;
+    let cursor = selectedDate;
+    while (dateSet.has(cursor)) {
+      streak += 1;
+      cursor = shiftDate(cursor, -1);
+    }
+    loggingStreakNode.textContent =
+      streak > 0
+        ? `${streak}-day logging streak up to ${selectedDate}.`
+        : `No intake logged for ${selectedDate} yet.`;
   }
 
   function renderIntakeTrendChart(dateList) {
@@ -981,6 +1176,7 @@
     const filenameDate = new Date().toISOString().slice(0, 10);
     pdf.save(`onco-nutrition-clinician-report-${filenameDate}.pdf`);
     setFoodLookupStatus("Clinician PDF report exported.", false);
+    showToast("Clinician report exported.", "success");
   }
 
   function shiftDate(dateStr, deltaDays) {
@@ -1014,6 +1210,9 @@
     }
     syncTargetInputs();
     syncSymptomForm();
+    loadChecklist(selectedDate);
+    renderChecklist();
+    loadCareTeamNote(selectedDate);
     renderMeals();
     renderProfileSummary();
   }
@@ -1099,6 +1298,7 @@
     nutritionStatus.classList.remove("good", "warning", "critical");
     nutritionStatus.classList.add(status === "GOOD" ? "good" : status === "WARNING" ? "warning" : "critical");
     renderStepProgress(score);
+    calculateLoggingStreak();
 
     const recs = dailyRecommendations(sum);
     todayRecommendationsNode.innerHTML = "";
@@ -1111,7 +1311,17 @@
     mealList.innerHTML = "";
     if (state.meals.length === 0) {
       mealList.innerHTML =
-        "<p class='muted'>You have not logged any meals today. Start by adding your first meal.</p>";
+        "<div class='empty-state'><p class='muted'>You have not logged any meals today.</p><button type='button' class='secondary' id='emptyStateStartMeal'>Start with a quick autofill</button></div>";
+      const emptyStateStartMeal = document.getElementById("emptyStateStartMeal");
+      if (emptyStateStartMeal) {
+        emptyStateStartMeal.addEventListener("click", () => {
+          mealNameInput.value = "Protein shake";
+          mealServingInput.value = 100;
+          runFoodAutofill();
+          mealNameInput.scrollIntoView({ behavior: "smooth", block: "center" });
+          mealNameInput.focus();
+        });
+      }
       renderHistory();
       return;
     }
@@ -1580,10 +1790,12 @@
         localStorage.removeItem(USDA_API_KEY_STORAGE_KEY);
         usdaApiKeyStatus.textContent =
           "USDA key cleared. Falling back to DEMO_KEY.";
+        showToast("USDA key cleared.", "info");
         return;
       }
       localStorage.setItem(USDA_API_KEY_STORAGE_KEY, key);
       usdaApiKeyStatus.textContent = "USDA key saved.";
+      showToast("USDA key saved.", "success");
     });
 
     profileForm.addEventListener("submit", (e) => {
@@ -1598,6 +1810,7 @@
       state.profile = profile;
       saveProfile();
       applyPersonalizedTargets(profile, selectedTreatmentState());
+      showToast("Profile saved and targets personalized.", "success");
     });
 
     weightForm.addEventListener("submit", (e) => {
@@ -1613,6 +1826,7 @@
       }
       saveWeightHistory();
       renderWeightChart();
+      showToast("Weight entry saved.", "success");
     });
 
     saveSymptomsButton.addEventListener("click", () => {
@@ -1623,6 +1837,7 @@
       state.symptoms = symptoms;
       saveState();
       renderMeals();
+      showToast("Symptoms saved.", "success");
     });
 
     targetForm.addEventListener("submit", (e) => {
@@ -1636,6 +1851,7 @@
       saveState();
       renderMeals();
       renderProfileSummary();
+      showToast("Daily targets saved.", "success");
     });
 
     lookupBarcodeButton.addEventListener("click", async () => {
@@ -1647,6 +1863,7 @@
         applyMealMacroValues(result.macros);
         setFoodLookupStatus(`Autofilled from ${result.source}.`, false);
         setFoodSafetyNote(`Food safety note: ${result.safety}`);
+        showToast("Barcode lookup complete.", "success");
       } catch (err) {
         setFoodLookupStatus(
           err instanceof Error ? err.message : "Barcode lookup failed.",
@@ -1722,6 +1939,7 @@
       setFoodLookupStatus("", false);
       setFoodSafetyNote("");
       renderMeals();
+      showToast("Meal entry added.", "success");
     });
 
     mealList.addEventListener("click", (e) => {
@@ -1732,13 +1950,27 @@
       state.meals.splice(Number(idx), 1);
       saveState();
       renderMeals();
+      showToast("Meal entry removed.", "info");
     });
 
     clearEntriesButton.addEventListener("click", () => {
+      const shouldClear = window.confirm("Clear all meal entries for this selected day?");
+      if (!shouldClear) return;
       state.meals = [];
       saveState();
       renderMeals();
+      showToast("Daily meal entries cleared.", "info");
     });
+
+    if (patientChecklistForm) {
+      patientChecklistForm.addEventListener("change", () => {
+        updateChecklistFromInputs();
+      });
+    }
+
+    if (saveCareTeamNoteButton) {
+      saveCareTeamNoteButton.addEventListener("click", saveCareTeamNote);
+    }
   }
 
   function init() {
@@ -1752,6 +1984,8 @@
     dashboardDate.value = selectedDate;
     weightDateInput.value = selectedDate;
     const hasDailyState = loadState(selectedDate);
+    loadChecklist(selectedDate);
+    loadCareTeamNote(selectedDate);
 
     updateProfileUnitVisibility();
 
@@ -1764,8 +1998,10 @@
 
     syncTargetInputs();
     syncSymptomForm();
+    renderChecklist();
     renderProfileSummary();
     hookEvents();
+    initSectionNavigation();
     renderRecommendations();
     renderMeals();
     renderWeightChart();

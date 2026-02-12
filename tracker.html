@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tracker | OncoNutrition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="app-shell">
+    <a class="skip-link" href="#mainContent">Skip to main content</a>
+    <header class="top-nav">
+      <a class="brand" href="./index.html">OncoNutrition Tracker</a>
+      <nav aria-label="Primary navigation">
+        <a class="nav-link" href="./index.html">Home</a>
+        <a class="nav-link" href="#dashboard">Dashboard</a>
+        <a class="nav-link" href="#recommendations">Recommendations</a>
+        <a class="nav-link" href="#track-food">Track Food</a>
+        <a class="nav-link" href="#food-library">Food Library</a>
+        <a class="nav-link" href="#profile">Profile</a>
+        <a class="nav-link" href="./about.html">About</a>
+      </nav>
+    </header>
+
+    <main class="page" id="mainContent">
+      <section class="hero panel panel-hero">
+        <div class="hero-grid">
+          <div>
+            <p class="eyebrow">Clinical Nutrition Intelligence</p>
+            <h1>Medical-grade nutrition tracking for oncology patients</h1>
+            <p class="lead">
+              Personalized macro tracking, treatment-aware recommendations, and malnutrition risk monitoring.
+            </p>
+          </div>
+          <div class="hero-preview" aria-label="Dashboard preview">
+            <div class="preview-row">
+              <span>Nutrition Status</span>
+              <strong>Good</strong>
+            </div>
+            <div class="preview-bars">
+              <div><span>Calories</span><i style="width: 81%"></i></div>
+              <div><span>Protein</span><i style="width: 72%"></i></div>
+              <div><span>Risk</span><i style="width: 18%"></i></div>
+            </div>
+            <p class="muted">See what to do next without interpreting raw data manually.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card panel" aria-label="Step flow">
+        <h2>Care Flow</h2>
+        <div class="steps" id="stepProgress">
+          <div class="step" id="stepProfile">Step 1: Profile</div>
+          <div class="step" id="stepTargets">Step 2: Targets</div>
+          <div class="step" id="stepTrack">Step 3: Track Today</div>
+          <div class="step" id="stepReview">Step 4: Review Status</div>
+        </div>
+      </section>
+
+      <section class="card panel dashboard-panel" id="dashboard">
+        <div class="section-head">
+          <div>
+            <h2>Daily Dashboard</h2>
+            <p class="muted">Review risk status first, then drill into macro targets and actions.</p>
+          </div>
+          <form id="dayPickerForm" class="grid form-grid dashboard-date-controls">
+            <label>Date <input type="date" id="dashboardDate" required /></label>
+            <button type="button" id="prevDay" class="secondary">Previous day</button>
+            <button type="button" id="nextDay" class="secondary">Next day</button>
+          </form>
+        </div>
+
+        <div class="dashboard-overview">
+          <article class="mini-card panel panel-soft panel-priority overview-status">
+            <h3>Nutrition Status Indicator</h3>
+            <div id="nutritionStatus" class="status-chip">Status: Pending</div>
+            <div id="nutritionScore" class="muted"></div>
+          </article>
+          <article class="mini-card panel panel-soft overview-risk">
+            <h3>Malnutrition Risk Level</h3>
+            <div id="malnutritionRisk" class="muted"></div>
+          </article>
+          <article class="mini-card panel panel-soft overview-recommendations">
+            <h3>Recommendations Today</h3>
+            <ul id="todayRecommendations" class="sources"></ul>
+          </article>
+          <article class="mini-card panel panel-soft overview-streak">
+            <h3>Tracking Streak</h3>
+            <div id="loggingStreak" class="muted">No entries yet.</div>
+          </article>
+        </div>
+
+        <div id="medicalAlerts" class="alerts"></div>
+
+        <div class="dashboard-grid">
+          <article class="mini-card panel panel-soft dashboard-wide">
+            <h3>Daily Status Summary</h3>
+            <div id="macroRings" class="ring-grid"></div>
+            <div id="macroSummary" class="summary"></div>
+          </article>
+          <article class="mini-card panel panel-soft">
+            <h3>Remaining Today</h3>
+            <div id="remainingSummary" class="muted"></div>
+          </article>
+        </div>
+
+        <article class="mini-card panel panel-soft">
+          <h3>Calories and Protein Over Time</h3>
+          <svg id="intakeTrendChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Calorie and protein trend chart"></svg>
+        </article>
+
+        <div class="dashboard-support-grid">
+          <article class="mini-card panel panel-soft">
+            <h3>Daily Self-Care Checklist</h3>
+            <form id="patientChecklistForm" class="grid">
+              <label><input type="checkbox" id="checkHydration" /> I stayed hydrated today</label>
+              <label><input type="checkbox" id="checkProteinSnack" /> I added at least one protein-rich snack</label>
+              <label><input type="checkbox" id="checkSymptomsReviewed" /> I reviewed and logged symptoms</label>
+              <label><input type="checkbox" id="checkMovement" /> I did light movement (as tolerated)</label>
+            </form>
+            <p id="checklistStatus" class="muted" aria-live="polite"></p>
+          </article>
+          <article class="mini-card panel panel-soft">
+            <h3>Notes for Care Team</h3>
+            <label>
+              Daily note
+              <textarea id="careTeamNote" rows="5" placeholder="Example: appetite low in afternoon, nausea after lunch, tolerated smoothie better than solid food."></textarea>
+            </label>
+            <div class="inline-actions">
+              <button type="button" id="saveCareTeamNote" class="secondary">Save note</button>
+            </div>
+            <p id="careTeamNoteStatus" class="muted" aria-live="polite"></p>
+          </article>
+        </div>
+      </section>
+
+      <section class="card panel" id="recommendations">
+        <h2>Treatment Recommendations</h2>
+        <section class="card soft-card panel panel-soft">
+          <h3>Patient Context</h3>
+          <div class="grid">
+            <label>
+              Cancer type
+              <select id="cancerSelect"></select>
+            </label>
+
+            <fieldset>
+              <legend>Chemotherapy status</legend>
+              <label><input type="radio" name="chemoStatus" value="on" checked /> On chemo</label>
+              <label><input type="radio" name="chemoStatus" value="off" /> Off chemo</label>
+            </fieldset>
+
+            <fieldset id="dialysisField" class="hidden">
+              <legend>Dialysis status (Kidney only)</legend>
+              <label><input type="radio" name="dialysisStatus" value="off" checked /> Off dialysis</label>
+              <label><input type="radio" name="dialysisStatus" value="on" /> On dialysis</label>
+            </fieldset>
+          </div>
+        </section>
+
+        <section class="card soft-card panel panel-soft">
+          <h3>Recommendation Details</h3>
+          <div id="recommendationMeta" class="meta"></div>
+          <div id="recommendationList" class="recommendations"></div>
+        </section>
+      </section>
+
+      <section class="card panel" id="track-food">
+        <h2>Track Food</h2>
+        <p class="muted">Log food, monitor macro progress, and build daily records.</p>
+
+        <form id="targetForm" class="grid form-grid">
+          <label>Calories target <input type="number" min="0" id="targetCalories" required /></label>
+          <label>Protein target (g) <input type="number" min="0" step="0.01" id="targetProtein" required /></label>
+          <label>Carbs target (g) <input type="number" min="0" step="0.01" id="targetCarbs" required /></label>
+          <label>Fat target (g) <input type="number" min="0" step="0.01" id="targetFat" required /></label>
+          <button type="submit">Save targets</button>
+        </form>
+
+        <form id="mealForm" class="grid form-grid">
+          <label>Meal/Food <input type="text" id="mealName" list="oncologyFoodOptions" required /></label>
+          <datalist id="oncologyFoodOptions"></datalist>
+          <label>Barcode (UPC/EAN) <input type="text" id="mealBarcode" inputmode="numeric" /></label>
+          <button type="button" id="lookupBarcode" class="secondary">Lookup barcode</button>
+          <label>Serving size (g) <input type="number" min="1" id="mealServingGrams" value="100" required /></label>
+          <button type="button" id="autofillFood" class="secondary">Autofill from food name</button>
+          <label>Calories <input type="number" min="0" id="mealCalories" required /></label>
+          <label>Protein (g) <input type="number" min="0" step="0.01" id="mealProtein" required /></label>
+          <label>Carbs (g) <input type="number" min="0" step="0.01" id="mealCarbs" required /></label>
+          <label>Fat (g) <input type="number" min="0" step="0.01" id="mealFat" required /></label>
+          <button type="submit">Add entry</button>
+        </form>
+
+        <div class="quick-add" id="quickAddFoods">
+          <button type="button" data-quick-food="Egg (fully cooked)">+ Egg</button>
+          <button type="button" data-quick-food="Chicken breast (cooked)">+ Chicken breast</button>
+          <button type="button" data-quick-food="White rice (cooked)">+ Rice</button>
+          <button type="button" data-quick-food="Protein shake">+ Protein shake</button>
+          <button type="button" data-quick-food="Banana">+ Banana</button>
+        </div>
+
+        <p id="foodLookupStatus" class="muted" aria-live="polite"></p>
+        <p id="foodSafetyNote" class="muted" aria-live="polite"></p>
+
+        <div id="mealList" class="meals"></div>
+        <button id="clearEntries" class="danger" type="button">Clear today entries</button>
+      </section>
+
+      <section class="card panel" id="profile">
+        <h2>Profile</h2>
+        <p class="muted">Enter profile data for personalized macro and risk analysis.</p>
+        <form id="profileForm" class="grid form-grid">
+          <label>Name <input type="text" id="profileName" placeholder="Optional" /></label>
+          <label>
+            Gender
+            <select id="profileGender" required>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+            </select>
+          </label>
+          <label>Age <input type="number" min="18" max="120" id="profileAge" required /></label>
+          <label>
+            Height unit
+            <select id="profileHeightUnit">
+              <option value="cm">Centimeters (cm)</option>
+              <option value="ftin">Feet + inches (ft/in)</option>
+            </select>
+          </label>
+          <label id="heightCmWrap">Height (cm) <input type="number" min="100" max="250" id="profileHeightCm" required /></label>
+          <label id="heightFtWrap" class="hidden">Height (ft) <input type="number" min="3" max="8" id="profileHeightFt" /></label>
+          <label id="heightInWrap" class="hidden">Height (in) <input type="number" min="0" max="11" id="profileHeightIn" /></label>
+          <label>
+            Weight unit
+            <select id="profileWeightUnit">
+              <option value="kg">Kilograms (kg)</option>
+              <option value="lb">Pounds (lb)</option>
+            </select>
+          </label>
+          <label id="weightKgWrap">Weight (kg) <input type="number" min="30" max="300" id="profileWeightKg" required /></label>
+          <label id="weightLbWrap" class="hidden">Weight (lb) <input type="number" min="66" max="660" id="profileWeightLb" /></label>
+          <label>
+            Activity level
+            <select id="profileActivity" required>
+              <option value="1.2">Low / mostly sedentary</option>
+              <option value="1.375">Light activity (1-3 days/week)</option>
+              <option value="1.55">Moderate activity (3-5 days/week)</option>
+              <option value="1.725">Very active (6-7 days/week)</option>
+            </select>
+          </label>
+          <label>
+            Recent unintentional weight loss (last 6 months)
+            <select id="profileWeightLoss" required>
+              <option value="none">None</option>
+              <option value="mild">Up to 5%</option>
+              <option value="moderate">5-10%</option>
+              <option value="severe">More than 10%</option>
+            </select>
+          </label>
+          <label>
+            Appetite / intake this week
+            <select id="profileAppetite" required>
+              <option value="normal">Normal</option>
+              <option value="reduced">Reduced</option>
+              <option value="very_low">Very low</option>
+            </select>
+          </label>
+          <label>
+            Treatment mode
+            <select id="profileTreatmentMode" required>
+              <option value="chemotherapy">Chemotherapy</option>
+              <option value="radiation">Radiation</option>
+              <option value="recovery">Recovery</option>
+              <option value="remission">Remission</option>
+            </select>
+          </label>
+          <button type="submit">Save profile and personalize macros</button>
+        </form>
+        <div id="profileSummary" class="summary compact"></div>
+      </section>
+
+      <section class="card panel">
+        <h2>Weight Tracking</h2>
+        <form id="weightForm" class="grid form-grid">
+          <label>Date <input type="date" id="weightDate" required /></label>
+          <label>Weight (kg) <input type="number" min="20" max="350" step="0.1" id="weightValueKg" required /></label>
+          <button type="submit">Save weight entry</button>
+        </form>
+        <div id="weightTrendSummary" class="muted"></div>
+        <svg id="weightChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Weight trend chart"></svg>
+      </section>
+
+      <section class="card panel">
+        <h2>Symptoms</h2>
+        <form id="symptomForm" class="grid form-grid">
+          <label><input type="checkbox" value="nausea" /> Nausea</label>
+          <label><input type="checkbox" value="fatigue" /> Fatigue</label>
+          <label><input type="checkbox" value="appetite_loss" /> Appetite loss</label>
+          <label><input type="checkbox" value="taste_changes" /> Taste changes</label>
+          <button type="button" id="saveSymptoms">Save symptoms for selected day</button>
+        </form>
+      </section>
+
+      <section class="card panel">
+        <h2>History</h2>
+        <p class="muted">Recent days with calories, protein, and nutrition score.</p>
+        <button type="button" id="exportClinicianReport">Export clinician report (PDF)</button>
+        <div id="historyList" class="food-library"></div>
+      </section>
+
+      <section class="card panel" id="food-library">
+        <h2>Food Library</h2>
+        <p class="muted">
+          Browse curated oncology-safe foods and send items directly to the tracker.
+        </p>
+        <form id="foodLibraryFilters" class="grid">
+          <label>Search foods <input type="text" id="foodLibrarySearch" placeholder="ex: yogurt, chicken, oatmeal" /></label>
+          <details>
+            <summary>Advanced filters and data settings</summary>
+            <div class="grid">
+              <label>USDA API key (optional) <input type="password" id="usdaApiKey" placeholder="Uses DEMO_KEY if empty" /></label>
+              <button type="button" id="saveUsdaApiKey" class="secondary">Save USDA key</button>
+              <fieldset>
+                <legend>Filter options</legend>
+                <label><input type="checkbox" id="foodFilterHighProtein" /> High protein (>= 10g per 100g)</label>
+                <label><input type="checkbox" id="foodFilterPlantBased" /> Plant-based</label>
+                <label><input type="checkbox" id="foodFilterSoftTexture" /> Soft texture / easy to eat</label>
+              </fieldset>
+            </div>
+          </details>
+        </form>
+        <p id="usdaApiKeyStatus" class="muted" aria-live="polite"></p>
+        <p id="foodLibraryCount" class="muted"></p>
+        <div id="foodLibraryResults" class="food-library"></div>
+      </section>
+
+      <section class="card panel" id="evidence">
+        <h2>Evidence Sources</h2>
+        <details>
+          <summary>Show evidence and references</summary>
+          <ul id="sourceList" class="sources"></ul>
+        </details>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Medical disclaimer: This tool is educational and not medical advice. Consult your oncology and nutrition care team for individualized decisions.
+      </p>
+      <p><a href="#evidence">Evidence Sources</a> | <a href="./about.html">About</a> | Version 1.1.0</p>
+    </footer>
+    <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="./recommendations.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
