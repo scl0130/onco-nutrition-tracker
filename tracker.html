@@ -23,16 +23,24 @@
         <a class="nav-link" href="./about.html">About</a>
       </nav>
       <div class="auth-inline">
-        <span id="authUserBadge" class="muted hidden"></span>
+        <span id="authUserBadge" class="muted">Guest mode</span>
         <button type="button" id="logoutButton" class="secondary hidden">Log out</button>
       </div>
     </header>
 
-    <section class="page" id="authGate">
+    <section class="page auth-page" id="authGate">
       <article class="panel auth-card">
-        <h1>Sign up or log in</h1>
-        <p class="muted">Create a patient account to keep nutrition logs separated by user on this device.</p>
-        <div class="auth-grid">
+        <div class="auth-head">
+          <div>
+            <h2>Account (optional)</h2>
+            <p class="muted">Use guest mode immediately, or sign in securely to keep your data under your account.</p>
+          </div>
+          <div class="inline-actions">
+            <button type="button" id="continueGuestButton" class="secondary">Continue as guest</button>
+          </div>
+        </div>
+        <p id="authModeStatus" class="muted">Guest mode active. Data stays on this browser.</p>
+        <div class="auth-grid" id="authFormsWrap">
           <form id="signupForm" class="grid">
             <h3>Create account</h3>
             <label>Email <input type="email" id="signupEmail" required /></label>
@@ -50,7 +58,7 @@
       </article>
     </section>
 
-    <main class="page hidden" id="mainContent">
+    <main class="page" id="mainContent">
       <section class="hero panel panel-hero">
         <div class="hero-grid">
           <div>
@@ -381,6 +389,8 @@
     <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
     <script src="./recommendations.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./app-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="./app.js"></script>
   </body>

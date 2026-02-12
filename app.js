@@ -84,8 +84,11 @@
   const loginEmail = document.getElementById("loginEmail");
   const loginPassword = document.getElementById("loginPassword");
   const authStatus = document.getElementById("authStatus");
+  const authModeStatus = document.getElementById("authModeStatus");
+  const authFormsWrap = document.getElementById("authFormsWrap");
   const authUserBadge = document.getElementById("authUserBadge");
   const logoutButton = document.getElementById("logoutButton");
+  const continueGuestButton = document.getElementById("continueGuestButton");
 
   const targetCalories = document.getElementById("targetCalories");
   const targetProtein = document.getElementById("targetProtein");
@@ -120,8 +123,6 @@
   const USDA_DEFAULT_API_KEY = "DEMO_KEY";
   const CHECKLIST_STORAGE_PREFIX = "oncoNutritionChecklist:v1:";
   const CARE_NOTE_STORAGE_PREFIX = "oncoNutritionCareNote:v1:";
-  const AUTH_USERS_STORAGE_KEY = "oncoNutritionUsers:v1";
-  const AUTH_SESSION_STORAGE_KEY = "oncoNutritionSession:v1";
 
   const CURATED_ONCOLOGY_SAFE_FOODS = [
     {
@@ -265,7 +266,7 @@
   };
 
   function scopedKey(baseKey) {
-    const userId = currentUser && currentUser.email ? currentUser.email : "guest";
+    const userId = currentUser && currentUser.id ? currentUser.id : "guest";
     return `${baseKey}:${userId}`;
   }
 
@@ -273,37 +274,42 @@
     return String(email || "").trim().toLowerCase();
   }
 
-  function readAuthUsers() {
-    const raw = localStorage.getItem(AUTH_USERS_STORAGE_KEY);
-    if (!raw) return {};
-    try {
-      const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" ? parsed : {};
-    } catch (_err) {
-      return {};
+  function setCurrentUserFromAuthUser(user) {
+    if (!user) {
+      currentUser = null;
+      return;
     }
-  }
-
-  function saveAuthUsers(users) {
-    localStorage.setItem(AUTH_USERS_STORAGE_KEY, JSON.stringify(users));
-  }
-
-  function setCurrentUser(email) {
-    currentUser = { email: normalizeEmail(email) };
-    localStorage.setItem(AUTH_SESSION_STORAGE_KEY, currentUser.email);
-  }
-
-  function loadSessionUser() {
-    const saved = normalizeEmail(localStorage.getItem(AUTH_SESSION_STORAGE_KEY));
-    if (!saved) return;
-    const users = readAuthUsers();
-    if (!users[saved]) return;
-    currentUser = { email: saved };
+    currentUser = {
+      id: user.id,
+      email: normalizeEmail(user.email || "")
+    };
   }
 
   function clearCurrentUser() {
     currentUser = null;
-    localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
+  }
+
+  function isSupabaseConfigured() {
+    const cfg = window.APP_CONFIG || {};
+    return Boolean(cfg.supabaseUrl && cfg.supabaseAnonKey);
+  }
+
+  async function initSupabaseAuth() {
+    if (!window.supabase || !window.supabase.createClient || !isSupabaseConfigured()) {
+      return false;
+    }
+
+    const cfg = window.APP_CONFIG;
+    supabaseClient = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+    const { data } = await supabaseClient.auth.getSession();
+    setCurrentUserFromAuthUser(data.session ? data.session.user : null);
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      setCurrentUserFromAuthUser(session ? session.user : null);
+      if (authInitialized) {
+        bootstrapForCurrentUser();
+      }
+    });
+    return true;
   }
 
   const isoToday = () => new Date().toISOString().slice(0, 10);
@@ -312,6 +318,8 @@
   let selectedDate = isoToday();
   let weightHistory = [];
   let currentUser = null;
+  let supabaseClient = null;
+  let authInitialized = false;
   let checklistState = {
     hydration: false,
     proteinSnack: false,
@@ -499,54 +507,77 @@
 
   function renderAuthVisibility() {
     const loggedIn = Boolean(currentUser && currentUser.email);
-    if (authGate) authGate.classList.toggle("hidden", loggedIn);
-    if (mainContent) mainContent.classList.toggle("hidden", !loggedIn);
+    const secureAuthReady = Boolean(supabaseClient);
+    if (authGate) authGate.classList.remove("hidden");
+    if (mainContent) mainContent.classList.remove("hidden");
     if (authUserBadge) {
-      authUserBadge.classList.toggle("hidden", !loggedIn);
-      authUserBadge.textContent = loggedIn ? currentUser.email : "";
+      authUserBadge.classList.remove("hidden");
+      authUserBadge.textContent = loggedIn ? currentUser.email : "Guest mode";
     }
     if (logoutButton) {
       logoutButton.classList.toggle("hidden", !loggedIn);
     }
+    if (authFormsWrap) {
+      authFormsWrap.classList.toggle("hidden", loggedIn || !secureAuthReady);
+    }
+    if (authModeStatus) {
+      if (loggedIn) {
+        authModeStatus.textContent = "Authenticated session active.";
+      } else if (!secureAuthReady) {
+        authModeStatus.textContent =
+          "Guest mode active. Configure Supabase in app-config.js to enable secure sign up and log in.";
+      } else {
+        authModeStatus.textContent = "Guest mode active. You can sign up or log in anytime.";
+      }
+    }
   }
 
-  function handleSignupSubmit(e) {
+  async function handleSignupSubmit(e) {
     e.preventDefault();
+    if (!supabaseClient) {
+      setAuthStatus("Secure auth not configured yet. Use guest mode or set app-config.js.", true);
+      return;
+    }
     const email = normalizeEmail(signupEmail.value);
     const password = String(signupPassword.value || "");
     if (!email || password.length < 6) {
       setAuthStatus("Use a valid email and password (6+ chars).", true);
       return;
     }
-    const users = readAuthUsers();
-    if (users[email]) {
-      setAuthStatus("Account already exists. Please log in instead.", true);
+    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+    if (error) {
+      setAuthStatus(error.message, true);
       return;
     }
-    users[email] = { password };
-    saveAuthUsers(users);
-    setCurrentUser(email);
-    setAuthStatus("Account created. Loading your tracker...");
-    showToast("Account created.", "success");
+    setCurrentUserFromAuthUser(data.user);
+    setAuthStatus("Sign-up submitted. Check email for confirmation if required.");
+    showToast("Sign-up successful.", "success");
     bootstrapForCurrentUser();
   }
 
-  function handleLoginSubmit(e) {
+  async function handleLoginSubmit(e) {
     e.preventDefault();
-    const email = normalizeEmail(loginEmail.value);
-    const password = String(loginPassword.value || "");
-    const users = readAuthUsers();
-    if (!users[email] || users[email].password !== password) {
-      setAuthStatus("Login failed. Check email and password.", true);
+    if (!supabaseClient) {
+      setAuthStatus("Secure auth not configured yet. Use guest mode or set app-config.js.", true);
       return;
     }
-    setCurrentUser(email);
+    const email = normalizeEmail(loginEmail.value);
+    const password = String(loginPassword.value || "");
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      setAuthStatus(error.message, true);
+      return;
+    }
+    setCurrentUserFromAuthUser(data.user);
     setAuthStatus("Login successful.");
     showToast("Logged in.", "success");
     bootstrapForCurrentUser();
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    if (supabaseClient) {
+      await supabaseClient.auth.signOut();
+    }
     clearCurrentUser();
     resetWorkingState();
     renderAuthVisibility();
@@ -560,6 +591,13 @@
     if (signupForm) signupForm.addEventListener("submit", handleSignupSubmit);
     if (loginForm) loginForm.addEventListener("submit", handleLoginSubmit);
     if (logoutButton) logoutButton.addEventListener("click", handleLogout);
+    if (continueGuestButton) {
+      continueGuestButton.addEventListener("click", () => {
+        clearCurrentUser();
+        bootstrapForCurrentUser();
+        setAuthStatus("Continuing in guest mode.");
+      });
+    }
   }
 
   function loadProfile() {
@@ -2129,11 +2167,6 @@
   }
 
   function bootstrapForCurrentUser() {
-    if (!currentUser) {
-      renderAuthVisibility();
-      return;
-    }
-
     renderAuthVisibility();
     resetWorkingState();
     loadUsdaApiKeyInput();
@@ -2165,14 +2198,15 @@
     renderHistory();
   }
 
-  function init() {
+  async function init() {
     initCancerOptions();
     populateCuratedFoodOptions();
     renderFoodLibrary();
     initAuthHandlers();
     hookEvents();
     initSectionNavigation();
-    loadSessionUser();
+    await initSupabaseAuth();
+    authInitialized = true;
     bootstrapForCurrentUser();
   }
 

@@ -16,9 +16,17 @@ python3 -m http.server 8081
 
 Then open `http://localhost:8081`.
 Landing page is `index.html`; the interactive tracker is `tracker.html`.
-`tracker.html` now includes local sign-up/log-in so each patient can keep separate browser-local data.
+`tracker.html` supports guest mode by default and optional secure account auth via Supabase.
 
 If refresh shows "site cannot be reached", the local server process is not running. Start it again with the command above.
+
+## Secure Auth Setup (Supabase)
+1. Create a Supabase project and enable Email/Password auth.
+2. Copy `app-config.example.js` to `app-config.js`.
+3. Fill in your Supabase URL and anon key in `app-config.js`.
+4. Keep `app-config.js` local (it is gitignored).
+
+Without this setup, the tracker still works fully in guest mode.
 
 ## Publish (public URL)
 For a stable URL, deploy this static folder to Netlify:
