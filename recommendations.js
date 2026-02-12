@@ -232,7 +232,9 @@ const CANCER_OVERRIDES = {
         "Alcohol reduction is high priority in survivorship planning; discuss individualized targets with your oncology team.",
         "Track body weight and unintentional loss each week during active treatment to trigger early nutrition support."
       ],
-      sourceIds: ["breastDietSurvival", "acsGuideline", "espenGuideline", "nciNutrition"]
+      sourceIds: ["breastDietSurvival", "acsGuideline", "espenGuideline", "nciNutrition"],
+      evidenceStrength: "Guideline + Cohort",
+      confidence: "High confidence"
     },
     {
       title: "Breast treatment-phase strategy",
@@ -252,7 +254,9 @@ const CANCER_OVERRIDES = {
         "Minimize ultra-processed foods and monitor cardiometabolic markers, especially during androgen-deprivation therapy.",
         "Preserve lean mass with consistent daily protein distribution and resistance activity as tolerated."
       ],
-      sourceIds: ["prostateDietReview2024", "prostateMediterranean", "acsGuideline", "espenGuideline"]
+      sourceIds: ["prostateDietReview2024", "prostateMediterranean", "acsGuideline", "espenGuideline"],
+      evidenceStrength: "Guideline + Systematic review",
+      confidence: "High confidence"
     }
   ],
   "Lung Cancer (including bronchus)": [
@@ -274,7 +278,9 @@ const CANCER_OVERRIDES = {
         "Pair hydration tracking with stool pattern tracking to guide day-to-day diet adjustments.",
         "Post-diagnosis high-quality dietary patterns are associated with better outcomes in cohort data."
       ],
-      sourceIds: ["colorectalPostDxDiet", "colorectalPlantPattern", "nciNutrition", "espenGuideline"]
+      sourceIds: ["colorectalPostDxDiet", "colorectalPlantPattern", "nciNutrition", "espenGuideline"],
+      evidenceStrength: "Guideline + Cohort/Systematic review",
+      confidence: "High confidence"
     },
     {
       title: "Peri-treatment strategy",
@@ -294,7 +300,9 @@ const CANCER_OVERRIDES = {
         "Emerging evidence links microbiome-supportive patterns (including adequate dietary fiber) with checkpoint therapy response.",
         "Avoid restrictive elimination plans unless medically indicated; prioritize intake consistency and symptom control."
       ],
-      sourceIds: ["melanomaFiberImmunotherapy", "nciNutrition", "espenGuideline", "nciFoodSafety"]
+      sourceIds: ["melanomaFiberImmunotherapy", "nciNutrition", "espenGuideline", "nciFoodSafety"],
+      evidenceStrength: "Translational + guideline",
+      confidence: "Emerging evidence"
     }
   ],
   "Bladder Cancer": [
@@ -305,7 +313,9 @@ const CANCER_OVERRIDES = {
         "Use hydration plans individualized to urinary symptoms and urology guidance rather than fixed universal targets.",
         "Track tolerability triggers (irritative foods, timing) and maintain protein adequacy through treatment."
       ],
-      sourceIds: ["bladderImmunonutrition", "nciNutrition", "espenGuideline"]
+      sourceIds: ["bladderImmunonutrition", "nciNutrition", "espenGuideline"],
+      evidenceStrength: "Small clinical studies + guideline",
+      confidence: "Emerging evidence"
     }
   ],
   "Pancreatic Cancer": [
@@ -336,7 +346,9 @@ const CANCER_OVERRIDES = {
         "If CKD or dialysis is present, coordinate oncology targets with renal-specific sodium/potassium/phosphorus guidance.",
         "Avoid unreviewed supplements and unsupervised electrolyte changes."
       ],
-      sourceIds: ["kidneyNutritionStatus", "niddkDialysis", "espenGuideline", "nciNutrition"]
+      sourceIds: ["kidneyNutritionStatus", "niddkDialysis", "espenGuideline", "nciNutrition"],
+      evidenceStrength: "Guideline + observational",
+      confidence: "Moderate confidence"
     }
   ],
   "Non-Hodgkin Lymphoma": [
@@ -358,7 +370,9 @@ const CANCER_OVERRIDES = {
         "Use adequate protein and progressive activity to preserve lean mass during/after treatment.",
         "Apply symptom-directed meal adaptation when therapy causes appetite or GI disruption."
       ],
-      sourceIds: ["uterineDietPrognosis", "acsGuideline", "nciNutrition", "espenGuideline"]
+      sourceIds: ["uterineDietPrognosis", "acsGuideline", "nciNutrition", "espenGuideline"],
+      evidenceStrength: "Guideline + cohort",
+      confidence: "Moderate confidence"
     }
   ]
 };

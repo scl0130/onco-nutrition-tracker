@@ -407,6 +407,69 @@
     return recs;
   }
 
+  function recommendationEvidenceMeta(rec) {
+    const sources = (rec.sourceIds || [])
+      .map((id) => APP_SOURCES[id])
+      .filter(Boolean);
+
+    if (rec.evidenceStrength && rec.confidence) {
+      return {
+        evidenceStrength: rec.evidenceStrength,
+        confidence: rec.confidence
+      };
+    }
+
+    const sourceText = sources
+      .map((s) => `${s.title} ${s.type}`)
+      .join(" ")
+      .toLowerCase();
+
+    const hasGuideline =
+      sourceText.includes("guideline") || sourceText.includes("practical guideline");
+    const hasMeta =
+      sourceText.includes("meta-analysis") || sourceText.includes("systematic review");
+    const hasCohort =
+      sourceText.includes("cohort") || sourceText.includes("observational");
+    const hasEmergingHint =
+      sourceText.includes("microbiome") || sourceText.includes("single-center");
+
+    if (hasGuideline || hasMeta) {
+      return { evidenceStrength: "Guideline/Meta-analysis", confidence: "High confidence" };
+    }
+    if (hasCohort || hasEmergingHint) {
+      return { evidenceStrength: "Cohort/Observational", confidence: "Emerging evidence" };
+    }
+    return { evidenceStrength: "Mixed evidence", confidence: "Moderate confidence" };
+  }
+
+  function recommendationCard(rec) {
+    const meta = recommendationEvidenceMeta(rec);
+    const card = document.createElement("article");
+    card.className = "rec-card";
+
+    const h3 = document.createElement("h3");
+    h3.textContent = rec.title;
+    card.appendChild(h3);
+
+    const chips = document.createElement("div");
+    chips.className = "rec-meta";
+    chips.innerHTML = `
+      <span class="rec-chip strength">${meta.evidenceStrength}</span>
+      <span class="rec-chip confidence ${meta.confidence === "High confidence" ? "high" : meta.confidence === "Emerging evidence" ? "emerging" : "moderate"}">${meta.confidence}</span>
+    `;
+    card.appendChild(chips);
+
+    const ul = document.createElement("ul");
+    rec.bullets.forEach((point) => {
+      const li = document.createElement("li");
+      li.textContent = point;
+      ul.appendChild(li);
+    });
+    card.appendChild(ul);
+
+    return { card, meta };
+  }
+
   function renderRecommendations() {
     const cancer = cancerSelect.value;
     const chemo = selectedTreatmentState();
@@ -440,26 +503,34 @@
     recommendationList.innerHTML = "";
 
     const sourceIds = new Set(["nciStats"]);
+    const highConfidenceCards = [];
+    const emergingCards = [];
 
     recs.forEach((rec) => {
       rec.sourceIds.forEach((id) => sourceIds.add(id));
-      const card = document.createElement("article");
-      card.className = "rec-card";
-
-      const h3 = document.createElement("h3");
-      h3.textContent = rec.title;
-      card.appendChild(h3);
-
-      const ul = document.createElement("ul");
-      rec.bullets.forEach((point) => {
-        const li = document.createElement("li");
-        li.textContent = point;
-        ul.appendChild(li);
-      });
-
-      card.appendChild(ul);
-      recommendationList.appendChild(card);
+      const built = recommendationCard(rec);
+      if (built.meta.confidence === "Emerging evidence") {
+        emergingCards.push(built.card);
+      } else {
+        highConfidenceCards.push(built.card);
+      }
     });
+
+    if (highConfidenceCards.length) {
+      const highWrap = document.createElement("section");
+      highWrap.className = "recommendation-group";
+      highWrap.innerHTML = "<h4>High-confidence guidance</h4>";
+      highConfidenceCards.forEach((card) => highWrap.appendChild(card));
+      recommendationList.appendChild(highWrap);
+    }
+
+    if (emergingCards.length) {
+      const emergingWrap = document.createElement("section");
+      emergingWrap.className = "recommendation-group";
+      emergingWrap.innerHTML = "<h4>Emerging evidence to discuss with care team</h4>";
+      emergingCards.forEach((card) => emergingWrap.appendChild(card));
+      recommendationList.appendChild(emergingWrap);
+    }
 
     renderSources(Array.from(sourceIds));
   }

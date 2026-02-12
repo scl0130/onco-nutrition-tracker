@@ -766,6 +766,59 @@ button:active {
   padding-left: 18px;
 }
 
+.recommendation-group {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.recommendation-group h4 {
+  margin: 0;
+  font-size: var(--text-base);
+  letter-spacing: 0.01em;
+  color: #2a3f5f;
+}
+
+.rec-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.rec-chip {
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  border: 1px solid var(--line);
+  background: #eef3fa;
+  color: #314b70;
+}
+
+.rec-chip.strength {
+  background: #edf5ff;
+  border-color: #c8daef;
+  color: #274f8d;
+}
+
+.rec-chip.confidence.high {
+  background: #eaf7ef;
+  border-color: #cce7d6;
+  color: #11643a;
+}
+
+.rec-chip.confidence.moderate {
+  background: #f2f5f9;
+  border-color: #d8e1ea;
+  color: #425971;
+}
+
+.rec-chip.confidence.emerging {
+  background: #fff6e8;
+  border-color: #f2d8a6;
+  color: #8a5a10;
+}
+
 .food-card h3 {
   margin-bottom: var(--space-2);
 }
