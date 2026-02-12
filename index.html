@@ -6,59 +6,174 @@
     <title>OncoNutrition Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <header class="top-nav">
+      <div class="brand">OncoNutrition Tracker</div>
+      <nav>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#track-food">Track Food</a>
+        <a href="#food-library">Food Library</a>
+        <a href="#profile">Profile</a>
+      </nav>
+    </header>
+
     <main class="page">
-      <header class="hero">
+      <section class="hero">
         <div class="hero-grid">
           <div>
-            <p class="eyebrow">Premium Medical Nutrition Platform</p>
-            <h1>Precision Nutrition for Medical and Metabolic Health</h1>
+            <p class="eyebrow">Clinical Nutrition Intelligence</p>
+            <h1>Medical-grade nutrition tracking for oncology patients</h1>
             <p class="lead">
-              Track macros, optimize health outcomes, and receive personalized medical grade nutrition insights.
+              Personalized macro tracking, treatment-aware recommendations, and malnutrition risk monitoring.
             </p>
           </div>
           <div class="hero-preview" aria-label="Dashboard preview">
             <div class="preview-row">
-              <span>Daily Nutrition Score</span>
-              <strong>84</strong>
+              <span>Nutrition Status</span>
+              <strong>Good</strong>
             </div>
             <div class="preview-bars">
-              <div><span>Protein</span><i style="width: 78%"></i></div>
-              <div><span>Carbs</span><i style="width: 64%"></i></div>
-              <div><span>Fat</span><i style="width: 52%"></i></div>
+              <div><span>Calories</span><i style="width: 81%"></i></div>
+              <div><span>Protein</span><i style="width: 72%"></i></div>
+              <div><span>Risk</span><i style="width: 18%"></i></div>
             </div>
-            <p class="muted">Medical risk indicators and personalized targets update in real time.</p>
+            <p class="muted">See what to do next without interpreting raw data manually.</p>
           </div>
         </div>
-      </header>
+      </section>
 
-      <section class="feature-row">
-        <article class="feature-card">
-          <h3>Macro Tracking</h3>
-          <p class="muted">Calorie and macro tracking with treatment-aware target adjustments.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Health Risk Scoring</h3>
-          <p class="muted">Nutrition-risk informed recommendations based on appetite and weight trends.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Disease Recommendations</h3>
-          <p class="muted">Cancer-specific nutrition guidance with transparent medical and peer-reviewed sources.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Progress Monitoring</h3>
-          <p class="muted">Simple daily logging, progress visuals, and food lookup support.</p>
+      <section class="card" aria-label="Step flow">
+        <h2>Care Flow</h2>
+        <div class="steps" id="stepProgress">
+          <div class="step" id="stepProfile">Step 1: Profile</div>
+          <div class="step" id="stepTargets">Step 2: Targets</div>
+          <div class="step" id="stepTrack">Step 3: Track Today</div>
+          <div class="step" id="stepReview">Step 4: Review Status</div>
+        </div>
+      </section>
+
+      <section class="card" id="dashboard">
+        <h2>Daily Dashboard</h2>
+        <form id="dayPickerForm" class="grid form-grid">
+          <label>Date <input type="date" id="dashboardDate" required /></label>
+          <button type="button" id="prevDay">Previous day</button>
+          <button type="button" id="nextDay">Next day</button>
+        </form>
+
+        <div id="medicalAlerts" class="alerts"></div>
+
+        <div class="grid form-grid">
+          <article class="mini-card">
+            <h3>Daily Status Summary</h3>
+            <div id="macroRings" class="ring-grid"></div>
+            <div id="macroSummary" class="summary"></div>
+          </article>
+          <article class="mini-card">
+            <h3>Nutrition Status Indicator</h3>
+            <div id="nutritionStatus" class="status-chip">Status: Pending</div>
+            <div id="nutritionScore" class="muted"></div>
+          </article>
+          <article class="mini-card">
+            <h3>Malnutrition Risk Level</h3>
+            <div id="malnutritionRisk" class="muted"></div>
+          </article>
+        </div>
+
+        <div class="grid form-grid">
+          <article class="mini-card">
+            <h3>Remaining Today</h3>
+            <div id="remainingSummary" class="muted"></div>
+          </article>
+          <article class="mini-card">
+            <h3>Recommendations Today</h3>
+            <ul id="todayRecommendations" class="sources"></ul>
+          </article>
+        </div>
+
+        <article class="mini-card">
+          <h3>Calories and Protein Over Time</h3>
+          <svg id="intakeTrendChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Calorie and protein trend chart"></svg>
         </article>
       </section>
 
-      <section class="card">
-        <h2>Hello</h2>
-        <p class="muted">
-          Enter your profile so the app can personalize your macro targets.
-        </p>
+      <section class="card" id="recommendations">
+        <h2>Treatment Recommendations</h2>
+        <section class="card soft-card">
+          <h3>Patient Context</h3>
+          <div class="grid">
+            <label>
+              Cancer type
+              <select id="cancerSelect"></select>
+            </label>
+
+            <fieldset>
+              <legend>Chemotherapy status</legend>
+              <label><input type="radio" name="chemoStatus" value="on" checked /> On chemo</label>
+              <label><input type="radio" name="chemoStatus" value="off" /> Off chemo</label>
+            </fieldset>
+
+            <fieldset id="dialysisField" class="hidden">
+              <legend>Dialysis status (Kidney only)</legend>
+              <label><input type="radio" name="dialysisStatus" value="off" checked /> Off dialysis</label>
+              <label><input type="radio" name="dialysisStatus" value="on" /> On dialysis</label>
+            </fieldset>
+          </div>
+        </section>
+
+        <section class="card soft-card">
+          <h3>Recommendation Details</h3>
+          <div id="recommendationMeta" class="meta"></div>
+          <div id="recommendationList" class="recommendations"></div>
+        </section>
+      </section>
+
+      <section class="card" id="track-food">
+        <h2>Track Food</h2>
+        <p class="muted">Log food, monitor macro progress, and build daily records.</p>
+
+        <form id="targetForm" class="grid form-grid">
+          <label>Calories target <input type="number" min="0" id="targetCalories" required /></label>
+          <label>Protein target (g) <input type="number" min="0" step="0.01" id="targetProtein" required /></label>
+          <label>Carbs target (g) <input type="number" min="0" step="0.01" id="targetCarbs" required /></label>
+          <label>Fat target (g) <input type="number" min="0" step="0.01" id="targetFat" required /></label>
+          <button type="submit">Save targets</button>
+        </form>
+
+        <form id="mealForm" class="grid form-grid">
+          <label>Meal/Food <input type="text" id="mealName" list="oncologyFoodOptions" required /></label>
+          <datalist id="oncologyFoodOptions"></datalist>
+          <label>Barcode (UPC/EAN) <input type="text" id="mealBarcode" inputmode="numeric" /></label>
+          <button type="button" id="lookupBarcode">Lookup barcode</button>
+          <label>Serving size (g) <input type="number" min="1" id="mealServingGrams" value="100" required /></label>
+          <button type="button" id="autofillFood">Autofill from food name</button>
+          <label>Calories <input type="number" min="0" id="mealCalories" required /></label>
+          <label>Protein (g) <input type="number" min="0" step="0.01" id="mealProtein" required /></label>
+          <label>Carbs (g) <input type="number" min="0" step="0.01" id="mealCarbs" required /></label>
+          <label>Fat (g) <input type="number" min="0" step="0.01" id="mealFat" required /></label>
+          <button type="submit">Add entry</button>
+        </form>
+
+        <div class="quick-add" id="quickAddFoods">
+          <button type="button" data-quick-food="Egg (fully cooked)">+ Egg</button>
+          <button type="button" data-quick-food="Chicken breast (cooked)">+ Chicken breast</button>
+          <button type="button" data-quick-food="White rice (cooked)">+ Rice</button>
+          <button type="button" data-quick-food="Protein shake">+ Protein shake</button>
+          <button type="button" data-quick-food="Banana">+ Banana</button>
+        </div>
+
+        <p id="foodLookupStatus" class="muted"></p>
+        <p id="foodSafetyNote" class="muted"></p>
+
+        <div id="mealList" class="meals"></div>
+        <button id="clearEntries" class="danger" type="button">Clear today entries</button>
+      </section>
+
+      <section class="card" id="profile">
+        <h2>Profile</h2>
+        <p class="muted">Enter profile data for personalized macro and risk analysis.</p>
         <form id="profileForm" class="grid form-grid">
           <label>Name <input type="text" id="profileName" placeholder="Optional" /></label>
           <label>
@@ -128,117 +243,6 @@
         <div id="profileSummary" class="summary compact"></div>
       </section>
 
-      <section class="disclaimer" aria-label="Medical disclaimer">
-        <h2>Medical Disclaimer</h2>
-        <p>
-          This tool provides educational recommendations only and is not medical advice. Patients should consult their oncologist, renal team,
-          and registered dietitian before changing diet, supplements, fluid intake, or macro targets.
-        </p>
-      </section>
-
-      <section class="card">
-        <h2>Daily Dashboard</h2>
-        <form id="dayPickerForm" class="grid form-grid">
-          <label>Date <input type="date" id="dashboardDate" required /></label>
-          <button type="button" id="prevDay">Previous day</button>
-          <button type="button" id="nextDay">Next day</button>
-        </form>
-        <div id="medicalAlerts" class="alerts"></div>
-        <div id="macroRings" class="ring-grid"></div>
-        <div id="macroSummary" class="summary"></div>
-        <div class="grid form-grid">
-          <article class="mini-card">
-            <h3>Remaining Today</h3>
-            <div id="remainingSummary" class="muted"></div>
-          </article>
-          <article class="mini-card">
-            <h3>Nutrition Score</h3>
-            <div id="nutritionScore" class="muted"></div>
-          </article>
-          <article class="mini-card">
-            <h3>Malnutrition Risk</h3>
-            <div id="malnutritionRisk" class="muted"></div>
-          </article>
-        </div>
-        <article class="mini-card">
-          <h3>Your Recommendations Today</h3>
-          <ul id="todayRecommendations" class="sources"></ul>
-        </article>
-        <article class="mini-card">
-          <h3>Intake Trend (Last 14 Days)</h3>
-          <svg id="intakeTrendChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Calorie and protein trend chart"></svg>
-        </article>
-      </section>
-
-      <section class="card">
-        <h2>Patient Context</h2>
-        <div class="grid">
-          <label>
-            Cancer type
-            <select id="cancerSelect"></select>
-          </label>
-
-          <fieldset>
-            <legend>Chemotherapy status</legend>
-            <label><input type="radio" name="chemoStatus" value="on" checked /> On chemo</label>
-            <label><input type="radio" name="chemoStatus" value="off" /> Off chemo</label>
-          </fieldset>
-
-          <fieldset id="dialysisField" class="hidden">
-            <legend>Dialysis status (Kidney only)</legend>
-            <label><input type="radio" name="dialysisStatus" value="off" checked /> Off dialysis</label>
-            <label><input type="radio" name="dialysisStatus" value="on" /> On dialysis</label>
-          </fieldset>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Recommendations</h2>
-        <div id="recommendationMeta" class="meta"></div>
-        <div id="recommendationList" class="recommendations"></div>
-      </section>
-
-      <section class="card">
-        <h2>Macro Tracker</h2>
-        <p class="muted">
-          Targets are customizable and should be set with your care team.
-        </p>
-
-        <form id="targetForm" class="grid form-grid">
-          <label>Calories target <input type="number" min="0" id="targetCalories" required /></label>
-          <label>Protein target (g) <input type="number" min="0" step="0.01" id="targetProtein" required /></label>
-          <label>Carbs target (g) <input type="number" min="0" step="0.01" id="targetCarbs" required /></label>
-          <label>Fat target (g) <input type="number" min="0" step="0.01" id="targetFat" required /></label>
-          <button type="submit">Save targets</button>
-        </form>
-
-        <form id="mealForm" class="grid form-grid">
-          <label>Meal/Food <input type="text" id="mealName" list="oncologyFoodOptions" required /></label>
-          <datalist id="oncologyFoodOptions"></datalist>
-          <label>Barcode (UPC/EAN) <input type="text" id="mealBarcode" inputmode="numeric" /></label>
-          <button type="button" id="lookupBarcode">Lookup barcode</button>
-          <label>Serving size (g) <input type="number" min="1" id="mealServingGrams" value="100" required /></label>
-          <button type="button" id="autofillFood">Autofill from food name</button>
-          <label>Calories <input type="number" min="0" id="mealCalories" required /></label>
-          <label>Protein (g) <input type="number" min="0" step="0.01" id="mealProtein" required /></label>
-          <label>Carbs (g) <input type="number" min="0" step="0.01" id="mealCarbs" required /></label>
-          <label>Fat (g) <input type="number" min="0" step="0.01" id="mealFat" required /></label>
-          <button type="submit">Add entry</button>
-        </form>
-        <p class="muted">Autofill currently works best with one food name at a time.</p>
-        <div class="quick-add" id="quickAddFoods">
-          <button type="button" data-quick-food="Egg (fully cooked)">+ Egg</button>
-          <button type="button" data-quick-food="White rice (cooked)">+ Rice</button>
-          <button type="button" data-quick-food="Chicken breast (cooked)">+ Chicken breast</button>
-          <button type="button" data-quick-food="Protein shake">+ Protein shake</button>
-          <button type="button" data-quick-food="Banana">+ Banana</button>
-        </div>
-        <p id="foodLookupStatus" class="muted"></p>
-        <p id="foodSafetyNote" class="muted"></p>
-        <div id="mealList" class="meals"></div>
-        <button id="clearEntries" class="danger" type="button">Clear today entries</button>
-      </section>
-
       <section class="card">
         <h2>Weight Tracking</h2>
         <form id="weightForm" class="grid form-grid">
@@ -268,32 +272,47 @@
         <div id="historyList" class="food-library"></div>
       </section>
 
-      <section class="card">
+      <section class="card" id="food-library">
         <h2>Food Library</h2>
         <p class="muted">
-          Browse curated oncology-safe foods, filter by need, and send items directly to the tracker.
+          Browse curated oncology-safe foods and send items directly to the tracker.
         </p>
         <form id="foodLibraryFilters" class="grid">
           <label>Search foods <input type="text" id="foodLibrarySearch" placeholder="ex: yogurt, chicken, oatmeal" /></label>
-          <label>USDA API key (optional) <input type="password" id="usdaApiKey" placeholder="Uses DEMO_KEY if empty" /></label>
-          <button type="button" id="saveUsdaApiKey">Save USDA key</button>
-          <fieldset>
-            <legend>Filter options</legend>
-            <label><input type="checkbox" id="foodFilterHighProtein" /> High protein (>= 10g per 100g)</label>
-            <label><input type="checkbox" id="foodFilterPlantBased" /> Plant-based</label>
-            <label><input type="checkbox" id="foodFilterSoftTexture" /> Soft texture / easy to eat</label>
-          </fieldset>
+          <details>
+            <summary>Advanced filters and data settings</summary>
+            <div class="grid">
+              <label>USDA API key (optional) <input type="password" id="usdaApiKey" placeholder="Uses DEMO_KEY if empty" /></label>
+              <button type="button" id="saveUsdaApiKey">Save USDA key</button>
+              <fieldset>
+                <legend>Filter options</legend>
+                <label><input type="checkbox" id="foodFilterHighProtein" /> High protein (>= 10g per 100g)</label>
+                <label><input type="checkbox" id="foodFilterPlantBased" /> Plant-based</label>
+                <label><input type="checkbox" id="foodFilterSoftTexture" /> Soft texture / easy to eat</label>
+              </fieldset>
+            </div>
+          </details>
         </form>
         <p id="usdaApiKeyStatus" class="muted"></p>
         <p id="foodLibraryCount" class="muted"></p>
         <div id="foodLibraryResults" class="food-library"></div>
       </section>
 
-      <section class="card">
+      <section class="card" id="evidence">
         <h2>Evidence Sources</h2>
-        <ul id="sourceList" class="sources"></ul>
+        <details>
+          <summary>Show evidence and references</summary>
+          <ul id="sourceList" class="sources"></ul>
+        </details>
       </section>
     </main>
+
+    <footer class="app-footer">
+      <p>
+        Medical disclaimer: This tool is educational and not medical advice. Consult your oncology and nutrition care team for individualized decisions.
+      </p>
+      <p><a href="#evidence">Evidence Sources</a> | Version 1.0.0 | Built by OncoNutrition Tracker Team</p>
+    </footer>
 
     <script src="./recommendations.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>

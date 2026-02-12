@@ -35,6 +35,7 @@
   const macroRings = document.getElementById("macroRings");
   const remainingSummary = document.getElementById("remainingSummary");
   const nutritionScoreNode = document.getElementById("nutritionScore");
+  const nutritionStatus = document.getElementById("nutritionStatus");
   const medicalAlerts = document.getElementById("medicalAlerts");
   const malnutritionRiskNode = document.getElementById("malnutritionRisk");
   const todayRecommendationsNode = document.getElementById("todayRecommendations");
@@ -56,6 +57,10 @@
   const historyList = document.getElementById("historyList");
   const exportClinicianReportButton = document.getElementById("exportClinicianReport");
   const intakeTrendChart = document.getElementById("intakeTrendChart");
+  const stepProfile = document.getElementById("stepProfile");
+  const stepTargets = document.getElementById("stepTargets");
+  const stepTrack = document.getElementById("stepTrack");
+  const stepReview = document.getElementById("stepReview");
 
   const targetCalories = document.getElementById("targetCalories");
   const targetProtein = document.getElementById("targetProtein");
@@ -679,6 +684,12 @@
     return "High concern";
   }
 
+  function statusLevel(score, risk, alertsCount) {
+    if (risk === "High risk" || alertsCount >= 2 || score < 50) return "CRITICAL";
+    if (risk === "Moderate risk" || alertsCount >= 1 || score < 75) return "WARNING";
+    return "GOOD";
+  }
+
   function remainingMacros(sum) {
     return {
       calories: Math.max(0, roundOne(state.targets.calories - sum.calories)),
@@ -764,6 +775,28 @@
       `;
       macroRings.appendChild(ring);
     });
+  }
+
+  function renderStepProgress(score) {
+    const profileDone = Boolean(state.profile);
+    const targetsDone =
+      state.targets.calories > 0 &&
+      state.targets.protein > 0 &&
+      state.targets.carbs > 0 &&
+      state.targets.fat > 0;
+    const trackingDone = state.meals.length > 0;
+    const reviewDone = score >= 70;
+
+    const apply = (node, done, active) => {
+      if (!node) return;
+      node.classList.toggle("complete", done);
+      node.classList.toggle("active", active && !done);
+    };
+
+    apply(stepProfile, profileDone, true);
+    apply(stepTargets, targetsDone, profileDone);
+    apply(stepTrack, trackingDone, targetsDone);
+    apply(stepReview, reviewDone, trackingDone);
   }
 
   function renderHistory() {
@@ -1061,6 +1094,12 @@
       });
     }
 
+    const status = statusLevel(score, risk, alerts.length);
+    nutritionStatus.textContent = `Status: ${status}`;
+    nutritionStatus.classList.remove("good", "warning", "critical");
+    nutritionStatus.classList.add(status === "GOOD" ? "good" : status === "WARNING" ? "warning" : "critical");
+    renderStepProgress(score);
+
     const recs = dailyRecommendations(sum);
     todayRecommendationsNode.innerHTML = "";
     recs.forEach((text) => {
@@ -1071,7 +1110,8 @@
 
     mealList.innerHTML = "";
     if (state.meals.length === 0) {
-      mealList.innerHTML = "<p class='muted'>No entries yet for today.</p>";
+      mealList.innerHTML =
+        "<p class='muted'>You have not logged any meals today. Start by adding your first meal.</p>";
       renderHistory();
       return;
     }
