@@ -10,6 +10,8 @@
   const profileGender = document.getElementById("profileGender");
   const profileAge = document.getElementById("profileAge");
   const profileActivity = document.getElementById("profileActivity");
+  const profileWeightLoss = document.getElementById("profileWeightLoss");
+  const profileAppetite = document.getElementById("profileAppetite");
   const profileSummary = document.getElementById("profileSummary");
 
   const profileHeightUnit = document.getElementById("profileHeightUnit");
@@ -334,6 +336,8 @@
       if (!parsed || !parsed.gender || !parsed.heightCm || !parsed.weightKg || !parsed.age) {
         return;
       }
+      if (!parsed.weightLoss) parsed.weightLoss = "none";
+      if (!parsed.appetite) parsed.appetite = "normal";
       state.profile = parsed;
     } catch (_err) {
       // Ignore malformed profile storage.
@@ -463,6 +467,8 @@
     profileGender.value = state.profile.gender;
     profileAge.value = state.profile.age;
     profileActivity.value = String(state.profile.activityFactor);
+    profileWeightLoss.value = state.profile.weightLoss || "none";
+    profileAppetite.value = state.profile.appetite || "normal";
 
     profileHeightUnit.value = state.profile.heightUnit || "cm";
     profileWeightUnit.value = state.profile.weightUnit || "kg";
@@ -489,19 +495,66 @@
     }
   }
 
-  function calculatePersonalizedTargets(profile) {
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function nutritionRiskLevel(profile) {
+    if (profile.weightLoss === "severe" || profile.appetite === "very_low") {
+      return "high";
+    }
+    if (profile.weightLoss === "moderate" || profile.appetite === "reduced") {
+      return "moderate";
+    }
+    if (profile.weightLoss === "mild") {
+      return "mild";
+    }
+    return "low";
+  }
+
+  function calculatePersonalizedTargets(profile, chemoState) {
     const { gender, age, heightCm, weightKg, activityFactor } = profile;
+    const risk = nutritionRiskLevel(profile);
 
     const bmrBase = 10 * weightKg + 6.25 * heightCm - 5 * age;
     const bmr = gender === "male" ? bmrBase + 5 : bmrBase - 161;
     const tdee = bmr * activityFactor;
 
-    const calories = Math.max(1200, Math.round(tdee / 10) * 10);
-    const protein = Math.round(weightKg * 1.4);
-    const fat = Math.round((calories * 0.3) / 9);
-    const carbs = Math.max(50, Math.round((calories - protein * 4 - fat * 9) / 4));
+    const lowEnergy = 25 * weightKg;
+    const midEnergy = 27.5 * weightKg;
+    const highEnergy = 30 * weightKg;
+    let calories = clamp(tdee, lowEnergy, highEnergy);
 
-    return { calories, protein, carbs, fat };
+    if (chemoState === "on") {
+      if (risk === "mild") calories = Math.max(calories, 28.5 * weightKg);
+      if (risk === "moderate") calories = Math.max(calories, 30 * weightKg);
+      if (risk === "high") calories = Math.max(calories, 32 * weightKg);
+    }
+
+    let proteinMultiplier = 1.2;
+    if (chemoState === "on") proteinMultiplier = 1.3;
+    if (risk === "moderate") proteinMultiplier = Math.max(proteinMultiplier, 1.4);
+    if (risk === "high") proteinMultiplier = Math.max(proteinMultiplier, 1.5);
+
+    const caloriesRounded = Math.max(1200, Math.round(calories / 10) * 10);
+    const protein = roundTwo(weightKg * proteinMultiplier);
+    const fat = roundTwo((caloriesRounded * 0.3) / 9);
+    const carbs = roundTwo(
+      Math.max(50, (caloriesRounded - protein * 4 - fat * 9) / 4)
+    );
+
+    return {
+      calories: caloriesRounded,
+      protein,
+      carbs,
+      fat,
+      rationale: {
+        chemoState,
+        risk,
+        energyRangeKcal: `${Math.round(lowEnergy)}-${Math.round(highEnergy)}`,
+        baseMidEnergyKcal: Math.round(midEnergy)
+      }
+    };
   }
 
   function renderProfileSummary() {
@@ -512,10 +565,12 @@
 
     const helloName = state.profile.name ? `${state.profile.name}` : "there";
     const convertedHeight = cmToFeetInches(state.profile.heightCm);
+    const treatmentState = selectedTreatmentState();
 
     profileSummary.innerHTML = `
       <p><strong>Hello, ${helloName}.</strong></p>
       <p class="muted">Profile: ${state.profile.gender}, ${state.profile.age} years, ${roundOne(state.profile.heightCm)} cm (${convertedHeight.feet} ft ${convertedHeight.inches} in), ${roundOne(state.profile.weightKg)} kg (${roundOne(kgToLb(state.profile.weightKg))} lb).</p>
+      <p class="muted">Treatment profile: ${treatmentState === "on" ? "on chemotherapy" : "off chemotherapy"}, appetite ${state.profile.appetite}, recent weight loss ${state.profile.weightLoss}.</p>
       <p class="muted">Personalized targets set to ${state.targets.calories} kcal, P ${state.targets.protein}g, C ${state.targets.carbs}g, F ${state.targets.fat}g.</p>
     `;
   }
@@ -918,8 +973,14 @@
     }
   }
 
-  function applyPersonalizedTargets(profile) {
-    state.targets = calculatePersonalizedTargets(profile);
+  function applyPersonalizedTargets(profile, chemoState) {
+    const personalized = calculatePersonalizedTargets(profile, chemoState);
+    state.targets = {
+      calories: personalized.calories,
+      protein: personalized.protein,
+      carbs: personalized.carbs,
+      fat: personalized.fat
+    };
     syncTargetInputs();
     saveState();
     renderMeals();
@@ -957,6 +1018,8 @@
       gender: profileGender.value,
       age: Number(profileAge.value),
       activityFactor: Number(profileActivity.value),
+      weightLoss: profileWeightLoss.value,
+      appetite: profileAppetite.value,
       heightUnit,
       weightUnit,
       heightCm: roundOne(heightCmValue),
@@ -973,14 +1036,20 @@
       profile.age > 0 &&
       profile.heightCm > 0 &&
       profile.weightKg > 0 &&
-      profile.activityFactor > 0
+      profile.activityFactor > 0 &&
+      Boolean(profile.weightLoss) &&
+      Boolean(profile.appetite)
     );
   }
 
   function hookEvents() {
     cancerSelect.addEventListener("change", renderRecommendations);
     document.querySelectorAll('input[name="chemoStatus"]').forEach((input) => {
-      input.addEventListener("change", renderRecommendations);
+      input.addEventListener("change", () => {
+        renderRecommendations();
+        if (!state.profile) return;
+        applyPersonalizedTargets(state.profile, selectedTreatmentState());
+      });
     });
     document.querySelectorAll('input[name="dialysisStatus"]').forEach((input) => {
       input.addEventListener("change", renderRecommendations);
@@ -1011,7 +1080,7 @@
 
       state.profile = profile;
       saveProfile();
-      applyPersonalizedTargets(profile);
+      applyPersonalizedTargets(profile, selectedTreatmentState());
     });
 
     targetForm.addEventListener("submit", (e) => {
@@ -1105,7 +1174,7 @@
     if (state.profile) {
       syncProfileInputs();
       if (!hasDailyState) {
-        applyPersonalizedTargets(state.profile);
+        applyPersonalizedTargets(state.profile, selectedTreatmentState());
       }
     }
 

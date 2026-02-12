@@ -62,6 +62,23 @@
               <option value="1.725">Very active (6-7 days/week)</option>
             </select>
           </label>
+          <label>
+            Recent unintentional weight loss (last 6 months)
+            <select id="profileWeightLoss" required>
+              <option value="none">None</option>
+              <option value="mild">Up to 5%</option>
+              <option value="moderate">5-10%</option>
+              <option value="severe">More than 10%</option>
+            </select>
+          </label>
+          <label>
+            Appetite / intake this week
+            <select id="profileAppetite" required>
+              <option value="normal">Normal</option>
+              <option value="reduced">Reduced</option>
+              <option value="very_low">Very low</option>
+            </select>
+          </label>
           <button type="submit">Save profile and personalize macros</button>
         </form>
         <div id="profileSummary" class="summary compact"></div>

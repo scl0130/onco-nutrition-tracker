@@ -50,6 +50,13 @@ const APP_SOURCES = {
     url: "https://pubmed.ncbi.nlm.nih.gov/33946039/",
     backupUrl: "https://doi.org/10.1016/j.clnu.2021.02.005",
     type: "Peer-reviewed"
+  },
+  esmoCachexia: {
+    title: "Cancer Cachexia in Adult Patients: ESMO Clinical Practice Guideline (2021)",
+    org: "ESMO Open",
+    url: "https://pubmed.ncbi.nlm.nih.gov/34144781/",
+    backupUrl: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8233663/",
+    type: "Peer-reviewed"
   }
 };
 
@@ -69,32 +76,42 @@ const TOP_CANCERS = [
 const BASE_RECOMMENDATIONS = {
   off: [
     {
-      title: "Core dietary pattern (off chemotherapy)",
+      title: "Energy and protein framework (off chemotherapy)",
       bullets: [
-        "Prioritize vegetables, fruits, whole grains, legumes, and lean proteins.",
-        "Limit ultra-processed foods, processed/red meat, added sugars, and alcohol.",
-        "Review weight trends and appetite regularly with your care team."
+        "For many stable adult cancer patients, starting energy range is about 25-30 kcal/kg/day unless individualized testing is available.",
+        "Protein is commonly targeted above 1.0 g/kg/day and up to about 1.5 g/kg/day when tolerated.",
+        "Review weight, appetite, and intake trends regularly and adjust targets with your oncology dietitian."
       ],
-      sourceIds: ["acsGuideline", "nciNutrition"]
+      sourceIds: ["espenGuideline", "esmoCachexia", "nciNutrition"]
     },
     {
-      title: "Nutrition monitoring",
+      title: "Diet quality and survivorship pattern",
       bullets: [
-        "Screen for malnutrition risk and involve an oncology dietitian early.",
-        "Adjust plan based on symptoms, treatment history, and lab trends."
+        "Prioritize vegetables, fruits, whole grains, legumes, and high-quality protein sources.",
+        "Limit ultra-processed foods, processed/red meat, added sugars, and alcohol.",
+        "Screen for malnutrition risk and involve oncology nutrition support early when weight or intake declines."
       ],
-      sourceIds: ["nciNutrition", "espenGuideline"]
+      sourceIds: ["acsGuideline", "nciNutrition", "espenGuideline"]
     }
   ],
   on: [
     {
       title: "Energy and protein support (on chemotherapy)",
       bullets: [
-        "If intake is reduced, use small frequent meals and energy-dense options.",
-        "Increase protein intake as tolerated to support tissue repair and recovery.",
-        "Escalate early for persistent weight loss or poor oral intake."
+        "Baseline energy often starts in a similar range (about 25-30 kcal/kg/day), but should move toward higher intensity when appetite drops or unintentional weight loss appears.",
+        "Protein needs are frequently pushed toward the upper end (for example ~1.2-1.5 g/kg/day) during active treatment and catabolic stress.",
+        "If oral intake remains inadequate, escalate early to oral nutrition supplements and dietitian-led intervention."
       ],
-      sourceIds: ["nciNutrition", "espenGuideline"]
+      sourceIds: ["espenGuideline", "esmoCachexia", "nciNutrition"]
+    },
+    {
+      title: "Symptom-driven meal planning",
+      bullets: [
+        "Use small, frequent meals and softer/easier foods during nausea, mouth soreness, taste changes, or early satiety.",
+        "Track symptom days and hydration so calorie/protein goals can be adapted week-to-week.",
+        "Ask your care team for medication and nutrition strategies early if intake drops for more than a few days."
+      ],
+      sourceIds: ["nciNutrition", "esmoCachexia"]
     },
     {
       title: "Food safety priority",
