@@ -1135,3 +1135,24 @@ a {
     flex-direction: column;
   }
 }
+
+/* Architecture restructure additions */
+.auth-hidden-by-user {
+  display: none;
+}
+
+#whatToDoCard {
+  grid-column: 1 / -1;
+}
+
+#profileSetupForm {
+  grid-column: 1 / -1;
+}
+
+#track-food {
+  grid-column: 1 / -1;
+}
+
+#profileSummaryCard p {
+  margin: 4px 0;
+}

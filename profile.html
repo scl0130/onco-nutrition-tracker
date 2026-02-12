@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile | OncoNutrition Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="app-shell" data-page="profile">
+    <header class="top-nav">
+      <a class="brand" href="./index.html">OncoNutrition Tracker</a>
+      <nav aria-label="Primary navigation">
+        <a class="nav-link" href="./index.html">Dashboard</a>
+        <a class="nav-link" href="./tracker.html">Track Food</a>
+        <a class="nav-link is-active" href="./profile.html" aria-current="page">Profile</a>
+      </nav>
+    </header>
+
+    <main class="page">
+      <section class="card panel">
+        <h1>Profile Setup</h1>
+        <p class="muted">Set up patient context before interpreting dashboard status.</p>
+      </section>
+
+      <form id="profileSetupForm" class="grid">
+        <section class="card panel">
+          <h2>Section 1: Basic Information</h2>
+          <div class="grid form-grid">
+            <label>Age <input type="number" min="18" max="120" id="profileAge" required /></label>
+            <label>Sex
+              <select id="profileSex" required>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+              </select>
+            </label>
+            <label>Height (cm) <input type="number" min="100" max="250" id="profileHeightCm" required /></label>
+            <label>Weight (kg) <input type="number" min="30" max="300" step="0.1" id="profileWeightKg" required /></label>
+            <label>Activity level
+              <select id="profileActivity" required>
+                <option value="1.2">Low / mostly sedentary</option>
+                <option value="1.375">Light activity</option>
+                <option value="1.55">Moderate activity</option>
+                <option value="1.725">High activity</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="card panel">
+          <h2>Section 2: Cancer and Treatment</h2>
+          <div class="grid form-grid">
+            <label>Cancer type <select id="cancerSelect" required></select></label>
+            <label>Treatment type
+              <select id="profileTreatmentType" required>
+                <option value="chemotherapy">Chemotherapy</option>
+                <option value="radiation">Radiation</option>
+                <option value="surgery">Surgery / perioperative</option>
+                <option value="immunotherapy">Immunotherapy</option>
+                <option value="targeted">Targeted therapy</option>
+                <option value="none">None currently</option>
+              </select>
+            </label>
+            <label>Treatment mode
+              <select id="profileTreatmentMode" required>
+                <option value="on">On treatment</option>
+                <option value="off">Off treatment</option>
+                <option value="normal">Normal / no active treatment</option>
+              </select>
+            </label>
+            <fieldset id="dialysisField" class="hidden">
+              <legend>Dialysis status (Kidney only)</legend>
+              <label><input type="radio" name="dialysisStatus" value="off" checked /> Off dialysis</label>
+              <label><input type="radio" name="dialysisStatus" value="on" /> On dialysis</label>
+            </fieldset>
+          </div>
+        </section>
+
+        <section class="card panel">
+          <h2>Section 3: Symptoms</h2>
+          <div id="symptomForm" class="grid form-grid">
+            <label><input type="checkbox" value="nausea" /> Nausea</label>
+            <label><input type="checkbox" value="fatigue" /> Fatigue</label>
+            <label><input type="checkbox" value="appetite_loss" /> Appetite loss</label>
+            <label><input type="checkbox" value="taste_changes" /> Taste changes</label>
+          </div>
+        </section>
+
+        <section class="card panel">
+          <h2>Weight History</h2>
+          <form id="weightForm" class="grid form-grid">
+            <label>Date <input type="date" id="weightDate" required /></label>
+            <label>Weight (kg) <input type="number" min="20" max="350" step="0.1" id="weightValueKg" required /></label>
+            <button type="button" id="saveWeightEntry" class="secondary">Add weight entry</button>
+          </form>
+          <div id="weightTrendSummary" class="muted"></div>
+          <svg id="weightChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Weight trend chart"></svg>
+        </section>
+
+        <section class="card panel">
+          <h2>Section 4: Save</h2>
+          <button type="submit" id="saveProfileButton">Save Profile</button>
+          <p id="profileStatus" class="muted" aria-live="polite"></p>
+        </section>
+      </form>
+    </main>
+
+    <script src="./recommendations.js"></script>
+    <script src="./app-main.js"></script>
+  </body>
+</html>

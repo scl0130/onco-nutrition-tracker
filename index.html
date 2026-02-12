@@ -3,67 +3,73 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OncoNutrition Tracker</title>
+    <title>Dashboard | OncoNutrition Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body class="site-shell">
-    <header class="top-nav site-nav">
+  <body class="app-shell" data-page="dashboard">
+    <header class="top-nav">
       <a class="brand" href="./index.html">OncoNutrition Tracker</a>
       <nav aria-label="Primary navigation">
-        <a class="nav-link is-active" href="./index.html" aria-current="page">Home</a>
-        <a class="nav-link" href="./tracker.html">Tracker</a>
-        <a class="nav-link" href="./about.html">About</a>
+        <a class="nav-link is-active" href="./index.html" aria-current="page">Dashboard</a>
+        <a class="nav-link" href="./tracker.html">Track Food</a>
+        <a class="nav-link" href="./profile.html">Profile</a>
       </nav>
     </header>
 
-    <main class="landing-page">
-      <section class="landing-hero">
-        <p class="eyebrow">Oncology Nutrition Care</p>
-        <h1>Track intake, monitor risk, and prep better care-team conversations.</h1>
-        <p class="lead">A calmer, clinical nutrition tracker inspired by modern health dashboards: focused metrics, clear hierarchy, and patient-first daily support.</p>
-        <div class="inline-actions">
-          <a class="cta" href="./tracker.html">Open Tracker</a>
-          <a class="cta cta-secondary" href="./about.html">View Methodology</a>
-        </div>
+    <main class="page" id="mainContent">
+      <section class="card panel" id="whatToDoCard">
+        <h2>What To Do Today</h2>
+        <ul id="whatToDoList" class="sources"></ul>
       </section>
 
-      <section class="landing-grid">
-        <article class="feature-panel">
-          <h2>Daily Snapshot</h2>
-          <p class="muted">Status, score, malnutrition risk, and action prompts in one dashboard row.</p>
+      <section class="dashboard-overview">
+        <article class="mini-card panel panel-soft overview-status">
+          <h3>Nutrition Status</h3>
+          <div id="nutritionStatus" class="status-chip">Status: Pending</div>
+          <div id="nutritionScore" class="muted"></div>
         </article>
-        <article class="feature-panel">
-          <h2>Smarter Logging</h2>
-          <p class="muted">Quick add, barcode lookup, curated food library, and treatment-aware recommendations.</p>
+        <article class="mini-card panel panel-soft overview-risk">
+          <h3>Risk Level</h3>
+          <div id="malnutritionRisk" class="muted"></div>
         </article>
-        <article class="feature-panel">
-          <h2>Patient Support</h2>
-          <p class="muted">Self-care checklist, care-team notes, symptom tracking, and clinician report export.</p>
+        <article class="mini-card panel panel-soft overview-recommendations">
+          <h3>Profile Summary</h3>
+          <div id="profileSummaryCard" class="muted"></div>
+          <a class="cta cta-secondary" href="./profile.html">Edit Profile</a>
+        </article>
+        <article class="mini-card panel panel-soft overview-streak">
+          <h3>Selected Date</h3>
+          <input type="date" id="dashboardDate" />
         </article>
       </section>
 
-      <section class="landing-metrics">
-        <article>
-          <strong>10</strong>
-          <span>Common cancers covered</span>
-        </article>
-        <article>
-          <strong>4</strong>
-          <span>Core care-flow steps</span>
-        </article>
-        <article>
-          <strong>100%</strong>
-          <span>Static site, browser-local data</span>
-        </article>
+      <section class="card panel">
+        <h2>Progress Rings</h2>
+        <div id="macroRings" class="ring-grid"></div>
+      </section>
+
+      <section class="card panel" id="recommendations">
+        <h2>Recommendations</h2>
+        <div id="recommendationMeta" class="meta"></div>
+        <div id="recommendationList" class="recommendations"></div>
+      </section>
+
+      <section class="card panel">
+        <h2>Weight Trend</h2>
+        <div id="weightTrendSummary" class="muted"></div>
+        <svg id="weightChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Weight trend chart"></svg>
+      </section>
+
+      <section class="card panel" id="evidence">
+        <h2>Evidence Sources</h2>
+        <ul id="sourceList" class="sources"></ul>
       </section>
     </main>
 
-    <footer class="app-footer">
-      <p>Medical disclaimer: Educational only, not medical advice. Confirm decisions with oncology and nutrition teams.</p>
-      <p><a href="./tracker.html">Open Tracker</a> | <a href="./about.html">About</a></p>
-    </footer>
+    <script src="./recommendations.js"></script>
+    <script src="./app-main.js"></script>
   </body>
 </html>
