@@ -17,6 +17,10 @@
         <a class="nav-link" href="./tracker.html">Track Food</a>
         <a class="nav-link" href="./profile.html">Profile</a>
       </nav>
+      <div class="auth-inline">
+        <span id="authUserBadge" class="muted">Guest mode</span>
+        <button type="button" id="logoutButton" class="secondary hidden">Log out</button>
+      </div>
     </header>
 
     <main class="page" id="mainContent">
@@ -70,6 +74,7 @@
     </main>
 
     <script src="./recommendations.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./app-main.js"></script>
   </body>
 </html>
