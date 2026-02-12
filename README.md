@@ -56,3 +56,8 @@ This app is educational and not medical advice. Patients should consult their on
 
 ## Source policy
 Current recommendations cite government and/or peer-reviewed references. When adding new rules, attach at least one source per rule in `sourceIds`.
+
+## Food data sources
+- Curated oncology-safe foods (in-app library)
+- USDA FoodData Central search (primary broad lookup; uses `DEMO_KEY` by default)
+- OpenFoodFacts fallback for additional packaged/global matches

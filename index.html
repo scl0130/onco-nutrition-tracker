@@ -143,6 +143,8 @@
         </p>
         <form id="foodLibraryFilters" class="grid">
           <label>Search foods <input type="text" id="foodLibrarySearch" placeholder="ex: yogurt, chicken, oatmeal" /></label>
+          <label>USDA API key (optional) <input type="password" id="usdaApiKey" placeholder="Uses DEMO_KEY if empty" /></label>
+          <button type="button" id="saveUsdaApiKey">Save USDA key</button>
           <fieldset>
             <legend>Filter options</legend>
             <label><input type="checkbox" id="foodFilterHighProtein" /> High protein (>= 10g per 100g)</label>
@@ -150,6 +152,7 @@
             <label><input type="checkbox" id="foodFilterSoftTexture" /> Soft texture / easy to eat</label>
           </fieldset>
         </form>
+        <p id="usdaApiKeyStatus" class="muted"></p>
         <p id="foodLibraryCount" class="muted"></p>
         <div id="foodLibraryResults" class="food-library"></div>
       </section>

@@ -48,6 +48,9 @@
   const foodSafetyNote = document.getElementById("foodSafetyNote");
   const oncologyFoodOptions = document.getElementById("oncologyFoodOptions");
   const foodLibrarySearch = document.getElementById("foodLibrarySearch");
+  const usdaApiKeyInput = document.getElementById("usdaApiKey");
+  const saveUsdaApiKeyButton = document.getElementById("saveUsdaApiKey");
+  const usdaApiKeyStatus = document.getElementById("usdaApiKeyStatus");
   const foodFilterHighProtein = document.getElementById("foodFilterHighProtein");
   const foodFilterPlantBased = document.getElementById("foodFilterPlantBased");
   const foodFilterSoftTexture = document.getElementById("foodFilterSoftTexture");
@@ -55,6 +58,8 @@
   const foodLibraryResults = document.getElementById("foodLibraryResults");
 
   const PROFILE_STORAGE_KEY = "oncoNutritionProfile:v2";
+  const USDA_API_KEY_STORAGE_KEY = "oncoNutritionUsdaApiKey:v1";
+  const USDA_DEFAULT_API_KEY = "DEMO_KEY";
 
   const CURATED_ONCOLOGY_SAFE_FOODS = [
     {
@@ -338,6 +343,22 @@
   function saveProfile() {
     if (!state.profile) return;
     localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(state.profile));
+  }
+
+  function getUsdaApiKey() {
+    const saved = localStorage.getItem(USDA_API_KEY_STORAGE_KEY);
+    return saved && saved.trim() ? saved.trim() : USDA_DEFAULT_API_KEY;
+  }
+
+  function loadUsdaApiKeyInput() {
+    const saved = localStorage.getItem(USDA_API_KEY_STORAGE_KEY) || "";
+    usdaApiKeyInput.value = saved;
+    if (saved) {
+      usdaApiKeyStatus.textContent = "USDA API key saved.";
+      return;
+    }
+    usdaApiKeyStatus.textContent =
+      "No USDA key saved. Using DEMO_KEY (lower limits).";
   }
 
   function syncTargetInputs() {
@@ -711,6 +732,82 @@
     };
   }
 
+  function usdaNutrientValue(food, nutrientNumber, nutrientNames) {
+    const nutrients = Array.isArray(food.foodNutrients) ? food.foodNutrients : [];
+    const match = nutrients.find((n) => {
+      const num = String(n.nutrientNumber || n.number || "");
+      const name = String(n.nutrientName || n.name || "").toLowerCase();
+      if (num === nutrientNumber) return true;
+      return nutrientNames.some((candidate) => name.includes(candidate));
+    });
+
+    if (!match) return NaN;
+    return Number(match.value ?? match.amount ?? NaN);
+  }
+
+  function parseUsdaFoodMacros(food) {
+    if (!food) return null;
+
+    const calories100g = usdaNutrientValue(food, "1008", ["energy"]);
+    const protein100g = usdaNutrientValue(food, "1003", ["protein"]);
+    const carbs100g = usdaNutrientValue(food, "1005", ["carbohydrate"]);
+    const fat100g = usdaNutrientValue(food, "1004", ["total lipid", "fat"]);
+
+    if (
+      Number.isNaN(calories100g) ||
+      Number.isNaN(protein100g) ||
+      Number.isNaN(carbs100g) ||
+      Number.isNaN(fat100g)
+    ) {
+      return null;
+    }
+
+    return {
+      calories: calories100g,
+      protein: protein100g,
+      carbs: carbs100g,
+      fat: fat100g
+    };
+  }
+
+  async function lookupUsdaFoodMacros(name, servingGrams) {
+    const apiKey = getUsdaApiKey();
+    const response = await fetch(
+      `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${encodeURIComponent(
+        apiKey
+      )}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: name,
+          pageSize: 10
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`USDA search failed (${response.status})`);
+    }
+
+    const data = await response.json();
+    const foods = Array.isArray(data.foods) ? data.foods : [];
+
+    for (const food of foods) {
+      const macros100g = parseUsdaFoodMacros(food);
+      if (!macros100g) continue;
+
+      return {
+        source: `USDA FoodData Central (${food.description || "best match"})`,
+        safety:
+          "General food database result. Keep oncology food-safety precautions for prep and storage.",
+        macros: scaleFoodMacros(macros100g, servingGrams)
+      };
+    }
+
+    throw new Error("USDA did not return complete macro data for this query");
+  }
+
   async function lookupFoodMacros(name, servingGrams) {
     const curated = findCuratedFoodMatch(name);
     if (curated) {
@@ -719,6 +816,12 @@
         safety: curated.safety,
         macros: scaleFoodMacros(curated.macros100g, servingGrams)
       };
+    }
+
+    try {
+      return await lookupUsdaFoodMacros(name, servingGrams);
+    } catch (_err) {
+      // Fall through to OpenFoodFacts.
     }
 
     const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(
@@ -870,6 +973,17 @@
 
     profileHeightUnit.addEventListener("change", handleHeightUnitChange);
     profileWeightUnit.addEventListener("change", handleWeightUnitChange);
+    saveUsdaApiKeyButton.addEventListener("click", () => {
+      const key = usdaApiKeyInput.value.trim();
+      if (!key) {
+        localStorage.removeItem(USDA_API_KEY_STORAGE_KEY);
+        usdaApiKeyStatus.textContent =
+          "USDA key cleared. Falling back to DEMO_KEY.";
+        return;
+      }
+      localStorage.setItem(USDA_API_KEY_STORAGE_KEY, key);
+      usdaApiKeyStatus.textContent = "USDA key saved.";
+    });
 
     profileForm.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -967,6 +1081,7 @@
     initCancerOptions();
     populateCuratedFoodOptions();
     renderFoodLibrary();
+    loadUsdaApiKeyInput();
     loadProfile();
     const hasDailyState = loadState();
 
