@@ -411,9 +411,17 @@
     return "GOOD";
   }
 
-  function getRecommendations(profile, dayTotals, dayTargets) {
-    if (typeof getPolicyRecommendations !== "function") return [];
-    return getPolicyRecommendations(profile, dayTotals, dayTargets);
+  function getRecommendations(profile, dayTotals, dayTargets, weightHistory) {
+    if (typeof getRecommendationsForUser !== "function") {
+      return { recommendations: [], allRecommendations: [], validationErrors: ["Recommendation engine not loaded."] };
+    }
+    return getRecommendationsForUser({
+      profile,
+      dailyTotals: dayTotals,
+      targets: dayTargets,
+      weightHistory,
+      maxResults: 12
+    });
   }
 
   function ensureRecommendationErrorBanner() {
@@ -484,73 +492,102 @@
     if (!recList) return;
     const day = readDay(document.getElementById("dashboardDate") ? (document.getElementById("dashboardDate").value || isoToday()) : isoToday());
     const dayTotals = totals(day.meals);
-    const recs = getRecommendations(profile, dayTotals, day.targets);
+    const weightHistory = loadWeightHistory();
+    const engineResult = getRecommendations(profile, dayTotals, day.targets, weightHistory);
+    const allRecs = engineResult.allRecommendations || [];
+    const recs = allRecs.slice(0, 6);
     recList.innerHTML = "";
     if (errorBanner) {
       errorBanner.classList.add("hidden");
       errorBanner.textContent = "";
     }
 
-    const catalogValidation = typeof validateRecommendationCatalog === "function"
-      ? validateRecommendationCatalog(window.RECOMMENDATION_CATALOG || [])
-      : { valid: false, errors: ["Recommendation validator not loaded."] };
-    const sourceDomainValidation = typeof validateAllSourcesRegistryDomains === "function"
-      ? validateAllSourcesRegistryDomains()
+    const sourceDomainValidation = typeof validateSourcesRegistryDomains === "function"
+      ? validateSourcesRegistryDomains()
       : { valid: false, errors: ["Source registry validator not loaded."] };
+    const sourceIdValidation = typeof validateRecommendationSourceIds === "function"
+      ? validateRecommendationSourceIds(window.RECOMMENDATIONS_CATALOG || [])
+      : { valid: false, errors: ["Recommendation sourceId validator not loaded."] };
 
-    if (!catalogValidation.valid || !sourceDomainValidation.valid) {
+    const validationErrors = [
+      ...(sourceDomainValidation.errors || []),
+      ...(sourceIdValidation.errors || []),
+      ...(engineResult.validationErrors || [])
+    ];
+
+    if (validationErrors.length) {
+      console.warn("Recommendation validation issues", validationErrors);
+    }
+    if (!sourceDomainValidation.valid) {
       if (errorBanner) {
         errorBanner.classList.remove("hidden");
-        errorBanner.textContent = `Recommendation policy validation failed: ${[...catalogValidation.errors, ...sourceDomainValidation.errors].join(" | ")}`;
+        errorBanner.textContent = `Some source registry entries failed validation. Showing only valid sourced recommendations.`;
       }
-      recList.innerHTML = "<p class='muted'>Recommendations unavailable until source validation issues are resolved.</p>";
-      return;
     }
 
     if (recMetaNode) {
       recMetaNode.textContent = `Cancer: ${profile.cancerType} | Treatment mode: ${profile.treatmentMode}`;
     }
 
-    const high = [];
-    const emerging = [];
-
     recs.forEach((rec) => {
       if (!Array.isArray(rec.sourceIds) || rec.sourceIds.length === 0) return;
-      const meta = recMeta(rec);
       const card = document.createElement("article");
       card.className = "rec-card";
       card.innerHTML = `<h3>${rec.title}</h3>
+        <p>${rec.patientTextShort || rec.patientText || ""}</p>
         <div class="rec-meta">
-          <span class="rec-chip strength">${meta.evidenceStrength}</span>
-          <span class="rec-chip confidence ${meta.confidence === "High confidence" ? "high" : meta.confidence === "Emerging evidence" ? "emerging" : "moderate"}">${meta.confidence}</span>
+          <span class="rec-chip strength">${(rec.evidenceTags || ["Guideline"]).join(", ")}</span>
         </div>
-        <p>${rec.patientText}</p>
         <p class="muted">${rec.safetyNote}</p>`;
+      const actions = document.createElement("details");
+      actions.className = "rec-actions";
+      actions.innerHTML = `<summary>What you can do today</summary><ul class="sources">${(rec.patientTextActions || []).map((line) => `<li>${line}</li>`).join("")}</ul>`;
+      card.appendChild(actions);
+      const why = document.createElement("details");
+      why.className = "rec-why";
+      why.innerHTML = `<summary>Why this matters</summary><p>${rec.whyThisMatters || ""}</p>`;
+      card.appendChild(why);
       const details = document.createElement("details");
       details.className = "rec-sources";
       details.innerHTML = `<summary>Sources</summary><ul class="sources">${rec.sourceIds.map(sourceLinkHtml).join("")}</ul>`;
       card.appendChild(details);
-      if (meta.confidence === "Emerging evidence") emerging.push(card);
-      else high.push(card);
+      recList.appendChild(card);
     });
 
-    if (high.length) {
-      const sec = document.createElement("section");
-      sec.className = "recommendation-group";
-      sec.innerHTML = "<h4>High-confidence guidance</h4>";
-      high.forEach((c) => sec.appendChild(c));
-      recList.appendChild(sec);
+    if (allRecs.length > 6) {
+      const showMoreButton = document.createElement("button");
+      showMoreButton.type = "button";
+      showMoreButton.className = "secondary";
+      showMoreButton.textContent = "Show more";
+      showMoreButton.addEventListener("click", () => {
+        const additional = allRecs.slice(6, 12);
+        additional.forEach((rec) => {
+          const card = document.createElement("article");
+          card.className = "rec-card";
+          card.innerHTML = `<h3>${rec.title}</h3>
+            <p>${rec.patientTextShort || rec.patientText || ""}</p>
+            <div class="rec-meta"><span class="rec-chip strength">${(rec.evidenceTags || ["Guideline"]).join(", ")}</span></div>
+            <p class="muted">${rec.safetyNote}</p>`;
+          const actions = document.createElement("details");
+          actions.className = "rec-actions";
+          actions.innerHTML = `<summary>What you can do today</summary><ul class="sources">${(rec.patientTextActions || []).map((line) => `<li>${line}</li>`).join("")}</ul>`;
+          card.appendChild(actions);
+          const why = document.createElement("details");
+          why.className = "rec-why";
+          why.innerHTML = `<summary>Why this matters</summary><p>${rec.whyThisMatters || ""}</p>`;
+          card.appendChild(why);
+          const src = document.createElement("details");
+          src.className = "rec-sources";
+          src.innerHTML = `<summary>Sources</summary><ul class="sources">${rec.sourceIds.map(sourceLinkHtml).join("")}</ul>`;
+          card.appendChild(src);
+          recList.appendChild(card);
+        });
+        showMoreButton.remove();
+      });
+      recList.appendChild(showMoreButton);
     }
 
-    if (emerging.length) {
-      const sec = document.createElement("section");
-      sec.className = "recommendation-group";
-      sec.innerHTML = "<h4>Emerging evidence to discuss with care team</h4>";
-      emerging.forEach((c) => sec.appendChild(c));
-      recList.appendChild(sec);
-    }
-
-    if (!high.length && !emerging.length) {
+    if (!allRecs.length) {
       recList.innerHTML = "<p class='muted'>No source-qualified recommendations matched your current profile and symptoms.</p>";
     }
     renderReferencesPanel();
@@ -745,6 +782,8 @@
       difficulty_swallowing: "Difficulty swallowing",
       constipation: "Constipation",
       diarrhea: "Diarrhea",
+      greasy_stools: "Greasy stools",
+      floating_stools: "Floating stools",
       bloating: "Bloating",
       early_satiety: "Early satiety",
       pain: "Pain affecting eating"

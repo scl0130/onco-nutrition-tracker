@@ -10,6 +10,9 @@ Static multi-page web app for oncology nutrition tracking with profile-aware gui
 - `sourcesRegistry.js`: Single source of truth for citations (strict allowlist domains)
 - `recommendationValidator.js`: Recommendation/source validation on page load
 - `recommendations.js`: Policy-based recommendation catalog and trigger logic
+- `src/data/recommendationsCatalog.js`: Expanded recommendation library (cancer/treatment/symptom specific)
+- `src/logic/deriveFlags.js`: Derived flag engine (`protein_deficit`, `calorie_deficit`, `weight_loss_concerning`, etc.)
+- `src/logic/getRecommendationsForUser.js`: Matching + ranking engine (top 6 default, up to 12 with show more)
 - `styles.css`: Shared styles and responsive layout
 
 ## Current Features
@@ -43,6 +46,16 @@ Static multi-page web app for oncology nutrition tracking with profile-aware gui
   - Every recommendation card includes expandable `Sources`
   - Validation blocks recommendation rendering if source rules fail
   - References panel groups all sources by evidence type
+  - Invalid recommendations are excluded individually; valid sourced recommendations still render
+
+## Recommendation Coverage Check
+Run this check after editing recommendation content:
+```bash
+cd /Users/chunglee/Desktop/Project
+node scripts/checkRecommendationCoverage.js
+```
+
+It verifies minimum recommendation volume by cancer type, treatment type, and common symptoms, and validates source references exist in the registry.
 
 ## Local Run
 Open files directly in browser, or run a static server:

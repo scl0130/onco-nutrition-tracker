@@ -1,71 +1,62 @@
 (function () {
-  function domainAllowed(url) {
+  function isAllowlisted(url) {
     try {
       const host = new URL(url).hostname.toLowerCase();
-      return (window.ALLOWED_SOURCE_DOMAINS || []).some((allowed) => {
-        const normalized = String(allowed || "").toLowerCase();
-        return host === normalized || host.endsWith(`.${normalized}`);
-      });
+      return (window.ALLOWED_SOURCE_DOMAINS || []).some((domain) => host === domain || host.endsWith(`.${domain}`));
     } catch (_err) {
       return false;
     }
   }
 
-  function validateRecommendationCatalog(recommendations) {
+  function validateSourcesRegistryDomains() {
     const registry = window.SOURCES_REGISTRY || {};
     const errors = [];
+    Object.keys(registry).forEach((id) => {
+      const src = registry[id];
+      if (!isAllowlisted(src.url)) {
+        errors.push(`Source '${id}' is outside allowlist.`);
+      }
+    });
+    return { valid: errors.length === 0, errors };
+  }
 
-    if (!Array.isArray(recommendations)) {
-      return {
-        valid: false,
-        errors: ["Recommendation catalog is missing or invalid."]
-      };
-    }
+  function validateRecommendationSourceIds(recommendations) {
+    const registry = window.SOURCES_REGISTRY || {};
+    const errors = [];
+    const validRecommendations = [];
 
-    recommendations.forEach((rec) => {
+    (Array.isArray(recommendations) ? recommendations : []).forEach((rec) => {
       if (!rec || !rec.id) {
         errors.push("Recommendation missing id.");
         return;
       }
-
       if (!Array.isArray(rec.sourceIds) || rec.sourceIds.length === 0) {
         errors.push(`${rec.id}: missing sourceIds.`);
         return;
       }
 
-      rec.sourceIds.forEach((sourceId) => {
+      const invalid = rec.sourceIds.some((sourceId) => {
         const source = registry[sourceId];
-        if (!source) {
-          errors.push(`${rec.id}: sourceId '${sourceId}' not found in sourcesRegistry.js.`);
-          return;
-        }
-        if (!domainAllowed(source.url)) {
-          errors.push(`${rec.id}: source '${sourceId}' uses non-allowlisted domain.`);
-        }
+        if (!source) return true;
+        if (!isAllowlisted(source.url)) return true;
+        return false;
       });
-    });
 
-    return {
-      valid: errors.length === 0,
-      errors
-    };
-  }
-
-  function validateAllSourcesRegistryDomains() {
-    const registry = window.SOURCES_REGISTRY || {};
-    const errors = [];
-    Object.keys(registry).forEach((id) => {
-      const src = registry[id];
-      if (!domainAllowed(src.url)) {
-        errors.push(`Source '${id}' has non-allowlisted domain.`);
+      if (invalid) {
+        errors.push(`${rec.id}: has invalid sourceId or non-allowlisted source URL.`);
+        return;
       }
+
+      validRecommendations.push(rec);
     });
+
     return {
       valid: errors.length === 0,
-      errors
+      errors,
+      validRecommendations
     };
   }
 
-  window.validateRecommendationCatalog = validateRecommendationCatalog;
-  window.validateAllSourcesRegistryDomains = validateAllSourcesRegistryDomains;
+  window.validateSourcesRegistryDomains = validateSourcesRegistryDomains;
+  window.validateRecommendationSourceIds = validateRecommendationSourceIds;
 })();
