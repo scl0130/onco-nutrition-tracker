@@ -736,12 +736,18 @@
     };
   }
 
-  function usdaNutrientValue(food, nutrientNumber, nutrientNames) {
+  function usdaNutrientValue(food, nutrientId, nutrientNumber, nutrientNames, unitName) {
     const nutrients = Array.isArray(food.foodNutrients) ? food.foodNutrients : [];
     const match = nutrients.find((n) => {
+      const id = Number(n.nutrientId ?? NaN);
       const num = String(n.nutrientNumber || n.number || "");
       const name = String(n.nutrientName || n.name || "").toLowerCase();
-      if (num === nutrientNumber) return true;
+      const unit = String(n.unitName || "").toUpperCase();
+      if (!Number.isNaN(id) && id === nutrientId) return true;
+      if (num === nutrientNumber) {
+        if (!unitName) return true;
+        return unit === unitName.toUpperCase();
+      }
       return nutrientNames.some((candidate) => name.includes(candidate));
     });
 
@@ -752,25 +758,28 @@
   function parseUsdaFoodMacros(food) {
     if (!food) return null;
 
-    const calories100g = usdaNutrientValue(food, "1008", ["energy"]);
-    const protein100g = usdaNutrientValue(food, "1003", ["protein"]);
-    const carbs100g = usdaNutrientValue(food, "1005", ["carbohydrate"]);
-    const fat100g = usdaNutrientValue(food, "1004", ["total lipid", "fat"]);
+    let calories100g = usdaNutrientValue(food, 1008, "1008", ["energy"], "KCAL");
+    const protein100g = usdaNutrientValue(food, 1003, "1003", ["protein"]);
+    const carbs100g = usdaNutrientValue(food, 1005, "1005", ["carbohydrate"]);
+    const fat100g = usdaNutrientValue(food, 1004, "1004", ["total lipid", "fat"]);
 
-    if (
-      Number.isNaN(calories100g) ||
-      Number.isNaN(protein100g) ||
-      Number.isNaN(carbs100g) ||
-      Number.isNaN(fat100g)
-    ) {
+    const safeProtein = Number.isNaN(protein100g) ? 0 : protein100g;
+    const safeCarbs = Number.isNaN(carbs100g) ? 0 : carbs100g;
+    const safeFat = Number.isNaN(fat100g) ? 0 : fat100g;
+
+    if (Number.isNaN(calories100g)) {
+      calories100g = safeProtein * 4 + safeCarbs * 4 + safeFat * 9;
+    }
+
+    if (Number.isNaN(calories100g)) {
       return null;
     }
 
     return {
       calories: calories100g,
-      protein: protein100g,
-      carbs: carbs100g,
-      fat: fat100g
+      protein: safeProtein,
+      carbs: safeCarbs,
+      fat: safeFat
     };
   }
 
@@ -785,7 +794,9 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: name,
-          pageSize: 10
+          pageSize: 25,
+          dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)", "Branded"],
+          requireAllWords: false
         })
       }
     );
