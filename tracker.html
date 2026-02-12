@@ -50,6 +50,7 @@
           <label>Date <input type="date" id="trackerDate" required /></label>
           <label>Meal/Food <input type="text" id="mealName" list="oncologyFoodOptions" required /></label>
           <datalist id="oncologyFoodOptions"></datalist>
+          <div id="foodSuggestions" class="food-suggestions hidden" aria-live="polite"></div>
           <label>Serving size (g) <input type="number" min="1" id="mealServingGrams" value="100" required /></label>
           <button type="button" id="autofillFood" class="secondary">Autofill (curated + USDA)</button>
           <label>Calories <input type="number" min="0" id="mealCalories" required /></label>

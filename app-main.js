@@ -332,6 +332,7 @@
     if (!raw) {
       return {
         targets: { calories: 2000, protein: 90, carbs: 230, fat: 70 },
+        targetsManual: false,
         meals: [],
         symptoms: []
       };
@@ -340,12 +341,14 @@
       const parsed = JSON.parse(raw);
       return {
         targets: parsed.targets || { calories: 2000, protein: 90, carbs: 230, fat: 70 },
+        targetsManual: Boolean(parsed.targetsManual),
         meals: Array.isArray(parsed.meals) ? parsed.meals : [],
         symptoms: Array.isArray(parsed.symptoms) ? parsed.symptoms : []
       };
     } catch (_err) {
       return {
         targets: { calories: 2000, protein: 90, carbs: 230, fat: 70 },
+        targetsManual: false,
         meals: [],
         symptoms: []
       };
@@ -811,6 +814,41 @@
     };
   }
 
+  function defaultTargets() {
+    return { calories: 2000, protein: 90, carbs: 230, fat: 70 };
+  }
+
+  function calculateRecommendedTargets(profile) {
+    if (!profile) return defaultTargets();
+    const age = Number(profile.age || 0);
+    const weight = Number(profile.weight || 0);
+    const heightCm = Number(profile.heightCm || 0);
+    const activity = Number(profile.activityLevel || 1.2);
+
+    if (age <= 0 || weight <= 0 || heightCm <= 0) return defaultTargets();
+
+    const isMale = String(profile.sex || "").toLowerCase() === "male";
+    let bmr = 10 * weight + 6.25 * heightCm - 5 * age + (isMale ? 5 : -161);
+    if (!Number.isFinite(bmr) || bmr <= 0) bmr = 1400;
+
+    const treatmentMode = String(profile.treatmentMode || "normal");
+    const treatmentFactor = treatmentMode === "on" ? 1.15 : treatmentMode === "off" ? 1.05 : 1.0;
+    const calories = Math.round(Math.max(1200, Math.min(4200, bmr * activity * treatmentFactor)));
+
+    let proteinPerKg = 1.2;
+    if (profile.weightLoss === "moderate") proteinPerKg = 1.4;
+    if (profile.weightLoss === "severe") proteinPerKg = 1.6;
+    if (profile.appetite === "reduced") proteinPerKg = Math.max(proteinPerKg, 1.3);
+    if (profile.appetite === "very_low") proteinPerKg = Math.max(proteinPerKg, 1.5);
+    const protein = roundTwo(Math.max(65, weight * proteinPerKg));
+
+    const fatRatio = profile.appetite === "very_low" ? 0.35 : 0.30;
+    const fat = roundTwo(Math.max(35, (calories * fatRatio) / 9));
+    const carbs = roundTwo(Math.max(50, (calories - protein * 4 - fat * 9) / 4));
+
+    return { calories, protein, carbs, fat };
+  }
+
   function findCuratedFoodByName(inputName) {
     const query = String(inputName || "").trim().toLowerCase();
     if (!query) return null;
@@ -977,7 +1015,105 @@
     }
   }
 
+  function parseQuantityToGrams(quantityText) {
+    const q = String(quantityText || "").toLowerCase();
+    const match = q.match(/(\d+(?:\.\d+)?)\s*(g|gram|grams|ml|milliliter|milliliters)/);
+    if (!match) return null;
+    const value = Number(match[1]);
+    if (!Number.isFinite(value) || value <= 0) return null;
+    return Math.round(value);
+  }
+
+  async function fetchFoodSuggestions(query) {
+    const normalized = String(query || "").trim();
+    if (normalized.length < 2) return [];
+    const key = normalized.toLowerCase();
+    const suggestions = [];
+    const seen = new Set();
+
+    const addSuggestion = (item) => {
+      const dedupeKey = String(item.name || item.label || "").toLowerCase();
+      if (!dedupeKey || seen.has(dedupeKey)) return;
+      seen.add(dedupeKey);
+      suggestions.push(item);
+    };
+
+    CURATED_FOODS.forEach((food) => {
+      if (food.name.toLowerCase().includes(key)) {
+        addSuggestion({
+          name: food.name,
+          label: food.name,
+          meta: "Curated",
+          servingHintGrams: 100,
+          macros100g: food.macros100g
+        });
+      }
+    });
+
+    try {
+      const offResp = await fetch(
+        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(normalized)}&search_simple=1&action=process&json=1&page_size=8`
+      );
+      if (offResp.ok) {
+        const offData = await offResp.json();
+        const products = Array.isArray(offData.products) ? offData.products : [];
+        products.forEach((p) => {
+          const name = String(p.product_name || "").trim();
+          if (!name) return;
+          const brand = String(p.brands || "").trim();
+          const qty = String(p.quantity || "").trim();
+          const macros100g = parseProductMacros(p);
+          addSuggestion({
+            name: `${name}${brand ? ` (${brand})` : ""}`,
+            label: `${name}${qty ? ` ${qty}` : ""}${brand ? ` (${brand})` : ""}`,
+            meta: "OpenFoodFacts",
+            servingHintGrams: parseQuantityToGrams(qty),
+            macros100g: macros100g || null
+          });
+        });
+      }
+    } catch (_err) {
+      // Ignore suggestion errors and keep remaining providers.
+    }
+
+    try {
+      const usdaResp = await fetch(
+        `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${encodeURIComponent(getUsdaApiKey())}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: normalized,
+            pageSize: 8,
+            dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)", "Branded"],
+            requireAllWords: false
+          })
+        }
+      );
+      if (usdaResp.ok) {
+        const usdaData = await usdaResp.json();
+        const foods = Array.isArray(usdaData.foods) ? usdaData.foods : [];
+        foods.forEach((food) => {
+          const desc = String(food.description || "").trim();
+          if (!desc) return;
+          addSuggestion({
+            name: desc,
+            label: desc,
+            meta: "USDA",
+            servingHintGrams: 100,
+            macros100g: parseUsdaFoodMacros(food)
+          });
+        });
+      }
+    } catch (_err) {
+      // Ignore suggestion errors and keep current list.
+    }
+
+    return suggestions.slice(0, 12);
+  }
+
   function initTrackerPage() {
+    const profile = getProfile();
     const dateInput = document.getElementById("trackerDate");
     const targetForm = document.getElementById("targetForm");
     const mealForm = document.getElementById("mealForm");
@@ -995,6 +1131,7 @@
     const mealProteinInput = document.getElementById("mealProtein");
     const mealCarbsInput = document.getElementById("mealCarbs");
     const mealFatInput = document.getElementById("mealFat");
+    const foodSuggestions = document.getElementById("foodSuggestions");
 
     if (!dateInput || !targetForm || !mealForm || !mealList || !macroSummary || !options || !quickAddFoods || !autofillFoodButton || !mealNameInput || !mealServingInput || !mealCaloriesInput || !mealProteinInput || !mealCarbsInput || !mealFatInput) {
       return;
@@ -1026,8 +1163,96 @@
       .map((f) => `<button type="button" data-food="${f.name}">+ ${f.name.split("(")[0].trim()}</button>`)
       .join(" ");
 
+    let activeSuggestions = [];
+    let suggestionsToken = 0;
+    let suggestionsTimer = null;
+
+    function hideSuggestions() {
+      if (!foodSuggestions) return;
+      foodSuggestions.classList.add("hidden");
+      foodSuggestions.innerHTML = "";
+      activeSuggestions = [];
+    }
+
+    function renderSuggestions() {
+      if (!foodSuggestions) return;
+      foodSuggestions.innerHTML = "";
+      if (!activeSuggestions.length) {
+        hideSuggestions();
+        return;
+      }
+      activeSuggestions.forEach((item, idx) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "food-suggestion-item";
+        button.setAttribute("data-suggestion-index", String(idx));
+        button.innerHTML = `<span>${item.label}</span><span class="food-suggestion-meta">${item.meta}</span>`;
+        foodSuggestions.appendChild(button);
+      });
+      foodSuggestions.classList.remove("hidden");
+    }
+
+    async function updateSuggestions() {
+      const query = mealNameInput.value.trim();
+      if (query.length < 2) {
+        hideSuggestions();
+        return;
+      }
+      const token = ++suggestionsToken;
+      const results = await fetchFoodSuggestions(query);
+      if (token !== suggestionsToken) return;
+      activeSuggestions = results;
+      renderSuggestions();
+    }
+
+    mealNameInput.addEventListener("input", () => {
+      if (suggestionsTimer) window.clearTimeout(suggestionsTimer);
+      suggestionsTimer = window.setTimeout(updateSuggestions, 300);
+    });
+    mealNameInput.addEventListener("focus", () => {
+      if (mealNameInput.value.trim().length >= 2) updateSuggestions();
+    });
+    mealNameInput.addEventListener("blur", () => {
+      window.setTimeout(() => hideSuggestions(), 120);
+    });
+
+    if (foodSuggestions) {
+      foodSuggestions.addEventListener("mousedown", (e) => {
+        const target = e.target;
+        if (!(target instanceof HTMLElement)) return;
+        const button = target.closest(".food-suggestion-item");
+        if (!button) return;
+        e.preventDefault();
+        const idx = Number(button.getAttribute("data-suggestion-index"));
+        const suggestion = activeSuggestions[idx];
+        if (!suggestion) return;
+        mealNameInput.value = suggestion.name;
+        if (suggestion.servingHintGrams && !Number.isNaN(Number(suggestion.servingHintGrams))) {
+          mealServingInput.value = String(suggestion.servingHintGrams);
+        }
+        if (suggestion.macros100g) {
+          const macros = scaleFoodMacros(suggestion.macros100g, Number(mealServingInput.value || 100));
+          mealCaloriesInput.value = macros.calories;
+          mealProteinInput.value = macros.protein;
+          mealCarbsInput.value = macros.carbs;
+          mealFatInput.value = macros.fat;
+          if (foodLookupStatus) {
+            foodLookupStatus.textContent = `Autofilled from ${suggestion.meta} (${suggestion.label}).`;
+          }
+        } else {
+          autofillFoodButton.click();
+        }
+        hideSuggestions();
+      });
+    }
+
     function render() {
       const day = readDay(dateInput.value || isoToday());
+      const recommendedTargets = calculateRecommendedTargets(profile);
+      if (!day.targetsManual) {
+        day.targets = recommendedTargets;
+        writeDay(dateInput.value || isoToday(), day);
+      }
       document.getElementById("targetCalories").value = day.targets.calories;
       document.getElementById("targetProtein").value = day.targets.protein;
       document.getElementById("targetCarbs").value = day.targets.carbs;
@@ -1065,6 +1290,7 @@
         carbs: roundTwo(Number(document.getElementById("targetCarbs").value || 0)),
         fat: roundTwo(Number(document.getElementById("targetFat").value || 0))
       };
+      day.targetsManual = true;
       writeDay(dateInput.value, day);
       render();
     });
