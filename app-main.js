@@ -875,6 +875,58 @@
     };
   }
 
+  function parseProductMacros(product) {
+    if (!product || !product.nutriments) return null;
+    const nutriments = product.nutriments;
+    const calories100g = Number(
+      nutriments["energy-kcal_100g"] ||
+      nutriments["energy-kcal_value"] ||
+      (nutriments.energy_100g ? nutriments.energy_100g / 4.184 : NaN)
+    );
+    const protein100g = Number(nutriments.proteins_100g);
+    const carbs100g = Number(nutriments.carbohydrates_100g);
+    const fat100g = Number(nutriments.fat_100g);
+
+    if (
+      Number.isNaN(calories100g) ||
+      Number.isNaN(protein100g) ||
+      Number.isNaN(carbs100g) ||
+      Number.isNaN(fat100g)
+    ) {
+      return null;
+    }
+
+    return {
+      calories: calories100g,
+      protein: protein100g,
+      carbs: carbs100g,
+      fat: fat100g
+    };
+  }
+
+  async function lookupOpenFoodFactsMacros(name, servingGrams) {
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(
+      name
+    )}&search_simple=1&action=process&json=1&page_size=10`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`OpenFoodFacts lookup failed (${response.status})`);
+    }
+    const data = await response.json();
+    const products = Array.isArray(data.products) ? data.products : [];
+
+    for (const product of products) {
+      const macros100g = parseProductMacros(product);
+      if (!macros100g) continue;
+      return {
+        source: `OpenFoodFacts (${product.product_name || "best match"})`,
+        macros: scaleFoodMacros(macros100g, servingGrams)
+      };
+    }
+
+    throw new Error("No nutrition data found for this food name");
+  }
+
   async function lookupUsdaFoodMacros(name, servingGrams) {
     const apiKey = getUsdaApiKey();
     const response = await fetch(
@@ -918,7 +970,11 @@
         macros: scaledMacros(curated, servingGrams)
       };
     }
-    return lookupUsdaFoodMacros(name, servingGrams);
+    try {
+      return await lookupUsdaFoodMacros(name, servingGrams);
+    } catch (_err) {
+      return lookupOpenFoodFactsMacros(name, servingGrams);
+    }
   }
 
   function initTrackerPage() {
@@ -933,8 +989,14 @@
     const autofillFoodButton = document.getElementById("autofillFood");
     const usdaApiKeyInput = document.getElementById("usdaApiKey");
     const saveUsdaApiKeyButton = document.getElementById("saveUsdaApiKey");
+    const mealNameInput = document.getElementById("mealName");
+    const mealServingInput = document.getElementById("mealServingGrams");
+    const mealCaloriesInput = document.getElementById("mealCalories");
+    const mealProteinInput = document.getElementById("mealProtein");
+    const mealCarbsInput = document.getElementById("mealCarbs");
+    const mealFatInput = document.getElementById("mealFat");
 
-    if (!dateInput || !targetForm || !mealForm || !mealList || !macroSummary || !options || !quickAddFoods || !autofillFoodButton) {
+    if (!dateInput || !targetForm || !mealForm || !mealList || !macroSummary || !options || !quickAddFoods || !autofillFoodButton || !mealNameInput || !mealServingInput || !mealCaloriesInput || !mealProteinInput || !mealCarbsInput || !mealFatInput) {
       return;
     }
 
@@ -1007,36 +1069,66 @@
       render();
     });
 
-    autofillFoodButton.addEventListener("click", async () => {
-      const mealName = document.getElementById("mealName");
-      const serving = Number(document.getElementById("mealServingGrams").value || 100);
-      const name = mealName.value.trim();
+    let activeLookupToken = 0;
+    let lastAutofillKey = "";
+    let autoFillTimer = null;
+
+    async function performAutofill(isAutoTriggered) {
+      const serving = Number(mealServingInput.value || 100);
+      const name = mealNameInput.value.trim();
       if (!name || serving <= 0) {
-        if (foodLookupStatus) foodLookupStatus.textContent = "Enter a food name and serving size.";
+        if (!isAutoTriggered && foodLookupStatus) {
+          foodLookupStatus.textContent = "Enter a food name and serving size.";
+        }
         return;
       }
 
+      const queryKey = `${name.toLowerCase()}|${serving}`;
+      if (isAutoTriggered && queryKey === lastAutofillKey) return;
+      lastAutofillKey = queryKey;
+
+      const lookupToken = ++activeLookupToken;
       autofillFoodButton.disabled = true;
       if (foodLookupStatus) {
         foodLookupStatus.textContent = "Looking up food macros...";
       }
       try {
         const result = await lookupFoodMacros(name, serving);
-        document.getElementById("mealCalories").value = result.macros.calories;
-        document.getElementById("mealProtein").value = result.macros.protein;
-        document.getElementById("mealCarbs").value = result.macros.carbs;
-        document.getElementById("mealFat").value = result.macros.fat;
+        if (lookupToken !== activeLookupToken) return;
+        mealCaloriesInput.value = result.macros.calories;
+        mealProteinInput.value = result.macros.protein;
+        mealCarbsInput.value = result.macros.carbs;
+        mealFatInput.value = result.macros.fat;
         if (foodLookupStatus) {
           foodLookupStatus.textContent = `Autofilled from ${result.source}.`;
         }
       } catch (err) {
+        if (lookupToken !== activeLookupToken) return;
         if (foodLookupStatus) {
-          foodLookupStatus.textContent = err instanceof Error ? err.message : "Food lookup failed.";
+          foodLookupStatus.textContent = err instanceof Error
+            ? `${err.message}. Try a more specific name (e.g., "ribeye steak cooked").`
+            : "Food lookup failed. Try a more specific food name.";
         }
       } finally {
-        autofillFoodButton.disabled = false;
+        if (lookupToken === activeLookupToken) {
+          autofillFoodButton.disabled = false;
+        }
       }
+    }
+
+    autofillFoodButton.addEventListener("click", () => {
+      performAutofill(false);
     });
+
+    function scheduleAutoFill() {
+      if (autoFillTimer) window.clearTimeout(autoFillTimer);
+      autoFillTimer = window.setTimeout(() => {
+        performAutofill(true);
+      }, 500);
+    }
+
+    mealNameInput.addEventListener("input", scheduleAutoFill);
+    mealServingInput.addEventListener("input", scheduleAutoFill);
 
     quickAddFoods.addEventListener("click", (e) => {
       const target = e.target;
