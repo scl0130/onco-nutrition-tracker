@@ -3,6 +3,8 @@
   const PROFILE_EXISTS_KEY_BASE = "profileExists";
   const WEIGHT_HISTORY_KEY_BASE = "oncoNutritionWeightHistory:v1";
   const DAY_LOG_KEY_BASE = "oncoNutritionLog";
+  const USDA_API_KEY_STORAGE_KEY = "oncoNutritionUsdaApiKey:v1";
+  const USDA_DEFAULT_API_KEY = "DEMO_KEY";
   const SUPABASE_URL_STORAGE_KEY = "oncoNutritionSupabaseUrl:v1";
   const SUPABASE_ANON_KEY_STORAGE_KEY = "oncoNutritionSupabaseAnonKey:v1";
 
@@ -53,6 +55,30 @@
 
   function storageKeyForDate(date) {
     return `${scopedKey(DAY_LOG_KEY_BASE)}:${date}`;
+  }
+
+  function getUsdaApiKey() {
+    const saved = localStorage.getItem(scopedKey(USDA_API_KEY_STORAGE_KEY));
+    return saved && saved.trim() ? saved.trim() : USDA_DEFAULT_API_KEY;
+  }
+
+  function setUsdaKeyStatus(message, isError) {
+    const node = document.getElementById("usdaApiKeyStatus");
+    if (!node) return;
+    node.textContent = message;
+    node.style.color = isError ? "var(--danger)" : "var(--muted)";
+  }
+
+  function syncUsdaApiKeyInput() {
+    const input = document.getElementById("usdaApiKey");
+    if (!input) return;
+    const saved = localStorage.getItem(scopedKey(USDA_API_KEY_STORAGE_KEY)) || "";
+    input.value = saved;
+    if (saved) {
+      setUsdaKeyStatus("USDA API key saved.");
+    } else {
+      setUsdaKeyStatus("No USDA key saved. Using DEMO_KEY (lower limits).");
+    }
   }
 
   function resolvedSupabaseConfig() {
@@ -795,6 +821,106 @@
     }) || null;
   }
 
+  function scaleFoodMacros(macros100g, servingGrams) {
+    const factor = servingGrams / 100;
+    return {
+      calories: roundOne(macros100g.calories * factor),
+      protein: roundTwo(macros100g.protein * factor),
+      carbs: roundTwo(macros100g.carbs * factor),
+      fat: roundTwo(macros100g.fat * factor)
+    };
+  }
+
+  function usdaNutrientValue(food, nutrientId, nutrientNumber, nutrientNames, unitName) {
+    const nutrients = Array.isArray(food.foodNutrients) ? food.foodNutrients : [];
+    const match = nutrients.find((n) => {
+      const id = Number(n.nutrientId || NaN);
+      const num = String(n.nutrientNumber || n.number || "");
+      const name = String(n.nutrientName || n.name || "").toLowerCase();
+      const unit = String(n.unitName || "").toUpperCase();
+      if (!Number.isNaN(id) && id === nutrientId) return true;
+      if (num === nutrientNumber) {
+        if (!unitName) return true;
+        return unit === unitName.toUpperCase();
+      }
+      return nutrientNames.some((candidate) => name.includes(candidate));
+    });
+    if (!match) return NaN;
+    return Number(match.value || match.amount || NaN);
+  }
+
+  function parseUsdaFoodMacros(food) {
+    if (!food) return null;
+
+    let calories100g = usdaNutrientValue(food, 1008, "1008", ["energy"], "KCAL");
+    const protein100g = usdaNutrientValue(food, 1003, "1003", ["protein"]);
+    const carbs100g = usdaNutrientValue(food, 1005, "1005", ["carbohydrate"]);
+    const fat100g = usdaNutrientValue(food, 1004, "1004", ["total lipid", "fat"]);
+
+    const safeProtein = Number.isNaN(protein100g) ? 0 : protein100g;
+    const safeCarbs = Number.isNaN(carbs100g) ? 0 : carbs100g;
+    const safeFat = Number.isNaN(fat100g) ? 0 : fat100g;
+
+    if (Number.isNaN(calories100g)) {
+      calories100g = safeProtein * 4 + safeCarbs * 4 + safeFat * 9;
+    }
+
+    if (Number.isNaN(calories100g)) return null;
+
+    return {
+      calories: calories100g,
+      protein: safeProtein,
+      carbs: safeCarbs,
+      fat: safeFat
+    };
+  }
+
+  async function lookupUsdaFoodMacros(name, servingGrams) {
+    const apiKey = getUsdaApiKey();
+    const response = await fetch(
+      `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${encodeURIComponent(apiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: name,
+          pageSize: 25,
+          dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)", "Branded"],
+          requireAllWords: false
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`USDA search failed (${response.status})`);
+    }
+
+    const data = await response.json();
+    const foods = Array.isArray(data.foods) ? data.foods : [];
+
+    for (const food of foods) {
+      const macros100g = parseUsdaFoodMacros(food);
+      if (!macros100g) continue;
+      return {
+        source: `USDA FoodData Central (${food.description || "best match"})`,
+        macros: scaleFoodMacros(macros100g, servingGrams)
+      };
+    }
+
+    throw new Error("USDA did not return complete macro data for this query");
+  }
+
+  async function lookupFoodMacros(name, servingGrams) {
+    const curated = findCuratedFoodByName(name);
+    if (curated) {
+      return {
+        source: `Curated library (${curated.name})`,
+        macros: scaledMacros(curated, servingGrams)
+      };
+    }
+    return lookupUsdaFoodMacros(name, servingGrams);
+  }
+
   function initTrackerPage() {
     const dateInput = document.getElementById("trackerDate");
     const targetForm = document.getElementById("targetForm");
@@ -805,12 +931,28 @@
     const options = document.getElementById("oncologyFoodOptions");
     const quickAddFoods = document.getElementById("quickAddFoods");
     const autofillFoodButton = document.getElementById("autofillFood");
+    const usdaApiKeyInput = document.getElementById("usdaApiKey");
+    const saveUsdaApiKeyButton = document.getElementById("saveUsdaApiKey");
 
     if (!dateInput || !targetForm || !mealForm || !mealList || !macroSummary || !options || !quickAddFoods || !autofillFoodButton) {
       return;
     }
 
     dateInput.value = isoToday();
+    syncUsdaApiKeyInput();
+
+    if (saveUsdaApiKeyButton && usdaApiKeyInput) {
+      saveUsdaApiKeyButton.addEventListener("click", () => {
+        const value = usdaApiKeyInput.value.trim();
+        if (!value) {
+          localStorage.removeItem(scopedKey(USDA_API_KEY_STORAGE_KEY));
+          setUsdaKeyStatus("USDA key cleared. Using DEMO_KEY (lower limits).");
+          return;
+        }
+        localStorage.setItem(scopedKey(USDA_API_KEY_STORAGE_KEY), value);
+        setUsdaKeyStatus("USDA API key saved.");
+      });
+    }
 
     CURATED_FOODS.forEach((f) => {
       const option = document.createElement("option");
@@ -865,21 +1007,34 @@
       render();
     });
 
-    autofillFoodButton.addEventListener("click", () => {
+    autofillFoodButton.addEventListener("click", async () => {
       const mealName = document.getElementById("mealName");
       const serving = Number(document.getElementById("mealServingGrams").value || 100);
-      const found = findCuratedFoodByName(mealName.value);
-      if (!found) {
-        if (foodLookupStatus) foodLookupStatus.textContent = "Food not in curated library.";
+      const name = mealName.value.trim();
+      if (!name || serving <= 0) {
+        if (foodLookupStatus) foodLookupStatus.textContent = "Enter a food name and serving size.";
         return;
       }
-      const macros = scaledMacros(found, serving);
-      document.getElementById("mealCalories").value = macros.calories;
-      document.getElementById("mealProtein").value = macros.protein;
-      document.getElementById("mealCarbs").value = macros.carbs;
-      document.getElementById("mealFat").value = macros.fat;
+
+      autofillFoodButton.disabled = true;
       if (foodLookupStatus) {
-        foodLookupStatus.textContent = `Autofilled from curated food library (${found.name}).`;
+        foodLookupStatus.textContent = "Looking up food macros...";
+      }
+      try {
+        const result = await lookupFoodMacros(name, serving);
+        document.getElementById("mealCalories").value = result.macros.calories;
+        document.getElementById("mealProtein").value = result.macros.protein;
+        document.getElementById("mealCarbs").value = result.macros.carbs;
+        document.getElementById("mealFat").value = result.macros.fat;
+        if (foodLookupStatus) {
+          foodLookupStatus.textContent = `Autofilled from ${result.source}.`;
+        }
+      } catch (err) {
+        if (foodLookupStatus) {
+          foodLookupStatus.textContent = err instanceof Error ? err.message : "Food lookup failed.";
+        }
+      } finally {
+        autofillFoodButton.disabled = false;
       }
     });
 

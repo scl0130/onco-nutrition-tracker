@@ -30,6 +30,14 @@
       </section>
 
       <section class="card panel" id="track-food">
+        <div class="grid form-grid">
+          <label>USDA API key (optional)
+            <input type="password" id="usdaApiKey" placeholder="Leave empty to use DEMO_KEY" />
+          </label>
+          <button type="button" id="saveUsdaApiKey" class="secondary">Save USDA key</button>
+        </div>
+        <p id="usdaApiKeyStatus" class="muted"></p>
+
         <form id="targetForm" class="grid form-grid">
           <label>Calories target <input type="number" min="0" id="targetCalories" required /></label>
           <label>Protein target (g) <input type="number" min="0" step="0.01" id="targetProtein" required /></label>
@@ -43,7 +51,7 @@
           <label>Meal/Food <input type="text" id="mealName" list="oncologyFoodOptions" required /></label>
           <datalist id="oncologyFoodOptions"></datalist>
           <label>Serving size (g) <input type="number" min="1" id="mealServingGrams" value="100" required /></label>
-          <button type="button" id="autofillFood" class="secondary">Autofill from library</button>
+          <button type="button" id="autofillFood" class="secondary">Autofill (curated + USDA)</button>
           <label>Calories <input type="number" min="0" id="mealCalories" required /></label>
           <label>Protein (g) <input type="number" min="0" step="0.01" id="mealProtein" required /></label>
           <label>Carbs (g) <input type="number" min="0" step="0.01" id="mealCarbs" required /></label>
