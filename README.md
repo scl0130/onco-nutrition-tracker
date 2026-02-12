@@ -22,9 +22,16 @@ If refresh shows "site cannot be reached", the local server process is not runni
 
 ## Secure Auth Setup (Supabase)
 1. Create a Supabase project and enable Email/Password auth.
-2. Copy `app-config.example.js` to `app-config.js`.
-3. Fill in your Supabase URL and anon key in `app-config.js`.
-4. Keep `app-config.js` local (it is gitignored).
+2. In Supabase `Authentication -> URL Configuration`:
+   - Set `Site URL` to your deployed app URL.
+   - Add redirect URLs for local and production (for example `http://localhost:8081/tracker.html` and your GitHub Pages URL).
+3. In the tracker UI, open `Secure auth configuration (Supabase)` and enter:
+   - Supabase URL (`https://<project-ref>.supabase.co`)
+   - Supabase anon key
+4. Optional local-file config:
+   - Copy `app-config.example.js` to `app-config.js`
+   - Fill in URL + anon key
+   - Keep `app-config.js` local (it is gitignored)
 
 Without this setup, the tracker still works fully in guest mode.
 

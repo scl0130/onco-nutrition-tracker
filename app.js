@@ -89,6 +89,12 @@
   const authUserBadge = document.getElementById("authUserBadge");
   const logoutButton = document.getElementById("logoutButton");
   const continueGuestButton = document.getElementById("continueGuestButton");
+  const authPanelToggleButton = document.getElementById("authPanelToggleButton");
+  const supabaseUrlInput = document.getElementById("supabaseUrlInput");
+  const supabaseAnonKeyInput = document.getElementById("supabaseAnonKeyInput");
+  const saveSupabaseConfigButton = document.getElementById("saveSupabaseConfig");
+  const clearSupabaseConfigButton = document.getElementById("clearSupabaseConfig");
+  const supabaseConfigStatus = document.getElementById("supabaseConfigStatus");
 
   const targetCalories = document.getElementById("targetCalories");
   const targetProtein = document.getElementById("targetProtein");
@@ -123,6 +129,8 @@
   const USDA_DEFAULT_API_KEY = "DEMO_KEY";
   const CHECKLIST_STORAGE_PREFIX = "oncoNutritionChecklist:v1:";
   const CARE_NOTE_STORAGE_PREFIX = "oncoNutritionCareNote:v1:";
+  const SUPABASE_URL_STORAGE_KEY = "oncoNutritionSupabaseUrl:v1";
+  const SUPABASE_ANON_KEY_STORAGE_KEY = "oncoNutritionSupabaseAnonKey:v1";
 
   const CURATED_ONCOLOGY_SAFE_FOODS = [
     {
@@ -290,16 +298,43 @@
   }
 
   function isSupabaseConfigured() {
-    const cfg = window.APP_CONFIG || {};
+    const cfg = resolvedSupabaseConfig();
     return Boolean(cfg.supabaseUrl && cfg.supabaseAnonKey);
+  }
+
+  function resolvedSupabaseConfig() {
+    const runtimeUrl = localStorage.getItem(SUPABASE_URL_STORAGE_KEY) || "";
+    const runtimeKey = localStorage.getItem(SUPABASE_ANON_KEY_STORAGE_KEY) || "";
+    if (runtimeUrl && runtimeKey) {
+      return { supabaseUrl: runtimeUrl, supabaseAnonKey: runtimeKey };
+    }
+    const cfg = window.APP_CONFIG || {};
+    return {
+      supabaseUrl: cfg.supabaseUrl || "",
+      supabaseAnonKey: cfg.supabaseAnonKey || ""
+    };
+  }
+
+  function setSupabaseConfigStatus(message, isError = false) {
+    if (!supabaseConfigStatus) return;
+    supabaseConfigStatus.textContent = message;
+    supabaseConfigStatus.style.color = isError ? "var(--danger)" : "var(--muted)";
+  }
+
+  function syncSupabaseConfigInputs() {
+    if (!supabaseUrlInput || !supabaseAnonKeyInput) return;
+    const cfg = resolvedSupabaseConfig();
+    supabaseUrlInput.value = cfg.supabaseUrl || "";
+    supabaseAnonKeyInput.value = cfg.supabaseAnonKey || "";
   }
 
   async function initSupabaseAuth() {
     if (!window.supabase || !window.supabase.createClient || !isSupabaseConfigured()) {
+      supabaseClient = null;
       return false;
     }
 
-    const cfg = window.APP_CONFIG;
+    const cfg = resolvedSupabaseConfig();
     supabaseClient = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
     const { data } = await supabaseClient.auth.getSession();
     setCurrentUserFromAuthUser(data.session ? data.session.user : null);
@@ -508,7 +543,9 @@
   function renderAuthVisibility() {
     const loggedIn = Boolean(currentUser && currentUser.email);
     const secureAuthReady = Boolean(supabaseClient);
-    if (authGate) authGate.classList.remove("hidden");
+    if (authGate && !authGate.classList.contains("auth-hidden-by-user")) {
+      authGate.classList.remove("hidden");
+    }
     if (mainContent) mainContent.classList.remove("hidden");
     if (authUserBadge) {
       authUserBadge.classList.remove("hidden");
@@ -587,6 +624,33 @@
     showToast("Logged out.", "info");
   }
 
+  async function saveSupabaseConfig() {
+    if (!supabaseUrlInput || !supabaseAnonKeyInput) return;
+    const url = supabaseUrlInput.value.trim();
+    const anonKey = supabaseAnonKeyInput.value.trim();
+    if (!url || !anonKey) {
+      setSupabaseConfigStatus("Enter both Supabase URL and anon key.", true);
+      return;
+    }
+    localStorage.setItem(SUPABASE_URL_STORAGE_KEY, url);
+    localStorage.setItem(SUPABASE_ANON_KEY_STORAGE_KEY, anonKey);
+    await initSupabaseAuth();
+    renderAuthVisibility();
+    setSupabaseConfigStatus("Secure auth config saved.");
+    showToast("Secure auth configured.", "success");
+  }
+
+  function clearSupabaseConfig() {
+    localStorage.removeItem(SUPABASE_URL_STORAGE_KEY);
+    localStorage.removeItem(SUPABASE_ANON_KEY_STORAGE_KEY);
+    supabaseClient = null;
+    clearCurrentUser();
+    renderAuthVisibility();
+    syncSupabaseConfigInputs();
+    setSupabaseConfigStatus("Secure auth config cleared.");
+    showToast("Secure auth config cleared.", "info");
+  }
+
   function initAuthHandlers() {
     if (signupForm) signupForm.addEventListener("submit", handleSignupSubmit);
     if (loginForm) loginForm.addEventListener("submit", handleLoginSubmit);
@@ -594,9 +658,27 @@
     if (continueGuestButton) {
       continueGuestButton.addEventListener("click", () => {
         clearCurrentUser();
+        if (authGate) {
+          authGate.classList.add("hidden");
+          authGate.classList.add("auth-hidden-by-user");
+        }
         bootstrapForCurrentUser();
         setAuthStatus("Continuing in guest mode.");
+        showToast("Guest mode enabled.", "info");
       });
+    }
+    if (authPanelToggleButton) {
+      authPanelToggleButton.addEventListener("click", () => {
+        if (!authGate) return;
+        authGate.classList.toggle("hidden");
+        authGate.classList.remove("auth-hidden-by-user");
+      });
+    }
+    if (saveSupabaseConfigButton) {
+      saveSupabaseConfigButton.addEventListener("click", saveSupabaseConfig);
+    }
+    if (clearSupabaseConfigButton) {
+      clearSupabaseConfigButton.addEventListener("click", clearSupabaseConfig);
     }
   }
 
@@ -2202,6 +2284,8 @@
     initCancerOptions();
     populateCuratedFoodOptions();
     renderFoodLibrary();
+    syncSupabaseConfigInputs();
+    setSupabaseConfigStatus(isSupabaseConfigured() ? "Secure auth config detected." : "No secure auth config yet.");
     initAuthHandlers();
     hookEvents();
     initSectionNavigation();

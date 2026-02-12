@@ -23,6 +23,7 @@
         <a class="nav-link" href="./about.html">About</a>
       </nav>
       <div class="auth-inline">
+        <button type="button" id="authPanelToggleButton" class="secondary">Account</button>
         <span id="authUserBadge" class="muted">Guest mode</span>
         <button type="button" id="logoutButton" class="secondary hidden">Log out</button>
       </div>
@@ -40,6 +41,18 @@
           </div>
         </div>
         <p id="authModeStatus" class="muted">Guest mode active. Data stays on this browser.</p>
+        <details class="auth-config">
+          <summary>Secure auth configuration (Supabase)</summary>
+          <div class="grid">
+            <label>Supabase URL <input type="url" id="supabaseUrlInput" placeholder="https://your-project.supabase.co" /></label>
+            <label>Supabase anon key <input type="password" id="supabaseAnonKeyInput" placeholder="sb_publishable_..." /></label>
+            <div class="inline-actions">
+              <button type="button" id="saveSupabaseConfig" class="secondary">Save auth config</button>
+              <button type="button" id="clearSupabaseConfig" class="secondary">Clear config</button>
+            </div>
+            <p id="supabaseConfigStatus" class="muted" aria-live="polite"></p>
+          </div>
+        </details>
         <div class="auth-grid" id="authFormsWrap">
           <form id="signupForm" class="grid">
             <h3>Create account</h3>

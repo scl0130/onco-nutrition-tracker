@@ -166,6 +166,11 @@ body {
   gap: var(--space-5);
 }
 
+.app-shell .auth-page {
+  grid-template-columns: none;
+  gap: 0;
+}
+
 .app-shell .page > section {
   grid-column: 1 / -1;
 }
@@ -234,11 +239,15 @@ summary {
 
 .auth-card {
   max-width: 1240px;
+  width: 100%;
   margin: 0 auto;
 }
 
 .auth-page {
-  padding-bottom: var(--space-4);
+  display: block;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-6) var(--space-3);
 }
 
 .auth-head {
@@ -262,6 +271,10 @@ summary {
   border-radius: var(--radius-md);
   background: var(--surface-soft);
   padding: var(--space-4);
+}
+
+.auth-config {
+  margin-top: var(--space-2);
 }
 
 .panel-soft,
@@ -999,6 +1012,10 @@ a {
     justify-content: flex-start;
   }
 
+  .auth-page {
+    padding: var(--space-4);
+  }
+
   .landing-grid,
   .landing-metrics {
     grid-template-columns: 1fr;
@@ -1024,6 +1041,10 @@ a {
   .landing-page {
     padding: var(--space-4);
     gap: var(--space-4);
+  }
+
+  .auth-page {
+    padding: var(--space-4);
   }
 
   .site-nav {
