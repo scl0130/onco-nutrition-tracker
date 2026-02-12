@@ -183,38 +183,6 @@
         </div>
       </section>
 
-      <section class="card panel" id="recommendations">
-        <h2>Treatment Recommendations</h2>
-        <section class="card soft-card panel panel-soft">
-          <h3>Patient Context</h3>
-          <div class="grid">
-            <label>
-              Cancer type
-              <select id="cancerSelect"></select>
-            </label>
-
-              <fieldset>
-                <legend>Chemotherapy status</legend>
-                <label><input type="radio" name="chemoStatus" value="on" checked /> On chemo</label>
-                <label><input type="radio" name="chemoStatus" value="off" /> Off chemo</label>
-                <label><input type="radio" name="chemoStatus" value="normal" /> Normal / no active treatment</label>
-              </fieldset>
-
-            <fieldset id="dialysisField" class="hidden">
-              <legend>Dialysis status (Kidney only)</legend>
-              <label><input type="radio" name="dialysisStatus" value="off" checked /> Off dialysis</label>
-              <label><input type="radio" name="dialysisStatus" value="on" /> On dialysis</label>
-            </fieldset>
-          </div>
-        </section>
-
-        <section class="card soft-card panel panel-soft">
-          <h3>Recommendation Details</h3>
-          <div id="recommendationMeta" class="meta"></div>
-          <div id="recommendationList" class="recommendations"></div>
-        </section>
-      </section>
-
       <section class="card panel" id="track-food">
         <h2>Track Food</h2>
         <p class="muted">Log food, monitor macro progress, and build daily records.</p>
@@ -327,6 +295,38 @@
           <button type="submit">Save profile and personalize macros</button>
         </form>
         <div id="profileSummary" class="summary compact"></div>
+      </section>
+
+      <section class="card panel" id="recommendations">
+        <h2>Treatment Recommendations</h2>
+        <section class="card soft-card panel panel-soft">
+          <h3>Patient Context</h3>
+          <div class="grid">
+            <label>
+              Cancer type
+              <select id="cancerSelect"></select>
+            </label>
+
+            <fieldset>
+              <legend>Chemotherapy status</legend>
+              <label><input type="radio" name="chemoStatus" value="on" checked /> On chemo</label>
+              <label><input type="radio" name="chemoStatus" value="off" /> Off chemo</label>
+              <label><input type="radio" name="chemoStatus" value="normal" /> Normal / no active treatment</label>
+            </fieldset>
+
+            <fieldset id="dialysisField" class="hidden">
+              <legend>Dialysis status (Kidney only)</legend>
+              <label><input type="radio" name="dialysisStatus" value="off" checked /> Off dialysis</label>
+              <label><input type="radio" name="dialysisStatus" value="on" /> On dialysis</label>
+            </fieldset>
+          </div>
+        </section>
+
+        <section class="card soft-card panel panel-soft">
+          <h3>Recommendation Details</h3>
+          <div id="recommendationMeta" class="meta"></div>
+          <div id="recommendationList" class="recommendations"></div>
+        </section>
       </section>
 
       <section class="card panel">

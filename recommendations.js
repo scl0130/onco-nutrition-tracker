@@ -57,6 +57,84 @@ const APP_SOURCES = {
     url: "https://pubmed.ncbi.nlm.nih.gov/34144781/",
     backupUrl: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8233663/",
     type: "Peer-reviewed"
+  },
+  breastDietSurvival: {
+    title: "Pre- to Postdiagnosis Dietary Pattern Trajectories and Survival in Breast Cancer",
+    org: "JNCI Cancer Spectrum",
+    url: "https://pubmed.ncbi.nlm.nih.gov/33928215/",
+    type: "Peer-reviewed"
+  },
+  prostateDietReview2024: {
+    title: "Nutritional Interventions in Prostate Cancer: A Systematic Review (2024)",
+    org: "Nutrients",
+    url: "https://pubmed.ncbi.nlm.nih.gov/40941553/",
+    type: "Peer-reviewed"
+  },
+  prostateMediterranean: {
+    title: "Mediterranean Dietary Pattern and Prostate Cancer Risk/Mortality: Systematic Review and Meta-analysis",
+    org: "Cancer Epidemiology, Biomarkers & Prevention",
+    url: "https://pubmed.ncbi.nlm.nih.gov/33467042/",
+    type: "Peer-reviewed"
+  },
+  lungCachexiaMeta: {
+    title: "Prognostic Significance of Cachexia in Lung Cancer: Systematic Review and Meta-analysis",
+    org: "Lung Cancer",
+    url: "https://pubmed.ncbi.nlm.nih.gov/38788267/",
+    type: "Peer-reviewed"
+  },
+  colorectalPostDxDiet: {
+    title: "Postdiagnosis Dietary Patterns and Colorectal Cancer Outcomes: Systematic Review",
+    org: "Nutrients",
+    url: "https://pubmed.ncbi.nlm.nih.gov/40317134/",
+    type: "Peer-reviewed"
+  },
+  colorectalPlantPattern: {
+    title: "Plant-based Dietary Patterns and Colorectal Cancer Survival: UK Biobank Cohort",
+    org: "American Journal of Clinical Nutrition",
+    url: "https://pubmed.ncbi.nlm.nih.gov/39212617/",
+    type: "Peer-reviewed"
+  },
+  melanomaFiberImmunotherapy: {
+    title: "Gut Microbiome Modulates Response to Anti-PD-1 Immunotherapy in Melanoma",
+    org: "Science",
+    url: "https://pubmed.ncbi.nlm.nih.gov/34941392/",
+    type: "Peer-reviewed"
+  },
+  bladderImmunonutrition: {
+    title: "Impact of Perioperative Immunonutrition on Radical Cystectomy Outcomes",
+    org: "Indian Journal of Urology",
+    url: "https://pubmed.ncbi.nlm.nih.gov/26654125/",
+    type: "Peer-reviewed"
+  },
+  kidneyNutritionStatus: {
+    title: "Nutritional Status and Long-term Prognosis in Renal Cell Carcinoma",
+    org: "Nutrients",
+    url: "https://pubmed.ncbi.nlm.nih.gov/35715363/",
+    type: "Peer-reviewed"
+  },
+  hemeNeutropenicDiet: {
+    title: "Neutropenic Diet in Hematopoietic Stem Cell Transplantation: Meta-analysis",
+    org: "Journal of Human Nutrition and Dietetics",
+    url: "https://pubmed.ncbi.nlm.nih.gov/30628912/",
+    type: "Peer-reviewed"
+  },
+  uterineDietPrognosis: {
+    title: "Diet Quality and Prognosis in Endometrial Cancer Survivors",
+    org: "American Journal of Clinical Nutrition",
+    url: "https://pubmed.ncbi.nlm.nih.gov/36477189/",
+    type: "Peer-reviewed"
+  },
+  pancreaticNutritionProtocol: {
+    title: "Nutrition in Pancreatic Cancer: Evidence and Expert Consensus (NUTRI-PAK)",
+    org: "Clinical Nutrition",
+    url: "https://pubmed.ncbi.nlm.nih.gov/34363594/",
+    type: "Peer-reviewed"
+  },
+  pancreaticCachexiaMeta: {
+    title: "Cachexia and Survival in Pancreatic Cancer: Systematic Review and Meta-analysis",
+    org: "Clinical Nutrition ESPEN",
+    url: "https://pubmed.ncbi.nlm.nih.gov/39397738/",
+    type: "Peer-reviewed"
   }
 };
 
@@ -148,124 +226,154 @@ const BASE_RECOMMENDATIONS = {
 const CANCER_OVERRIDES = {
   "Breast Cancer": [
     {
-      title: "Breast cancer focus",
+      title: "Breast cancer nutrition priorities",
       bullets: [
-        "Prioritize a high-fiber, plant-forward eating pattern with adequate lean protein.",
-        "Limit alcohol and ultra-processed foods where possible.",
-        "Track weight changes and discuss body-composition goals during and after treatment."
+        "Use a high-quality, mostly plant-forward dietary pattern with consistent lean-protein distribution across meals.",
+        "Alcohol reduction is high priority in survivorship planning; discuss individualized targets with your oncology team.",
+        "Track body weight and unintentional loss each week during active treatment to trigger early nutrition support."
       ],
-      sourceIds: ["acsGuideline", "nciNutrition", "espenGuideline"]
-    }
-  ],
-  "Prostate Cancer": [
+      sourceIds: ["breastDietSurvival", "acsGuideline", "espenGuideline", "nciNutrition"]
+    },
     {
-      title: "Prostate cancer focus",
+      title: "Breast treatment-phase strategy",
       bullets: [
-        "Use a heart-healthy pattern emphasizing vegetables, legumes, whole grains, and fish when tolerated.",
-        "Monitor weight and metabolic health, especially if hormonal therapy affects body composition.",
-        "Maintain consistent protein intake to support muscle mass."
-      ],
-      sourceIds: ["acsGuideline", "nciNutrition", "espenGuideline"]
-    }
-  ],
-  "Lung Cancer (including bronchus)": [
-    {
-      title: "Lung cancer focus",
-      bullets: [
-        "Risk of early weight loss can be high; prioritize calorie density and frequent protein feedings.",
-        "If breathlessness or fatigue limits intake, use smaller frequent meals and oral nutrition supplements.",
-        "Escalate nutrition support early when intake drops."
+        "During periods of poor intake, prioritize calorie-dense snacks and oral nutrition supplements before severe deficit develops.",
+        "When nausea or taste changes occur, switch to small frequent meals with lower odor foods and hydration spacing.",
+        "Escalate to dietitian-led intervention if protein or energy intake stays below goal for several days."
       ],
       sourceIds: ["espenGuideline", "esmoCachexia", "nciNutrition"]
     }
   ],
+  "Prostate Cancer": [
+    {
+      title: "Prostate cancer dietary pattern",
+      bullets: [
+        "Favor Mediterranean-style patterns emphasizing vegetables, legumes, whole grains, fish, and unsaturated fats.",
+        "Minimize ultra-processed foods and monitor cardiometabolic markers, especially during androgen-deprivation therapy.",
+        "Preserve lean mass with consistent daily protein distribution and resistance activity as tolerated."
+      ],
+      sourceIds: ["prostateDietReview2024", "prostateMediterranean", "acsGuideline", "espenGuideline"]
+    }
+  ],
+  "Lung Cancer (including bronchus)": [
+    {
+      title: "Lung cancer high-risk nutrition profile",
+      bullets: [
+        "Cachexia risk is substantial; monitor weekly weight trend and appetite decline and intervene early.",
+        "Use calorie-dense, low-volume meals when dyspnea or fatigue reduces oral intake capacity.",
+        "Escalate rapidly to oral supplements or specialized nutrition support if intake remains sub-target."
+      ],
+      sourceIds: ["lungCachexiaMeta", "espenGuideline", "esmoCachexia", "nciNutrition"]
+    }
+  ],
   "Colorectal Cancer (colon and rectum)": [
     {
-      title: "GI-specific attention",
+      title: "Colorectal cancer GI-focused plan",
       bullets: [
-        "Digestive cancers may raise risk of nutrition problems during treatment.",
-        "Track bowel changes and hydration, and involve GI/oncology dietitian early."
+        "Use symptom-adapted fiber and texture based on bowel pattern (constipation vs diarrhea) and treatment stage.",
+        "Pair hydration tracking with stool pattern tracking to guide day-to-day diet adjustments.",
+        "Post-diagnosis high-quality dietary patterns are associated with better outcomes in cohort data."
       ],
-      sourceIds: ["nciNutrition", "espenGuideline"]
+      sourceIds: ["colorectalPostDxDiet", "colorectalPlantPattern", "nciNutrition", "espenGuideline"]
+    },
+    {
+      title: "Peri-treatment strategy",
+      bullets: [
+        "Prioritize protein adequacy to support surgical and treatment recovery.",
+        "Use smaller meals and lower residue options during severe GI symptom flares.",
+        "Coordinate early with GI/oncology dietitian if intake is unstable for more than a few days."
+      ],
+      sourceIds: ["espenGuideline", "nciNutrition"]
     }
   ],
   "Melanoma of the Skin": [
     {
-      title: "Melanoma focus",
+      title: "Melanoma and immunotherapy support",
       bullets: [
-        "Maintain a balanced anti-inflammatory dietary pattern with adequate protein and hydration.",
-        "During systemic therapy, monitor appetite and GI side effects and adjust meal texture/frequency.",
-        "Use food safety precautions if immunosuppression risk is present."
+        "Maintain high diet quality and hydration; adjust meal frequency and texture during treatment-related GI symptoms.",
+        "Emerging evidence links microbiome-supportive patterns (including adequate dietary fiber) with checkpoint therapy response.",
+        "Avoid restrictive elimination plans unless medically indicated; prioritize intake consistency and symptom control."
       ],
-      sourceIds: ["nciNutrition", "espenGuideline", "nciFoodSafety"]
+      sourceIds: ["melanomaFiberImmunotherapy", "nciNutrition", "espenGuideline", "nciFoodSafety"]
     }
   ],
   "Bladder Cancer": [
     {
-      title: "Bladder cancer focus",
+      title: "Bladder cancer perioperative and recovery focus",
       bullets: [
-        "Prioritize hydration strategy individualized by clinical team guidance.",
-        "If urinary symptoms affect tolerance, use smaller meals and avoid foods that worsen irritation for you.",
-        "Maintain protein intake during active treatment and recovery."
+        "If surgery is planned, prehabilitation-style nutrition (protein + energy optimization) can support recovery trajectories.",
+        "Use hydration plans individualized to urinary symptoms and urology guidance rather than fixed universal targets.",
+        "Track tolerability triggers (irritative foods, timing) and maintain protein adequacy through treatment."
       ],
-      sourceIds: ["nciNutrition", "espenGuideline"]
+      sourceIds: ["bladderImmunonutrition", "nciNutrition", "espenGuideline"]
     }
   ],
   "Pancreatic Cancer": [
     {
-      title: "Early nutrition support",
+      title: "Pancreatic cancer aggressive nutrition intervention",
       bullets: [
-        "Pancreatic cancer is commonly associated with nutrition-impact symptoms.",
-        "Prioritize early symptom-driven nutrition planning and frequent reassessment."
+        "High risk for cachexia requires early, proactive calorie/protein intervention rather than wait-and-see monitoring.",
+        "Assess fat malabsorption and pancreatic enzyme replacement needs with care team when stool/fat intolerance is present.",
+        "Reassess intake and weight frequently during chemotherapy or perioperative windows."
       ],
-      sourceIds: ["nciNutrition", "espenGuideline"]
+      sourceIds: ["pancreaticNutritionProtocol", "pancreaticCachexiaMeta", "espenGuideline", "nciNutrition"]
+    },
+    {
+      title: "Symptom-prioritized meal framework",
+      bullets: [
+        "Use small frequent meals with higher calorie density when early satiety or nausea is active.",
+        "Prefer easier-to-digest proteins and liquid nutrition options during severe symptom days.",
+        "Escalate to oncology dietitian rapidly when unintentional loss persists."
+      ],
+      sourceIds: ["nciNutrition", "espenGuideline", "esmoCachexia"]
     }
   ],
   "Kidney and Renal Pelvis Cancer": [
     {
-      title: "Renal comorbidity check",
+      title: "Kidney cancer + renal function stratification",
       bullets: [
-        "If kidney function is reduced, coordinate oncology and renal nutrition plans.",
-        "Avoid unreviewed supplements unless approved by your oncology/renal team."
+        "Nutritional status and body-composition markers correlate with prognosis; monitor trends intentionally.",
+        "If CKD or dialysis is present, coordinate oncology targets with renal-specific sodium/potassium/phosphorus guidance.",
+        "Avoid unreviewed supplements and unsupervised electrolyte changes."
       ],
-      sourceIds: ["nciNutrition", "niddkDialysis"]
+      sourceIds: ["kidneyNutritionStatus", "niddkDialysis", "espenGuideline", "nciNutrition"]
     }
   ],
   "Non-Hodgkin Lymphoma": [
     {
-      title: "Lymphoma focus",
+      title: "Non-Hodgkin lymphoma infection-risk and intake strategy",
       bullets: [
-        "Use strict food safety practices during periods of neutropenia risk.",
-        "Prioritize energy/protein repletion if appetite declines or treatment toxicities limit intake.",
-        "Track symptoms and hydration closely around treatment cycles."
+        "During intensive therapy and neutropenia risk windows, prioritize strict food safety and rapid symptom escalation.",
+        "Use proactive calorie/protein support to prevent cumulative intake deficits between cycles.",
+        "Coordinate with hematology nutrition support when mucositis, nausea, or prolonged low intake persists."
       ],
-      sourceIds: ["nciFoodSafety", "cdcNeutropenia", "espenGuideline"]
+      sourceIds: ["hemeNeutropenicDiet", "nciFoodSafety", "cdcNeutropenia", "espenGuideline"]
     }
   ],
   "Uterine Corpus Cancer": [
     {
-      title: "Uterine cancer focus",
+      title: "Uterine corpus cancer survivorship-metabolic focus",
       bullets: [
-        "Use a balanced dietary pattern supporting healthy weight and lean mass retention.",
-        "If treatment affects appetite/GI tolerance, use symptom-directed meal planning.",
-        "Maintain consistent protein intake while monitoring long-term metabolic health."
+        "Emphasize diet quality and weight-stability strategy because metabolic risk is common in survivorship.",
+        "Use adequate protein and progressive activity to preserve lean mass during/after treatment.",
+        "Apply symptom-directed meal adaptation when therapy causes appetite or GI disruption."
       ],
-      sourceIds: ["acsGuideline", "nciNutrition", "espenGuideline"]
+      sourceIds: ["uterineDietPrognosis", "acsGuideline", "nciNutrition", "espenGuideline"]
     }
   ]
 };
 
 const CANCER_DAILY_TIPS = {
-  "Breast Cancer": ["Use fiber-rich meals plus protein at each meal; limit alcohol exposure."],
-  "Prostate Cancer": ["Lean proteins + plant-forward meals can support cardiometabolic health."],
-  "Lung Cancer (including bronchus)": ["Aim for energy-dense, smaller frequent meals when appetite is low."],
-  "Colorectal Cancer (colon and rectum)": ["Track bowel pattern and hydration; choose GI-tolerable textures."],
-  "Melanoma of the Skin": ["Monitor treatment-related appetite changes and maintain hydration consistency."],
-  "Bladder Cancer": ["Use a hydration routine and identify foods that worsen urinary irritation for you."],
-  "Kidney and Renal Pelvis Cancer": ["Coordinate sodium/protein/fluid decisions with renal and oncology teams."],
-  "Non-Hodgkin Lymphoma": ["Prioritize food safety and report prolonged poor intake quickly."],
-  "Uterine Corpus Cancer": ["Balance protein and overall intake to support recovery and healthy weight."],
-  "Pancreatic Cancer": ["Use early calorie/protein support if weight or appetite is falling."]
+  "Breast Cancer": ["Aim for 25-30 g protein per meal and reduce alcohol exposure days to improve consistency."],
+  "Prostate Cancer": ["Use a Mediterranean-style plate pattern and monitor waist/weight trend during therapy."],
+  "Lung Cancer (including bronchus)": ["Prioritize calorie-dense small meals every 2-3 hours on low-appetite days."],
+  "Colorectal Cancer (colon and rectum)": ["Match meal texture/fiber to bowel symptoms and record stool + hydration daily."],
+  "Melanoma of the Skin": ["Keep fiber and hydration steady during immunotherapy unless team advises restriction."],
+  "Bladder Cancer": ["Use a timed hydration schedule and track foods that worsen urinary irritation."],
+  "Kidney and Renal Pelvis Cancer": ["Use renal-safe sodium/electrolyte limits from your renal-oncology team plan."],
+  "Non-Hodgkin Lymphoma": ["On neutropenia-risk days, enforce strict food safety and avoid high-risk foods."],
+  "Uterine Corpus Cancer": ["Keep protein consistent and track long-term weight trajectory, not just daily scale noise."],
+  "Pancreatic Cancer": ["Screen early for malabsorption and consider enzyme discussion if fatty stools/weight loss occur."]
 };
 
 const KIDNEY_DIALYSIS = {
