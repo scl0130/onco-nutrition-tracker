@@ -1,13 +1,44 @@
-# OncoNutrition Tracker (MVP)
+# OncoNutrition Tracker
 
-Website MVP for macro/diet tracking across 10 common cancers with:
-- `on chemo` and `off chemo` recommendation modes
-- Kidney cancer `on dialysis` and `off dialysis` mode
-- Per-recommendation evidence citations
-- Daily macro tracking with local browser storage
+Static multi-page web app for oncology nutrition tracking with profile-aware guidance, daily logging, and evidence-linked recommendations.
 
-## Run
-Open `index.html` directly in a browser, or run:
+## Current App Structure
+- `index.html`: Dashboard (primary landing page)
+- `tracker.html`: Food logging and daily target management
+- `profile.html`: Profile + treatment setup + symptom capture + optional account/auth panel
+- `app-main.js`: Main app logic for all three pages
+- `recommendations.js`: Cancer/treatment recommendation engine and source metadata
+- `styles.css`: Shared styles and responsive layout
+
+## Current Features
+- 3-page architecture with persistent top navigation (Dashboard, Track Food, Profile)
+- Guest mode by default (no login required)
+- Optional secure auth with Supabase Email/Password (configured from Profile page)
+- User-scoped local storage (guest vs logged-in account data kept separate)
+- Profile capture:
+  - age, sex, height, weight, activity level
+  - cancer type, treatment type, treatment mode
+  - kidney dialysis status (kidney cancer context)
+  - appetite and recent unintentional weight change
+  - expanded symptoms with "No particular symptoms" option
+- Dashboard:
+  - nutrition status, risk, progress rings, evidence-backed recommendations
+  - profile summary card
+  - daily weight logging form + weight trend chart
+- Tracker:
+  - date-specific macro targets + meal logging
+  - auto-populate macros from food name + grams
+  - live food suggestions dropdown while typing
+  - quick-add curated foods
+- Food lookup pipeline:
+  1. Curated in-app food list
+  2. USDA FoodData Central search
+  3. OpenFoodFacts fallback
+- Profile-based macro target calculation (sex/age/height/weight/activity/treatment-aware)
+  - If user manually saves targets for a day, that day is treated as manual override
+
+## Local Run
+Open files directly in browser, or run a static server:
 
 ```bash
 cd /Users/chunglee/Desktop/Project
@@ -15,66 +46,28 @@ python3 -m http.server 8081
 ```
 
 Then open `http://localhost:8081`.
-Landing page is `index.html`; the interactive tracker is `tracker.html`.
-`tracker.html` supports guest mode by default and optional secure account auth via Supabase.
-
-If refresh shows "site cannot be reached", the local server process is not running. Start it again with the command above.
 
 ## Secure Auth Setup (Supabase)
+Auth is optional. App works in guest mode without this.
+
 1. Create a Supabase project and enable Email/Password auth.
-2. In Supabase `Authentication -> URL Configuration`:
-   - Set `Site URL` to your deployed app URL.
-   - Add redirect URLs for local and production (for example `http://localhost:8081/tracker.html` and your GitHub Pages URL).
-3. In the tracker UI, open `Secure auth configuration (Supabase)` and enter:
-   - Supabase URL (`https://<project-ref>.supabase.co`)
+2. Configure allowed URLs in Supabase Authentication settings.
+3. On `profile.html`, open "Secure auth configuration (Supabase)" and enter:
+   - Supabase URL
    - Supabase anon key
-4. Optional local-file config:
-   - Copy `app-config.example.js` to `app-config.js`
-   - Fill in URL + anon key
-   - Keep `app-config.js` local (it is gitignored)
+4. Save config, then use Sign up / Log in forms.
 
-Without this setup, the tracker still works fully in guest mode.
+## USDA API Key (Optional)
+- On `tracker.html`, use "USDA API key (optional)".
+- If blank, app uses USDA `DEMO_KEY` (rate-limited).
 
-## Publish (public URL)
-For a stable URL, deploy this static folder to Netlify:
-1. Go to https://app.netlify.com/drop
-2. Drag and drop the `/Users/chunglee/Desktop/Project` folder.
-3. Netlify returns a public URL (you can later set a custom domain in Site settings).
+## Persistence / Storage Notes
+- Data is saved in browser `localStorage`.
+- Keys are scoped per user id when logged in; guest data is scoped under `guest`.
+- Clearing browser storage removes local data.
 
-## Publish with GitHub Pages
-This project includes a workflow at `.github/workflows/deploy-pages.yml` that deploys on every push to `main`.
+## Deploy
+GitHub Pages workflow is included at `.github/workflows/deploy-pages.yml` and deploys on push to `main`.
 
-1. Create a new empty GitHub repo (for example: `onco-nutrition-tracker`).
-2. Run:
-
-```bash
-cd /Users/chunglee/Desktop/Project
-git init
-git add .
-git commit -m "Initial site with GitHub Pages deploy"
-git branch -M main
-git remote add origin https://github.com/<your-username>/onco-nutrition-tracker.git
-git push -u origin main
-```
-
-3. In the GitHub repo:
-   - Go to `Settings` -> `Pages`
-   - Under Build and deployment, set `Source` to `GitHub Actions`
-4. Open the `Actions` tab and confirm the deploy workflow succeeds.
-5. Your site URL will be:
-   - `https://<your-username>.github.io/onco-nutrition-tracker/`
-
-## Medical disclaimer
-This app is educational and not medical advice. Patients should consult their oncologist, renal team, and registered dietitian for individualized recommendations.
-
-## Data model
-- Recommendation/source data: `recommendations.js`
-- UI behavior and tracking logic: `app.js`
-
-## Source policy
-Current recommendations cite government and/or peer-reviewed references. When adding new rules, attach at least one source per rule in `sourceIds`.
-
-## Food data sources
-- Curated oncology-safe foods (in-app library)
-- USDA FoodData Central search (primary broad lookup; uses `DEMO_KEY` by default)
-- OpenFoodFacts fallback for additional packaged/global matches
+## Medical Disclaimer
+This app is educational and not medical advice. Patients should consult their oncologist and registered dietitian for individualized recommendations.
