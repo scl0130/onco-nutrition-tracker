@@ -22,9 +22,35 @@
         <a class="nav-link" href="#profile">Profile</a>
         <a class="nav-link" href="./about.html">About</a>
       </nav>
+      <div class="auth-inline">
+        <span id="authUserBadge" class="muted hidden"></span>
+        <button type="button" id="logoutButton" class="secondary hidden">Log out</button>
+      </div>
     </header>
 
-    <main class="page" id="mainContent">
+    <section class="page" id="authGate">
+      <article class="panel auth-card">
+        <h1>Sign up or log in</h1>
+        <p class="muted">Create a patient account to keep nutrition logs separated by user on this device.</p>
+        <div class="auth-grid">
+          <form id="signupForm" class="grid">
+            <h3>Create account</h3>
+            <label>Email <input type="email" id="signupEmail" required /></label>
+            <label>Password <input type="password" id="signupPassword" minlength="6" required /></label>
+            <button type="submit">Sign up</button>
+          </form>
+          <form id="loginForm" class="grid">
+            <h3>Log in</h3>
+            <label>Email <input type="email" id="loginEmail" required /></label>
+            <label>Password <input type="password" id="loginPassword" required /></label>
+            <button type="submit" class="secondary">Log in</button>
+          </form>
+        </div>
+        <p id="authStatus" class="muted" aria-live="polite"></p>
+      </article>
+    </section>
+
+    <main class="page hidden" id="mainContent">
       <section class="hero panel panel-hero">
         <div class="hero-grid">
           <div>
@@ -146,11 +172,12 @@
               <select id="cancerSelect"></select>
             </label>
 
-            <fieldset>
-              <legend>Chemotherapy status</legend>
-              <label><input type="radio" name="chemoStatus" value="on" checked /> On chemo</label>
-              <label><input type="radio" name="chemoStatus" value="off" /> Off chemo</label>
-            </fieldset>
+              <fieldset>
+                <legend>Chemotherapy status</legend>
+                <label><input type="radio" name="chemoStatus" value="on" checked /> On chemo</label>
+                <label><input type="radio" name="chemoStatus" value="off" /> Off chemo</label>
+                <label><input type="radio" name="chemoStatus" value="normal" /> Normal / no active treatment</label>
+              </fieldset>
 
             <fieldset id="dialysisField" class="hidden">
               <legend>Dialysis status (Kidney only)</legend>
@@ -273,6 +300,7 @@
               <option value="radiation">Radiation</option>
               <option value="recovery">Recovery</option>
               <option value="remission">Remission</option>
+              <option value="normal">Normal / no active treatment</option>
             </select>
           </label>
           <button type="submit">Save profile and personalize macros</button>

@@ -16,6 +16,7 @@ python3 -m http.server 8081
 
 Then open `http://localhost:8081`.
 Landing page is `index.html`; the interactive tracker is `tracker.html`.
+`tracker.html` now includes local sign-up/log-in so each patient can keep separate browser-local data.
 
 If refresh shows "site cannot be reached", the local server process is not running. Start it again with the command above.
 

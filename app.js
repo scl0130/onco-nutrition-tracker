@@ -75,6 +75,17 @@
   const saveCareTeamNoteButton = document.getElementById("saveCareTeamNote");
   const careTeamNoteStatus = document.getElementById("careTeamNoteStatus");
   const toastRegion = document.getElementById("toastRegion");
+  const authGate = document.getElementById("authGate");
+  const mainContent = document.getElementById("mainContent");
+  const signupForm = document.getElementById("signupForm");
+  const loginForm = document.getElementById("loginForm");
+  const signupEmail = document.getElementById("signupEmail");
+  const signupPassword = document.getElementById("signupPassword");
+  const loginEmail = document.getElementById("loginEmail");
+  const loginPassword = document.getElementById("loginPassword");
+  const authStatus = document.getElementById("authStatus");
+  const authUserBadge = document.getElementById("authUserBadge");
+  const logoutButton = document.getElementById("logoutButton");
 
   const targetCalories = document.getElementById("targetCalories");
   const targetProtein = document.getElementById("targetProtein");
@@ -109,6 +120,8 @@
   const USDA_DEFAULT_API_KEY = "DEMO_KEY";
   const CHECKLIST_STORAGE_PREFIX = "oncoNutritionChecklist:v1:";
   const CARE_NOTE_STORAGE_PREFIX = "oncoNutritionCareNote:v1:";
+  const AUTH_USERS_STORAGE_KEY = "oncoNutritionUsers:v1";
+  const AUTH_SESSION_STORAGE_KEY = "oncoNutritionSession:v1";
 
   const CURATED_ONCOLOGY_SAFE_FOODS = [
     {
@@ -240,22 +253,65 @@
   ];
 
   const storageKeyForDate = (dateStr) => {
-    return `oncoNutritionLog:${dateStr}`;
+    return `${scopedKey("oncoNutritionLog")}:${dateStr}`;
   };
 
   const checklistKeyForDate = (dateStr) => {
-    return `${CHECKLIST_STORAGE_PREFIX}${dateStr}`;
+    return `${scopedKey(CHECKLIST_STORAGE_PREFIX)}${dateStr}`;
   };
 
   const careNoteKeyForDate = (dateStr) => {
-    return `${CARE_NOTE_STORAGE_PREFIX}${dateStr}`;
+    return `${scopedKey(CARE_NOTE_STORAGE_PREFIX)}${dateStr}`;
   };
+
+  function scopedKey(baseKey) {
+    const userId = currentUser && currentUser.email ? currentUser.email : "guest";
+    return `${baseKey}:${userId}`;
+  }
+
+  function normalizeEmail(email) {
+    return String(email || "").trim().toLowerCase();
+  }
+
+  function readAuthUsers() {
+    const raw = localStorage.getItem(AUTH_USERS_STORAGE_KEY);
+    if (!raw) return {};
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (_err) {
+      return {};
+    }
+  }
+
+  function saveAuthUsers(users) {
+    localStorage.setItem(AUTH_USERS_STORAGE_KEY, JSON.stringify(users));
+  }
+
+  function setCurrentUser(email) {
+    currentUser = { email: normalizeEmail(email) };
+    localStorage.setItem(AUTH_SESSION_STORAGE_KEY, currentUser.email);
+  }
+
+  function loadSessionUser() {
+    const saved = normalizeEmail(localStorage.getItem(AUTH_SESSION_STORAGE_KEY));
+    if (!saved) return;
+    const users = readAuthUsers();
+    if (!users[saved]) return;
+    currentUser = { email: saved };
+  }
+
+  function clearCurrentUser() {
+    currentUser = null;
+    localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
+  }
 
   const isoToday = () => new Date().toISOString().slice(0, 10);
 
   let isFoodLookupRunning = false;
   let selectedDate = isoToday();
   let weightHistory = [];
+  let currentUser = null;
   let checklistState = {
     hydration: false,
     proteinSnack: false,
@@ -320,7 +376,13 @@
 
     const metaParts = [
       `Cancer: ${cancer}`,
-      `Chemo: ${chemo === "on" ? "On chemotherapy" : "Off chemotherapy"}`
+      `Chemo: ${
+        chemo === "on"
+          ? "On chemotherapy"
+          : chemo === "off"
+            ? "Off chemotherapy"
+            : "Normal / no active treatment"
+      }`
     ];
 
     if (cancer === "Kidney and Renal Pelvis Cancer") {
@@ -413,8 +475,95 @@
     }, 2600);
   }
 
+  function setAuthStatus(message, isError = false) {
+    if (!authStatus) return;
+    authStatus.textContent = message;
+    authStatus.style.color = isError ? "var(--danger)" : "var(--muted)";
+  }
+
+  function resetWorkingState() {
+    state = {
+      profile: null,
+      targets: { calories: 2000, protein: 90, carbs: 230, fat: 70 },
+      meals: [],
+      symptoms: []
+    };
+    weightHistory = [];
+    checklistState = {
+      hydration: false,
+      proteinSnack: false,
+      symptomsReviewed: false,
+      movement: false
+    };
+  }
+
+  function renderAuthVisibility() {
+    const loggedIn = Boolean(currentUser && currentUser.email);
+    if (authGate) authGate.classList.toggle("hidden", loggedIn);
+    if (mainContent) mainContent.classList.toggle("hidden", !loggedIn);
+    if (authUserBadge) {
+      authUserBadge.classList.toggle("hidden", !loggedIn);
+      authUserBadge.textContent = loggedIn ? currentUser.email : "";
+    }
+    if (logoutButton) {
+      logoutButton.classList.toggle("hidden", !loggedIn);
+    }
+  }
+
+  function handleSignupSubmit(e) {
+    e.preventDefault();
+    const email = normalizeEmail(signupEmail.value);
+    const password = String(signupPassword.value || "");
+    if (!email || password.length < 6) {
+      setAuthStatus("Use a valid email and password (6+ chars).", true);
+      return;
+    }
+    const users = readAuthUsers();
+    if (users[email]) {
+      setAuthStatus("Account already exists. Please log in instead.", true);
+      return;
+    }
+    users[email] = { password };
+    saveAuthUsers(users);
+    setCurrentUser(email);
+    setAuthStatus("Account created. Loading your tracker...");
+    showToast("Account created.", "success");
+    bootstrapForCurrentUser();
+  }
+
+  function handleLoginSubmit(e) {
+    e.preventDefault();
+    const email = normalizeEmail(loginEmail.value);
+    const password = String(loginPassword.value || "");
+    const users = readAuthUsers();
+    if (!users[email] || users[email].password !== password) {
+      setAuthStatus("Login failed. Check email and password.", true);
+      return;
+    }
+    setCurrentUser(email);
+    setAuthStatus("Login successful.");
+    showToast("Logged in.", "success");
+    bootstrapForCurrentUser();
+  }
+
+  function handleLogout() {
+    clearCurrentUser();
+    resetWorkingState();
+    renderAuthVisibility();
+    setAuthStatus("Logged out.");
+    if (signupForm) signupForm.reset();
+    if (loginForm) loginForm.reset();
+    showToast("Logged out.", "info");
+  }
+
+  function initAuthHandlers() {
+    if (signupForm) signupForm.addEventListener("submit", handleSignupSubmit);
+    if (loginForm) loginForm.addEventListener("submit", handleLoginSubmit);
+    if (logoutButton) logoutButton.addEventListener("click", handleLogout);
+  }
+
   function loadProfile() {
-    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    const raw = localStorage.getItem(scopedKey(PROFILE_STORAGE_KEY));
     if (!raw) return;
 
     try {
@@ -433,11 +582,11 @@
 
   function saveProfile() {
     if (!state.profile) return;
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(state.profile));
+    localStorage.setItem(scopedKey(PROFILE_STORAGE_KEY), JSON.stringify(state.profile));
   }
 
   function loadWeightHistory() {
-    const raw = localStorage.getItem(WEIGHT_HISTORY_STORAGE_KEY);
+    const raw = localStorage.getItem(scopedKey(WEIGHT_HISTORY_STORAGE_KEY));
     if (!raw) {
       weightHistory = [];
       return;
@@ -451,16 +600,16 @@
   }
 
   function saveWeightHistory() {
-    localStorage.setItem(WEIGHT_HISTORY_STORAGE_KEY, JSON.stringify(weightHistory));
+    localStorage.setItem(scopedKey(WEIGHT_HISTORY_STORAGE_KEY), JSON.stringify(weightHistory));
   }
 
   function getUsdaApiKey() {
-    const saved = localStorage.getItem(USDA_API_KEY_STORAGE_KEY);
+    const saved = localStorage.getItem(scopedKey(USDA_API_KEY_STORAGE_KEY));
     return saved && saved.trim() ? saved.trim() : USDA_DEFAULT_API_KEY;
   }
 
   function loadUsdaApiKeyInput() {
-    const saved = localStorage.getItem(USDA_API_KEY_STORAGE_KEY) || "";
+    const saved = localStorage.getItem(scopedKey(USDA_API_KEY_STORAGE_KEY)) || "";
     usdaApiKeyInput.value = saved;
     if (saved) {
       usdaApiKeyStatus.textContent = "USDA API key saved.";
@@ -841,6 +990,7 @@
   function dailyRecommendations(sum) {
     const recs = [];
     const profile = state.profile;
+    const cancer = cancerSelect.value;
     if (!profile) return recs;
 
     if (profile.treatmentMode === "chemotherapy" || selectedTreatmentState() === "on") {
@@ -857,6 +1007,9 @@
     }
     if (state.targets.protein > 0 && sum.protein < state.targets.protein * 0.8) {
       recs.push("To close protein gap, add Greek yogurt, eggs, tofu, lentils, or a protein shake.");
+    }
+    if (CANCER_DAILY_TIPS[cancer]) {
+      recs.push(...CANCER_DAILY_TIPS[cancer]);
     }
     if (recs.length === 0) {
       recs.push("Maintain your current plan and continue monitoring intake, weight, and symptoms.");
@@ -976,11 +1129,12 @@
   }
 
   function renderHistory() {
+    const prefix = `${scopedKey("oncoNutritionLog")}:`;
     const allDates = [];
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i);
-      if (!key || !key.startsWith("oncoNutritionLog:")) continue;
-      allDates.push(key.replace("oncoNutritionLog:", ""));
+      if (!key || !key.startsWith(prefix)) continue;
+      allDates.push(key.replace(prefix, ""));
     }
     allDates.sort((a, b) => (a < b ? 1 : -1));
     const recent = allDates.slice(0, 14);
@@ -1041,11 +1195,12 @@
   }
 
   function listLogDates(limit) {
+    const prefix = `${scopedKey("oncoNutritionLog")}:`;
     const dates = [];
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i);
-      if (!key || !key.startsWith("oncoNutritionLog:")) continue;
-      dates.push(key.replace("oncoNutritionLog:", ""));
+      if (!key || !key.startsWith(prefix)) continue;
+      dates.push(key.replace(prefix, ""));
     }
     dates.sort();
     if (limit) return dates.slice(-limit);
@@ -1787,13 +1942,13 @@
     saveUsdaApiKeyButton.addEventListener("click", () => {
       const key = usdaApiKeyInput.value.trim();
       if (!key) {
-        localStorage.removeItem(USDA_API_KEY_STORAGE_KEY);
+        localStorage.removeItem(scopedKey(USDA_API_KEY_STORAGE_KEY));
         usdaApiKeyStatus.textContent =
           "USDA key cleared. Falling back to DEMO_KEY.";
         showToast("USDA key cleared.", "info");
         return;
       }
-      localStorage.setItem(USDA_API_KEY_STORAGE_KEY, key);
+      localStorage.setItem(scopedKey(USDA_API_KEY_STORAGE_KEY), key);
       usdaApiKeyStatus.textContent = "USDA key saved.";
       showToast("USDA key saved.", "success");
     });
@@ -1973,10 +2128,14 @@
     }
   }
 
-  function init() {
-    initCancerOptions();
-    populateCuratedFoodOptions();
-    renderFoodLibrary();
+  function bootstrapForCurrentUser() {
+    if (!currentUser) {
+      renderAuthVisibility();
+      return;
+    }
+
+    renderAuthVisibility();
+    resetWorkingState();
     loadUsdaApiKeyInput();
     loadWeightHistory();
     loadProfile();
@@ -2000,12 +2159,21 @@
     syncSymptomForm();
     renderChecklist();
     renderProfileSummary();
-    hookEvents();
-    initSectionNavigation();
     renderRecommendations();
     renderMeals();
     renderWeightChart();
     renderHistory();
+  }
+
+  function init() {
+    initCancerOptions();
+    populateCuratedFoodOptions();
+    renderFoodLibrary();
+    initAuthHandlers();
+    hookEvents();
+    initSectionNavigation();
+    loadSessionUser();
+    bootstrapForCurrentUser();
   }
 
   init();
