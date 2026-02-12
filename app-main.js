@@ -516,10 +516,6 @@
   }
 
   function requireProfileGate() {
-    if (page !== "profile" && !profileExists()) {
-      window.location.replace("./profile.html");
-      return false;
-    }
     return true;
   }
 
@@ -540,6 +536,8 @@
 
     const cancerSelect = document.getElementById("cancerSelect");
     const dialysisField = document.getElementById("dialysisField");
+    const symptomInputs = Array.from(document.querySelectorAll('#symptomForm input[type="checkbox"]'));
+    const noneSymptomInput = symptomInputs.find((input) => input.value === "none");
     populateCancerOptions(cancerSelect);
 
     cancerSelect.addEventListener("change", () => {
@@ -564,7 +562,7 @@
         dialysisField.classList.toggle("hidden", cancerSelect.value !== "Kidney and Renal Pelvis Cancer");
       }
       const sym = new Set(saved.symptoms || []);
-      document.querySelectorAll('#symptomForm input[type="checkbox"]').forEach((input) => {
+      symptomInputs.forEach((input) => {
         input.checked = sym.has(input.value);
       });
       if (saved.dialysisStatus) {
@@ -573,31 +571,27 @@
       }
     }
 
-    const weightHistory = loadWeightHistory();
-    renderWeightChart(weightHistory, "weightTrendSummary", "weightChart");
-
-    const weightDate = document.getElementById("weightDate");
-    const weightValue = document.getElementById("weightValueKg");
-    if (weightDate) weightDate.value = isoToday();
-
-    const saveWeightEntry = document.getElementById("saveWeightEntry");
-    if (saveWeightEntry) {
-      saveWeightEntry.addEventListener("click", () => {
-        const date = weightDate ? weightDate.value : "";
-        const weightKg = roundOne(Number(weightValue ? weightValue.value : 0));
-        if (!date || weightKg <= 0) return;
-        const existing = weightHistory.find((x) => x.date === date);
-        if (existing) existing.weightKg = weightKg;
-        else weightHistory.push({ date, weightKg });
-        saveWeightHistory(weightHistory);
-        renderWeightChart(weightHistory, "weightTrendSummary", "weightChart");
-      });
+    function enforceSymptomSelectionBehavior(changedInput) {
+      if (!noneSymptomInput) return;
+      if (changedInput === noneSymptomInput && noneSymptomInput.checked) {
+        symptomInputs.forEach((input) => {
+          if (input !== noneSymptomInput) input.checked = false;
+        });
+        return;
+      }
+      if (changedInput !== noneSymptomInput && changedInput.checked) {
+        noneSymptomInput.checked = false;
+      }
     }
+
+    symptomInputs.forEach((input) => {
+      input.addEventListener("change", () => enforceSymptomSelectionBehavior(input));
+    });
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const symptoms = [];
-      document.querySelectorAll('#symptomForm input[type="checkbox"]').forEach((input) => {
+      symptomInputs.forEach((input) => {
         if (input.checked) symptoms.push(input.value);
       });
       const selectedDialysis = document.querySelector('input[name="dialysisStatus"]:checked');
@@ -652,6 +646,26 @@
     return "Normal";
   }
 
+  function symptomLabel(value) {
+    const labels = {
+      none: "No particular symptoms",
+      nausea: "Nausea",
+      vomiting: "Vomiting",
+      fatigue: "Fatigue",
+      appetite_loss: "Appetite loss",
+      taste_changes: "Taste changes",
+      mouth_sores: "Mouth sores",
+      dry_mouth: "Dry mouth",
+      difficulty_swallowing: "Difficulty swallowing",
+      constipation: "Constipation",
+      diarrhea: "Diarrhea",
+      bloating: "Bloating",
+      early_satiety: "Early satiety",
+      pain: "Pain affecting eating"
+    };
+    return labels[value] || value;
+  }
+
   function weightLossLabel(value) {
     if (value === "mild") return "Up to 5%";
     if (value === "moderate") return "5-10%";
@@ -660,12 +674,25 @@
   }
 
   function initDashboardPage() {
-    const profile = getProfile();
-    if (!profile) return;
-
+    const profile = getProfile() || {
+      treatmentType: "Not set",
+      treatmentMode: "normal",
+      weight: "-",
+      weightLoss: "none",
+      appetite: "normal",
+      symptoms: ["none"],
+      cancerType: TOP_CANCERS[0],
+      dialysisStatus: "off"
+    };
+    const hasProfile = profileExists();
     const dateInput = document.getElementById("dashboardDate");
     if (!dateInput) return;
     dateInput.value = isoToday();
+
+    const weightDateInput = document.getElementById("dashboardWeightDate");
+    const weightKgInput = document.getElementById("dashboardWeightKg");
+    const saveWeightButton = document.getElementById("dashboardSaveWeightEntry");
+    if (weightDateInput) weightDateInput.value = isoToday();
 
     const render = () => {
       const day = readDay(dateInput.value || isoToday());
@@ -692,12 +719,16 @@
         malnutritionRiskNode.innerHTML = `<p><strong>${risk}</strong></p>`;
       }
       if (profileSummaryNode) {
+        const symptoms = (profile.symptoms || []).filter((value) => value !== "none");
+        const symptomText = symptoms.length ? symptoms.map(symptomLabel).join(", ") : "No particular symptoms";
+        const weightText = typeof profile.weight === "number" ? `${profile.weight} kg` : "Not set";
         profileSummaryNode.innerHTML = `
           <p>Treatment: <strong>${profile.treatmentType} (${profile.treatmentMode})</strong></p>
-          <p>Weight: <strong>${profile.weight} kg</strong></p>
+          <p>Weight: <strong>${weightText}</strong></p>
           <p>Weight change: <strong>${weightLossLabel(profile.weightLoss || "none")}</strong></p>
           <p>Appetite: <strong>${appetiteLabel(profile.appetite || "normal")}</strong></p>
-          <p>Symptoms: <strong>${(profile.symptoms || []).join(", ") || "none"}</strong></p>`;
+          <p>Symptoms: <strong>${symptomText}</strong></p>
+          ${hasProfile ? "" : "<p class=\"muted\">Profile not complete yet. You can still use dashboard and tracker.</p>"}`;
       }
 
       renderRings(sum, day.targets);
@@ -724,6 +755,20 @@
       renderRecommendations(profile);
       renderWeightChart(loadWeightHistory(), "weightTrendSummary", "weightChart");
     };
+
+    if (saveWeightButton) {
+      saveWeightButton.addEventListener("click", () => {
+        const date = weightDateInput ? weightDateInput.value : "";
+        const weightKg = roundOne(Number(weightKgInput ? weightKgInput.value : 0));
+        if (!date || weightKg <= 0) return;
+        const weightHistory = loadWeightHistory();
+        const existing = weightHistory.find((entry) => entry.date === date);
+        if (existing) existing.weightKg = weightKg;
+        else weightHistory.push({ date, weightKg });
+        saveWeightHistory(weightHistory);
+        render();
+      });
+    }
 
     dateInput.addEventListener("change", render);
     render();

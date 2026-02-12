@@ -1171,11 +1171,11 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
-#weightForm.form-grid {
+#dashboardWeightForm.form-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-#weightForm button {
+#dashboardWeightForm button {
   align-self: end;
 }
 
@@ -1190,7 +1190,7 @@ a {
 @media (max-width: 880px) {
   #account .grid,
   #profileSetupForm .form-grid,
-  #weightForm.form-grid {
+  #dashboardWeightForm.form-grid {
     grid-template-columns: 1fr;
   }
 }

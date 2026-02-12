@@ -63,6 +63,11 @@
 
       <section class="card panel">
         <h2>Weight Trend</h2>
+        <form id="dashboardWeightForm" class="grid form-grid">
+          <label>Date <input type="date" id="dashboardWeightDate" required /></label>
+          <label>Weight (kg) <input type="number" min="20" max="350" step="0.1" id="dashboardWeightKg" required /></label>
+          <button type="button" id="dashboardSaveWeightEntry" class="secondary">Save daily weight</button>
+        </form>
         <div id="weightTrendSummary" class="muted"></div>
         <svg id="weightChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Weight trend chart"></svg>
       </section>

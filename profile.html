@@ -140,22 +140,26 @@
         <section class="card panel">
           <h2>Section 3: Symptoms</h2>
           <div id="symptomForm" class="grid form-grid">
+            <label><input type="checkbox" value="none" /> No particular symptoms</label>
             <label><input type="checkbox" value="nausea" /> Nausea</label>
+            <label><input type="checkbox" value="vomiting" /> Vomiting</label>
             <label><input type="checkbox" value="fatigue" /> Fatigue</label>
             <label><input type="checkbox" value="appetite_loss" /> Appetite loss</label>
             <label><input type="checkbox" value="taste_changes" /> Taste changes</label>
+            <label><input type="checkbox" value="mouth_sores" /> Mouth sores</label>
+            <label><input type="checkbox" value="dry_mouth" /> Dry mouth</label>
+            <label><input type="checkbox" value="difficulty_swallowing" /> Difficulty swallowing</label>
+            <label><input type="checkbox" value="constipation" /> Constipation</label>
+            <label><input type="checkbox" value="diarrhea" /> Diarrhea</label>
+            <label><input type="checkbox" value="bloating" /> Bloating</label>
+            <label><input type="checkbox" value="early_satiety" /> Early satiety</label>
+            <label><input type="checkbox" value="pain" /> Pain affecting eating</label>
           </div>
         </section>
 
         <section class="card panel">
-          <h2>Weight History</h2>
-          <div id="weightForm" class="grid form-grid">
-            <label>Date <input type="date" id="weightDate" required /></label>
-            <label>Weight (kg) <input type="number" min="20" max="350" step="0.1" id="weightValueKg" required /></label>
-            <button type="button" id="saveWeightEntry" class="secondary">Add weight entry</button>
-          </div>
-          <div id="weightTrendSummary" class="muted"></div>
-          <svg id="weightChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Weight trend chart"></svg>
+          <h2>Weight Tracking</h2>
+          <p class="muted">Log daily weights from the Dashboard under the Weight Trend panel.</p>
         </section>
 
         <section class="card panel">
