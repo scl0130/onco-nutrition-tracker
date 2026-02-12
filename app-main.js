@@ -411,31 +411,63 @@
     return "GOOD";
   }
 
-  function getRecommendations(profile) {
-    const treatmentMode = profile.treatmentMode || "normal";
-    const cancer = profile.cancerType || TOP_CANCERS[0];
-    const recs = [...(BASE_RECOMMENDATIONS[treatmentMode] || BASE_RECOMMENDATIONS.normal)];
-    recs.push(...(CANCER_OVERRIDES[cancer] || []));
-    if (cancer === "Kidney and Renal Pelvis Cancer") {
-      recs.push(KIDNEY_DIALYSIS[profile.dialysisStatus || "off"]);
-    }
-    return recs;
+  function getRecommendations(profile, dayTotals, dayTargets) {
+    if (typeof getPolicyRecommendations !== "function") return [];
+    return getPolicyRecommendations(profile, dayTotals, dayTargets);
   }
 
-  function renderEvidenceSources(sourceIds) {
+  function ensureRecommendationErrorBanner() {
+    const recommendationsSection = document.getElementById("recommendations");
+    if (!recommendationsSection) return null;
+    let banner = document.getElementById("recommendationValidationError");
+    if (banner) return banner;
+    banner = document.createElement("div");
+    banner.id = "recommendationValidationError";
+    banner.className = "alert-card hidden";
+    recommendationsSection.prepend(banner);
+    return banner;
+  }
+
+  function sourceLinkHtml(sourceId) {
+    const source = (window.SOURCES_REGISTRY || {})[sourceId];
+    if (!source) return "";
+    return `<li><a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.title}</a> <span class="muted">(${source.evidenceType}, reviewed ${source.lastReviewed})</span></li>`;
+  }
+
+  function renderReferencesPanel() {
     const sourceList = document.getElementById("sourceList");
     if (!sourceList) return;
-    sourceList.innerHTML = "";
-    sourceIds.forEach((id) => {
-      const source = APP_SOURCES[id];
-      if (!source) return;
-      const li = document.createElement("li");
-      const backup = source.backupUrl
-        ? ` | <a href="${source.backupUrl}" target="_blank" rel="noopener noreferrer">backup</a>`
-        : "";
-      li.innerHTML = `<strong>${source.title}</strong> (${source.org}, ${source.type}) - <a href="${source.url}" target="_blank" rel="noopener noreferrer">link</a>${backup}`;
-      sourceList.appendChild(li);
+    const registry = window.SOURCES_REGISTRY || {};
+    const byEvidence = {
+      guidelinesGovernment: [],
+      cancerCenters: [],
+      peerReviewed: []
+    };
+
+    Object.keys(registry).forEach((id) => {
+      const source = registry[id];
+      if (source.evidenceType === "Guideline" || source.evidenceType === "Government") {
+        byEvidence.guidelinesGovernment.push(id);
+      } else if (source.evidenceType === "CancerCenter") {
+        byEvidence.cancerCenters.push(id);
+      } else if (source.evidenceType === "PeerReviewed") {
+        byEvidence.peerReviewed.push(id);
+      }
     });
+
+    sourceList.innerHTML = `
+      <section class="reference-group">
+        <h3>Guidelines and government</h3>
+        <ul class="sources">${byEvidence.guidelinesGovernment.map(sourceLinkHtml).join("")}</ul>
+      </section>
+      <section class="reference-group">
+        <h3>Major cancer centers</h3>
+        <ul class="sources">${byEvidence.cancerCenters.map(sourceLinkHtml).join("")}</ul>
+      </section>
+      <section class="reference-group">
+        <h3>Peer reviewed journals (PubMed)</h3>
+        <ul class="sources">${byEvidence.peerReviewed.map(sourceLinkHtml).join("")}</ul>
+      </section>`;
   }
 
   function recMeta(rec) {
@@ -448,10 +480,32 @@
   function renderRecommendations(profile) {
     const recList = document.getElementById("recommendationList");
     const recMetaNode = document.getElementById("recommendationMeta");
+    const errorBanner = ensureRecommendationErrorBanner();
     if (!recList) return;
-    const recs = getRecommendations(profile);
-    const sourceIds = new Set(["nciStats"]);
+    const day = readDay(document.getElementById("dashboardDate") ? (document.getElementById("dashboardDate").value || isoToday()) : isoToday());
+    const dayTotals = totals(day.meals);
+    const recs = getRecommendations(profile, dayTotals, day.targets);
     recList.innerHTML = "";
+    if (errorBanner) {
+      errorBanner.classList.add("hidden");
+      errorBanner.textContent = "";
+    }
+
+    const catalogValidation = typeof validateRecommendationCatalog === "function"
+      ? validateRecommendationCatalog(window.RECOMMENDATION_CATALOG || [])
+      : { valid: false, errors: ["Recommendation validator not loaded."] };
+    const sourceDomainValidation = typeof validateAllSourcesRegistryDomains === "function"
+      ? validateAllSourcesRegistryDomains()
+      : { valid: false, errors: ["Source registry validator not loaded."] };
+
+    if (!catalogValidation.valid || !sourceDomainValidation.valid) {
+      if (errorBanner) {
+        errorBanner.classList.remove("hidden");
+        errorBanner.textContent = `Recommendation policy validation failed: ${[...catalogValidation.errors, ...sourceDomainValidation.errors].join(" | ")}`;
+      }
+      recList.innerHTML = "<p class='muted'>Recommendations unavailable until source validation issues are resolved.</p>";
+      return;
+    }
 
     if (recMetaNode) {
       recMetaNode.textContent = `Cancer: ${profile.cancerType} | Treatment mode: ${profile.treatmentMode}`;
@@ -461,7 +515,7 @@
     const emerging = [];
 
     recs.forEach((rec) => {
-      (rec.sourceIds || []).forEach((id) => sourceIds.add(id));
+      if (!Array.isArray(rec.sourceIds) || rec.sourceIds.length === 0) return;
       const meta = recMeta(rec);
       const card = document.createElement("article");
       card.className = "rec-card";
@@ -469,14 +523,13 @@
         <div class="rec-meta">
           <span class="rec-chip strength">${meta.evidenceStrength}</span>
           <span class="rec-chip confidence ${meta.confidence === "High confidence" ? "high" : meta.confidence === "Emerging evidence" ? "emerging" : "moderate"}">${meta.confidence}</span>
-        </div>`;
-      const ul = document.createElement("ul");
-      rec.bullets.forEach((b) => {
-        const li = document.createElement("li");
-        li.textContent = b;
-        ul.appendChild(li);
-      });
-      card.appendChild(ul);
+        </div>
+        <p>${rec.patientText}</p>
+        <p class="muted">${rec.safetyNote}</p>`;
+      const details = document.createElement("details");
+      details.className = "rec-sources";
+      details.innerHTML = `<summary>Sources</summary><ul class="sources">${rec.sourceIds.map(sourceLinkHtml).join("")}</ul>`;
+      card.appendChild(details);
       if (meta.confidence === "Emerging evidence") emerging.push(card);
       else high.push(card);
     });
@@ -497,7 +550,10 @@
       recList.appendChild(sec);
     }
 
-    renderEvidenceSources(Array.from(sourceIds));
+    if (!high.length && !emerging.length) {
+      recList.innerHTML = "<p class='muted'>No source-qualified recommendations matched your current profile and symptoms.</p>";
+    }
+    renderReferencesPanel();
   }
 
   function loadWeightHistory() {

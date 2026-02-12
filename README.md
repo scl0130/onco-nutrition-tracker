@@ -7,7 +7,9 @@ Static multi-page web app for oncology nutrition tracking with profile-aware gui
 - `tracker.html`: Food logging and daily target management
 - `profile.html`: Profile + treatment setup + symptom capture + optional account/auth panel
 - `app-main.js`: Main app logic for all three pages
-- `recommendations.js`: Cancer/treatment recommendation engine and source metadata
+- `sourcesRegistry.js`: Single source of truth for citations (strict allowlist domains)
+- `recommendationValidator.js`: Recommendation/source validation on page load
+- `recommendations.js`: Policy-based recommendation catalog and trigger logic
 - `styles.css`: Shared styles and responsive layout
 
 ## Current Features
@@ -36,6 +38,11 @@ Static multi-page web app for oncology nutrition tracking with profile-aware gui
   3. OpenFoodFacts fallback
 - Profile-based macro target calculation (sex/age/height/weight/activity/treatment-aware)
   - If user manually saves targets for a day, that day is treated as manual override
+- Recommendation source policy enforcement:
+  - Every recommendation must include sourceIds from `sourcesRegistry.js`
+  - Every recommendation card includes expandable `Sources`
+  - Validation blocks recommendation rendering if source rules fail
+  - References panel groups all sources by evidence type
 
 ## Local Run
 Open files directly in browser, or run a static server:
