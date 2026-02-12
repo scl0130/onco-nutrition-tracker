@@ -157,6 +157,65 @@ button {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
+.mini-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 14px;
+}
+
+.alerts {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.alert-card {
+  border: 1px solid #ffd6d6;
+  background: #fff4f4;
+  color: #7c2a2a;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.ring-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.ring-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ring {
+  --pct: 0;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--accent) calc(var(--pct) * 1%), #e3ebef 0);
+}
+
+.ring > span {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
 .card,
 .disclaimer {
   margin-top: 20px;
@@ -337,6 +396,26 @@ button:active {
   margin-top: 10px;
   display: grid;
   gap: 10px;
+}
+
+.quick-add {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.quick-add button {
+  padding: 7px 12px;
+  font-size: 0.9rem;
+}
+
+.weight-chart {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f8fafb;
+  margin-top: 10px;
 }
 
 .food-card {

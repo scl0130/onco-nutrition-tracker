@@ -12,6 +12,7 @@
   const profileActivity = document.getElementById("profileActivity");
   const profileWeightLoss = document.getElementById("profileWeightLoss");
   const profileAppetite = document.getElementById("profileAppetite");
+  const profileTreatmentMode = document.getElementById("profileTreatmentMode");
   const profileSummary = document.getElementById("profileSummary");
 
   const profileHeightUnit = document.getElementById("profileHeightUnit");
@@ -31,8 +32,28 @@
   const targetForm = document.getElementById("targetForm");
   const mealForm = document.getElementById("mealForm");
   const macroSummary = document.getElementById("macroSummary");
+  const macroRings = document.getElementById("macroRings");
+  const remainingSummary = document.getElementById("remainingSummary");
+  const nutritionScoreNode = document.getElementById("nutritionScore");
+  const medicalAlerts = document.getElementById("medicalAlerts");
+  const malnutritionRiskNode = document.getElementById("malnutritionRisk");
+  const todayRecommendationsNode = document.getElementById("todayRecommendations");
+  const dashboardDate = document.getElementById("dashboardDate");
+  const prevDayButton = document.getElementById("prevDay");
+  const nextDayButton = document.getElementById("nextDay");
   const mealList = document.getElementById("mealList");
   const clearEntriesButton = document.getElementById("clearEntries");
+  const quickAddFoods = document.getElementById("quickAddFoods");
+
+  const weightForm = document.getElementById("weightForm");
+  const weightDateInput = document.getElementById("weightDate");
+  const weightValueKgInput = document.getElementById("weightValueKg");
+  const weightTrendSummary = document.getElementById("weightTrendSummary");
+  const weightChart = document.getElementById("weightChart");
+
+  const symptomForm = document.getElementById("symptomForm");
+  const saveSymptomsButton = document.getElementById("saveSymptoms");
+  const historyList = document.getElementById("historyList");
 
   const targetCalories = document.getElementById("targetCalories");
   const targetProtein = document.getElementById("targetProtein");
@@ -60,6 +81,7 @@
   const foodLibraryResults = document.getElementById("foodLibraryResults");
 
   const PROFILE_STORAGE_KEY = "oncoNutritionProfile:v2";
+  const WEIGHT_HISTORY_STORAGE_KEY = "oncoNutritionWeightHistory:v1";
   const USDA_API_KEY_STORAGE_KEY = "oncoNutritionUsdaApiKey:v1";
   const USDA_DEFAULT_API_KEY = "DEMO_KEY";
 
@@ -183,20 +205,30 @@
       aliases: ["almonds"],
       macros100g: { calories: 579, protein: 21.2, carbs: 21.7, fat: 49.9 },
       safety: "Use sealed products and avoid bulk-bin foods during high infection risk."
+    },
+    {
+      name: "Protein shake",
+      aliases: ["protein shake", "ready to drink protein shake"],
+      macros100g: { calories: 72, protein: 12, carbs: 3, fat: 1.2 },
+      safety: "Use pasteurized, sealed products and keep refrigerated after opening."
     }
   ];
 
-  const storageKeyForDate = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    return `oncoNutritionLog:${today}`;
+  const storageKeyForDate = (dateStr) => {
+    return `oncoNutritionLog:${dateStr}`;
   };
 
+  const isoToday = () => new Date().toISOString().slice(0, 10);
+
   let isFoodLookupRunning = false;
+  let selectedDate = isoToday();
+  let weightHistory = [];
 
   let state = {
     profile: null,
     targets: { calories: 2000, protein: 90, carbs: 230, fat: 70 },
-    meals: []
+    meals: [],
+    symptoms: []
   };
 
   function initCancerOptions() {
@@ -302,8 +334,8 @@
     });
   }
 
-  function loadState() {
-    const raw = localStorage.getItem(storageKeyForDate());
+  function loadState(dateStr) {
+    const raw = localStorage.getItem(storageKeyForDate(dateStr));
     if (!raw) return false;
 
     try {
@@ -311,6 +343,7 @@
       if (parsed.targets && parsed.meals) {
         state.targets = parsed.targets;
         state.meals = parsed.meals;
+        state.symptoms = Array.isArray(parsed.symptoms) ? parsed.symptoms : [];
         return true;
       }
     } catch (_err) {
@@ -322,8 +355,8 @@
 
   function saveState() {
     localStorage.setItem(
-      storageKeyForDate(),
-      JSON.stringify({ targets: state.targets, meals: state.meals })
+      storageKeyForDate(selectedDate),
+      JSON.stringify({ targets: state.targets, meals: state.meals, symptoms: state.symptoms })
     );
   }
 
@@ -338,6 +371,7 @@
       }
       if (!parsed.weightLoss) parsed.weightLoss = "none";
       if (!parsed.appetite) parsed.appetite = "normal";
+      if (!parsed.treatmentMode) parsed.treatmentMode = "chemotherapy";
       state.profile = parsed;
     } catch (_err) {
       // Ignore malformed profile storage.
@@ -347,6 +381,24 @@
   function saveProfile() {
     if (!state.profile) return;
     localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(state.profile));
+  }
+
+  function loadWeightHistory() {
+    const raw = localStorage.getItem(WEIGHT_HISTORY_STORAGE_KEY);
+    if (!raw) {
+      weightHistory = [];
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      weightHistory = Array.isArray(parsed) ? parsed : [];
+    } catch (_err) {
+      weightHistory = [];
+    }
+  }
+
+  function saveWeightHistory() {
+    localStorage.setItem(WEIGHT_HISTORY_STORAGE_KEY, JSON.stringify(weightHistory));
   }
 
   function getUsdaApiKey() {
@@ -469,6 +521,7 @@
     profileActivity.value = String(state.profile.activityFactor);
     profileWeightLoss.value = state.profile.weightLoss || "none";
     profileAppetite.value = state.profile.appetite || "normal";
+    profileTreatmentMode.value = state.profile.treatmentMode || "chemotherapy";
 
     profileHeightUnit.value = state.profile.heightUnit || "cm";
     profileWeightUnit.value = state.profile.weightUnit || "kg";
@@ -515,6 +568,7 @@
   function calculatePersonalizedTargets(profile, chemoState) {
     const { gender, age, heightCm, weightKg, activityFactor } = profile;
     const risk = nutritionRiskLevel(profile);
+    const treatmentMode = profile.treatmentMode || "chemotherapy";
 
     const bmrBase = 10 * weightKg + 6.25 * heightCm - 5 * age;
     const bmr = gender === "male" ? bmrBase + 5 : bmrBase - 161;
@@ -525,14 +579,21 @@
     const highEnergy = 30 * weightKg;
     let calories = clamp(tdee, lowEnergy, highEnergy);
 
-    if (chemoState === "on") {
+    const activeTreatment =
+      chemoState === "on" ||
+      treatmentMode === "chemotherapy" ||
+      treatmentMode === "radiation";
+
+    if (activeTreatment) {
       if (risk === "mild") calories = Math.max(calories, 28.5 * weightKg);
       if (risk === "moderate") calories = Math.max(calories, 30 * weightKg);
       if (risk === "high") calories = Math.max(calories, 32 * weightKg);
     }
 
     let proteinMultiplier = 1.2;
-    if (chemoState === "on") proteinMultiplier = 1.3;
+    if (activeTreatment) proteinMultiplier = 1.3;
+    if (treatmentMode === "recovery") proteinMultiplier = Math.max(proteinMultiplier, 1.25);
+    if (treatmentMode === "remission") proteinMultiplier = Math.max(proteinMultiplier, 1.1);
     if (risk === "moderate") proteinMultiplier = Math.max(proteinMultiplier, 1.4);
     if (risk === "high") proteinMultiplier = Math.max(proteinMultiplier, 1.5);
 
@@ -570,7 +631,7 @@
     profileSummary.innerHTML = `
       <p><strong>Hello, ${helloName}.</strong></p>
       <p class="muted">Profile: ${state.profile.gender}, ${state.profile.age} years, ${roundOne(state.profile.heightCm)} cm (${convertedHeight.feet} ft ${convertedHeight.inches} in), ${roundOne(state.profile.weightKg)} kg (${roundOne(kgToLb(state.profile.weightKg))} lb).</p>
-      <p class="muted">Treatment profile: ${treatmentState === "on" ? "on chemotherapy" : "off chemotherapy"}, appetite ${state.profile.appetite}, recent weight loss ${state.profile.weightLoss}.</p>
+      <p class="muted">Treatment profile: mode ${state.profile.treatmentMode || "chemotherapy"}, ${treatmentState === "on" ? "on chemotherapy" : "off chemotherapy"}, appetite ${state.profile.appetite}, recent weight loss ${state.profile.weightLoss}.</p>
       <p class="muted">Personalized targets set to ${state.targets.calories} kcal, P ${state.targets.protein}g, C ${state.targets.carbs}g, F ${state.targets.fat}g.</p>
     `;
   }
@@ -586,6 +647,236 @@
       },
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
+  }
+
+  function percentage(consumed, target) {
+    if (!target || target <= 0) return 0;
+    return Math.round((consumed / target) * 100);
+  }
+
+  function nutritionScore(sum) {
+    const calPct = Math.min(100, Math.max(0, percentage(sum.calories, state.targets.calories)));
+    const proteinPct = Math.min(100, Math.max(0, percentage(sum.protein, state.targets.protein)));
+    const carbBalance = state.targets.carbs > 0
+      ? Math.max(0, 100 - Math.abs(percentage(sum.carbs, state.targets.carbs) - 100))
+      : 100;
+    const fatBalance = state.targets.fat > 0
+      ? Math.max(0, 100 - Math.abs(percentage(sum.fat, state.targets.fat) - 100))
+      : 100;
+
+    const weighted = calPct * 0.3 + proteinPct * 0.4 + carbBalance * 0.15 + fatBalance * 0.15;
+    return Math.round(Math.max(0, Math.min(100, weighted)));
+  }
+
+  function scoreStatus(score) {
+    if (score >= 85) return "Excellent";
+    if (score >= 70) return "Good";
+    if (score >= 50) return "Needs attention";
+    return "High concern";
+  }
+
+  function remainingMacros(sum) {
+    return {
+      calories: Math.max(0, roundOne(state.targets.calories - sum.calories)),
+      protein: Math.max(0, roundTwo(state.targets.protein - sum.protein)),
+      carbs: Math.max(0, roundTwo(state.targets.carbs - sum.carbs)),
+      fat: Math.max(0, roundTwo(state.targets.fat - sum.fat))
+    };
+  }
+
+  function malnutritionRisk(sum) {
+    const riskLevel = nutritionRiskLevel(state.profile || { weightLoss: "none", appetite: "normal" });
+    let score = 0;
+    if (riskLevel === "mild") score += 1;
+    if (riskLevel === "moderate") score += 2;
+    if (riskLevel === "high") score += 3;
+    if (state.targets.calories > 0 && sum.calories < state.targets.calories * 0.7) score += 1;
+    if (state.targets.protein > 0 && sum.protein < state.targets.protein * 0.7) score += 1;
+    if (state.symptoms.includes("appetite_loss")) score += 1;
+
+    if (score >= 4) return "High risk";
+    if (score >= 2) return "Moderate risk";
+    return "Low risk";
+  }
+
+  function buildDailyAlerts(sum) {
+    const alerts = [];
+    if (state.targets.protein > 0 && sum.protein < state.targets.protein * 0.75) {
+      alerts.push("Protein intake is too low today. Adequate protein is critical to prevent muscle loss during treatment.");
+    }
+    if (state.targets.calories > 0 && sum.calories < state.targets.calories * 0.75) {
+      alerts.push("You are below minimum calorie needs.");
+    }
+    const risk = malnutritionRisk(sum);
+    if (risk !== "Low risk") {
+      alerts.push(`You are at risk of malnutrition (${risk.toLowerCase()}). Consider contacting your care team.`);
+    }
+    return alerts;
+  }
+
+  function dailyRecommendations(sum) {
+    const recs = [];
+    const profile = state.profile;
+    if (!profile) return recs;
+
+    if (profile.treatmentMode === "chemotherapy" || selectedTreatmentState() === "on") {
+      recs.push("Increase protein density in each meal and prioritize easy-to-digest foods.");
+    }
+    if (profile.treatmentMode === "radiation") {
+      recs.push("Use frequent hydration and softer texture foods if throat/GI irritation occurs.");
+    }
+    if (profile.appetite === "reduced" || profile.appetite === "very_low") {
+      recs.push("Use high-calorie, nutrient-dense snacks in small frequent portions.");
+    }
+    if (state.symptoms.includes("nausea")) {
+      recs.push("Try bland, lower-odor meals and separate fluids from meals when nausea is active.");
+    }
+    if (state.targets.protein > 0 && sum.protein < state.targets.protein * 0.8) {
+      recs.push("To close protein gap, add Greek yogurt, eggs, tofu, lentils, or a protein shake.");
+    }
+    if (recs.length === 0) {
+      recs.push("Maintain your current plan and continue monitoring intake, weight, and symptoms.");
+    }
+    return recs;
+  }
+
+  function renderMacroRings(sum) {
+    const items = [
+      { label: "Calories", consumed: sum.calories, target: state.targets.calories, unit: "kcal" },
+      { label: "Protein", consumed: sum.protein, target: state.targets.protein, unit: "g" },
+      { label: "Carbs", consumed: sum.carbs, target: state.targets.carbs, unit: "g" },
+      { label: "Fat", consumed: sum.fat, target: state.targets.fat, unit: "g" }
+    ];
+    macroRings.innerHTML = "";
+    items.forEach((item) => {
+      const pct = Math.max(0, Math.min(100, percentage(item.consumed, item.target)));
+      const ring = document.createElement("article");
+      ring.className = "ring-card";
+      ring.innerHTML = `
+        <div class="ring" style="--pct:${pct}">
+          <span>${pct}%</span>
+        </div>
+        <p><strong>${item.label}</strong><br><span class="muted">${roundOne(item.consumed)} / ${item.target} ${item.unit}</span></p>
+      `;
+      macroRings.appendChild(ring);
+    });
+  }
+
+  function renderHistory() {
+    const allDates = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith("oncoNutritionLog:")) continue;
+      allDates.push(key.replace("oncoNutritionLog:", ""));
+    }
+    allDates.sort((a, b) => (a < b ? 1 : -1));
+    const recent = allDates.slice(0, 14);
+    historyList.innerHTML = "";
+    if (recent.length === 0) {
+      historyList.innerHTML = "<p class='muted'>No history yet.</p>";
+      return;
+    }
+    recent.forEach((dateStr) => {
+      try {
+        const raw = localStorage.getItem(storageKeyForDate(dateStr));
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        const sum = (parsed.meals || []).reduce(
+          (acc, meal) => {
+            acc.calories += Number(meal.calories || 0);
+            acc.protein += Number(meal.protein || 0);
+            acc.carbs += Number(meal.carbs || 0);
+            acc.fat += Number(meal.fat || 0);
+            return acc;
+          },
+          { calories: 0, protein: 0, carbs: 0, fat: 0 }
+        );
+        const targets = parsed.targets || state.targets;
+        const score = Math.round(
+          Math.min(100, Math.max(0, (sum.calories / Math.max(1, targets.calories)) * 100 * 0.3 +
+            (sum.protein / Math.max(1, targets.protein)) * 100 * 0.4 +
+            30))
+        );
+        const item = document.createElement("article");
+        item.className = "food-card";
+        item.innerHTML = `
+          <div>
+            <h3>${dateStr}${dateStr === selectedDate ? " (selected)" : ""}</h3>
+            <p class="muted">${roundOne(sum.calories)} kcal | P ${roundTwo(sum.protein)}g | C ${roundTwo(sum.carbs)}g | F ${roundTwo(sum.fat)}g</p>
+            <p class="muted">Nutrition score: ${score}/100</p>
+          </div>
+          <button type="button" data-open-date="${dateStr}">View</button>
+        `;
+        historyList.appendChild(item);
+      } catch (_err) {
+        // Skip malformed history rows.
+      }
+    });
+  }
+
+  function shiftDate(dateStr, deltaDays) {
+    const base = new Date(`${dateStr}T00:00:00`);
+    base.setDate(base.getDate() + deltaDays);
+    return base.toISOString().slice(0, 10);
+  }
+
+  function syncSymptomForm() {
+    const selected = new Set(state.symptoms || []);
+    symptomForm.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      input.checked = selected.has(input.value);
+    });
+  }
+
+  function loadDateState(dateStr) {
+    selectedDate = dateStr;
+    dashboardDate.value = selectedDate;
+    weightDateInput.value = selectedDate;
+
+    const hasState = loadState(selectedDate);
+    if (!hasState) {
+      state.meals = [];
+      state.symptoms = [];
+      if (state.profile) {
+        applyPersonalizedTargets(state.profile, selectedTreatmentState());
+      } else {
+        state.targets = { calories: 2000, protein: 90, carbs: 230, fat: 70 };
+      }
+      saveState();
+    }
+    syncTargetInputs();
+    syncSymptomForm();
+    renderMeals();
+    renderProfileSummary();
+  }
+
+  function renderWeightChart() {
+    const sorted = [...weightHistory].sort((a, b) => (a.date > b.date ? 1 : -1));
+    if (sorted.length === 0) {
+      weightChart.innerHTML = "";
+      weightTrendSummary.textContent = "No weight entries yet.";
+      return;
+    }
+
+    const values = sorted.map((x) => Number(x.weightKg));
+    const minW = Math.min(...values);
+    const maxW = Math.max(...values);
+    const span = Math.max(1, maxW - minW);
+
+    const points = sorted.map((entry, idx) => {
+      const x = 40 + (idx / Math.max(1, sorted.length - 1)) * 520;
+      const y = 180 - ((entry.weightKg - minW) / span) * 140;
+      return `${x},${y}`;
+    });
+
+    const latest = sorted[sorted.length - 1];
+    const first = sorted[0];
+    const delta = roundOne(latest.weightKg - first.weightKg);
+    weightTrendSummary.textContent = `Latest: ${latest.weightKg} kg (${latest.date}) | Change since first entry: ${delta >= 0 ? "+" : ""}${delta} kg`;
+
+    weightChart.innerHTML = `
+      <rect x="0" y="0" width="600" height="220" fill="#f8fafb"></rect>
+      <polyline points="${points.join(" ")}" fill="none" stroke="#2cb1a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    `;
   }
 
   function buildProgressRow(label, consumed, target) {
@@ -607,9 +898,45 @@
       buildProgressRow("Carbs", sum.carbs, state.targets.carbs) +
       buildProgressRow("Fat", sum.fat, state.targets.fat);
 
+    renderMacroRings(sum);
+    const remaining = remainingMacros(sum);
+    remainingSummary.innerHTML = `
+      <p>Calories remaining: <strong>${remaining.calories} kcal</strong></p>
+      <p>Protein remaining: <strong>${remaining.protein} g</strong></p>
+      <p>Carbs remaining: <strong>${remaining.carbs} g</strong></p>
+      <p>Fat remaining: <strong>${remaining.fat} g</strong></p>
+    `;
+
+    const score = nutritionScore(sum);
+    nutritionScoreNode.innerHTML = `<p><strong>${score} / 100</strong></p><p>${scoreStatus(score)}</p>`;
+    const risk = malnutritionRisk(sum);
+    malnutritionRiskNode.innerHTML = `<p><strong>${risk}</strong></p>`;
+
+    const alerts = buildDailyAlerts(sum);
+    medicalAlerts.innerHTML = "";
+    if (alerts.length === 0) {
+      medicalAlerts.innerHTML = "<p class='muted'>No critical alerts for selected day.</p>";
+    } else {
+      alerts.forEach((msg) => {
+        const alert = document.createElement("div");
+        alert.className = "alert-card";
+        alert.textContent = msg;
+        medicalAlerts.appendChild(alert);
+      });
+    }
+
+    const recs = dailyRecommendations(sum);
+    todayRecommendationsNode.innerHTML = "";
+    recs.forEach((text) => {
+      const li = document.createElement("li");
+      li.textContent = text;
+      todayRecommendationsNode.appendChild(li);
+    });
+
     mealList.innerHTML = "";
     if (state.meals.length === 0) {
       mealList.innerHTML = "<p class='muted'>No entries yet for today.</p>";
+      renderHistory();
       return;
     }
 
@@ -625,6 +952,7 @@
       `;
       mealList.appendChild(item);
     });
+    renderHistory();
   }
 
   function normalizeFoodName(name) {
@@ -1020,6 +1348,7 @@
       activityFactor: Number(profileActivity.value),
       weightLoss: profileWeightLoss.value,
       appetite: profileAppetite.value,
+      treatmentMode: profileTreatmentMode.value,
       heightUnit,
       weightUnit,
       heightCm: roundOne(heightCmValue),
@@ -1038,7 +1367,8 @@
       profile.weightKg > 0 &&
       profile.activityFactor > 0 &&
       Boolean(profile.weightLoss) &&
-      Boolean(profile.appetite)
+      Boolean(profile.appetite) &&
+      Boolean(profile.treatmentMode)
     );
   }
 
@@ -1053,6 +1383,17 @@
     });
     document.querySelectorAll('input[name="dialysisStatus"]').forEach((input) => {
       input.addEventListener("change", renderRecommendations);
+    });
+
+    dashboardDate.addEventListener("change", () => {
+      if (!dashboardDate.value) return;
+      loadDateState(dashboardDate.value);
+    });
+    prevDayButton.addEventListener("click", () => {
+      loadDateState(shiftDate(selectedDate, -1));
+    });
+    nextDayButton.addEventListener("click", () => {
+      loadDateState(shiftDate(selectedDate, 1));
     });
 
     profileHeightUnit.addEventListener("change", handleHeightUnitChange);
@@ -1081,6 +1422,31 @@
       state.profile = profile;
       saveProfile();
       applyPersonalizedTargets(profile, selectedTreatmentState());
+    });
+
+    weightForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const date = weightDateInput.value || selectedDate;
+      const weightKg = roundOne(Number(weightValueKgInput.value || 0));
+      if (weightKg <= 0) return;
+      const existing = weightHistory.find((x) => x.date === date);
+      if (existing) {
+        existing.weightKg = weightKg;
+      } else {
+        weightHistory.push({ date, weightKg });
+      }
+      saveWeightHistory();
+      renderWeightChart();
+    });
+
+    saveSymptomsButton.addEventListener("click", () => {
+      const symptoms = [];
+      symptomForm.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+        if (input.checked) symptoms.push(input.value);
+      });
+      state.symptoms = symptoms;
+      saveState();
+      renderMeals();
     });
 
     targetForm.addEventListener("submit", (e) => {
@@ -1112,6 +1478,24 @@
       runFoodAutofill();
       mealNameInput.scrollIntoView({ behavior: "smooth", block: "center" });
       mealNameInput.focus();
+    });
+
+    historyList.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      const openDate = target.getAttribute("data-open-date");
+      if (!openDate) return;
+      loadDateState(openDate);
+    });
+
+    quickAddFoods.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      const food = target.getAttribute("data-quick-food");
+      if (!food) return;
+      mealNameInput.value = food;
+      mealServingInput.value = 100;
+      runFoodAutofill();
     });
 
     mealNameInput.addEventListener("blur", () => {
@@ -1166,8 +1550,12 @@
     populateCuratedFoodOptions();
     renderFoodLibrary();
     loadUsdaApiKeyInput();
+    loadWeightHistory();
     loadProfile();
-    const hasDailyState = loadState();
+    selectedDate = isoToday();
+    dashboardDate.value = selectedDate;
+    weightDateInput.value = selectedDate;
+    const hasDailyState = loadState(selectedDate);
 
     updateProfileUnitVisibility();
 
@@ -1179,10 +1567,13 @@
     }
 
     syncTargetInputs();
+    syncSymptomForm();
     renderProfileSummary();
     hookEvents();
     renderRecommendations();
     renderMeals();
+    renderWeightChart();
+    renderHistory();
   }
 
   init();

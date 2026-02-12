@@ -114,6 +114,15 @@
               <option value="very_low">Very low</option>
             </select>
           </label>
+          <label>
+            Treatment mode
+            <select id="profileTreatmentMode" required>
+              <option value="chemotherapy">Chemotherapy</option>
+              <option value="radiation">Radiation</option>
+              <option value="recovery">Recovery</option>
+              <option value="remission">Remission</option>
+            </select>
+          </label>
           <button type="submit">Save profile and personalize macros</button>
         </form>
         <div id="profileSummary" class="summary compact"></div>
@@ -125,6 +134,36 @@
           This tool provides educational recommendations only and is not medical advice. Patients should consult their oncologist, renal team,
           and registered dietitian before changing diet, supplements, fluid intake, or macro targets.
         </p>
+      </section>
+
+      <section class="card">
+        <h2>Daily Dashboard</h2>
+        <form id="dayPickerForm" class="grid form-grid">
+          <label>Date <input type="date" id="dashboardDate" required /></label>
+          <button type="button" id="prevDay">Previous day</button>
+          <button type="button" id="nextDay">Next day</button>
+        </form>
+        <div id="medicalAlerts" class="alerts"></div>
+        <div id="macroRings" class="ring-grid"></div>
+        <div id="macroSummary" class="summary"></div>
+        <div class="grid form-grid">
+          <article class="mini-card">
+            <h3>Remaining Today</h3>
+            <div id="remainingSummary" class="muted"></div>
+          </article>
+          <article class="mini-card">
+            <h3>Nutrition Score</h3>
+            <div id="nutritionScore" class="muted"></div>
+          </article>
+          <article class="mini-card">
+            <h3>Malnutrition Risk</h3>
+            <div id="malnutritionRisk" class="muted"></div>
+          </article>
+        </div>
+        <article class="mini-card">
+          <h3>Your Recommendations Today</h3>
+          <ul id="todayRecommendations" class="sources"></ul>
+        </article>
       </section>
 
       <section class="card">
@@ -181,12 +220,45 @@
           <button type="submit">Add entry</button>
         </form>
         <p class="muted">Autofill currently works best with one food name at a time.</p>
+        <div class="quick-add" id="quickAddFoods">
+          <button type="button" data-quick-food="Egg (fully cooked)">+ Egg</button>
+          <button type="button" data-quick-food="White rice (cooked)">+ Rice</button>
+          <button type="button" data-quick-food="Chicken breast (cooked)">+ Chicken breast</button>
+          <button type="button" data-quick-food="Protein shake">+ Protein shake</button>
+          <button type="button" data-quick-food="Banana">+ Banana</button>
+        </div>
         <p id="foodLookupStatus" class="muted"></p>
         <p id="foodSafetyNote" class="muted"></p>
-
-        <div id="macroSummary" class="summary"></div>
         <div id="mealList" class="meals"></div>
         <button id="clearEntries" class="danger" type="button">Clear today entries</button>
+      </section>
+
+      <section class="card">
+        <h2>Weight Tracking</h2>
+        <form id="weightForm" class="grid form-grid">
+          <label>Date <input type="date" id="weightDate" required /></label>
+          <label>Weight (kg) <input type="number" min="20" max="350" step="0.1" id="weightValueKg" required /></label>
+          <button type="submit">Save weight entry</button>
+        </form>
+        <div id="weightTrendSummary" class="muted"></div>
+        <svg id="weightChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Weight trend chart"></svg>
+      </section>
+
+      <section class="card">
+        <h2>Symptoms</h2>
+        <form id="symptomForm" class="grid form-grid">
+          <label><input type="checkbox" value="nausea" /> Nausea</label>
+          <label><input type="checkbox" value="fatigue" /> Fatigue</label>
+          <label><input type="checkbox" value="appetite_loss" /> Appetite loss</label>
+          <label><input type="checkbox" value="taste_changes" /> Taste changes</label>
+          <button type="button" id="saveSymptoms">Save symptoms for selected day</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>History</h2>
+        <p class="muted">Recent days with calories, protein, and nutrition score.</p>
+        <div id="historyList" class="food-library"></div>
       </section>
 
       <section class="card">
