@@ -541,6 +541,7 @@
         <p class="muted">${rec.safetyNote}</p>`;
       const actions = document.createElement("details");
       actions.className = "rec-actions";
+      actions.open = true;
       actions.innerHTML = `<summary>What you can do today</summary><ul class="sources">${(rec.patientTextActions || []).map((line) => `<li>${line}</li>`).join("")}</ul>`;
       card.appendChild(actions);
       const why = document.createElement("details");
@@ -570,6 +571,7 @@
             <p class="muted">${rec.safetyNote}</p>`;
           const actions = document.createElement("details");
           actions.className = "rec-actions";
+          actions.open = true;
           actions.innerHTML = `<summary>What you can do today</summary><ul class="sources">${(rec.patientTextActions || []).map((line) => `<li>${line}</li>`).join("")}</ul>`;
           card.appendChild(actions);
           const why = document.createElement("details");

@@ -13,13 +13,13 @@
       id: "universal_monitor_intake_weight",
       priority: 100,
       title: "Daily intake and weight monitoring",
-      patientTextShort: "Track intake and weight trends so changes are identified early.",
+      patientTextShort: "Track food, fluid, and weight trends so concerning decline is identified early.",
       patientTextActions: [
-        "Log meals and fluids each day",
-        "Record weight at least weekly",
-        "Contact your care team if intake drops for several days"
+        "Log meals and fluids every day, not only on symptom days",
+        "Record weight at least weekly and more often if appetite is poor",
+        "Contact your care team if intake is low for several days or weight keeps falling"
       ],
-      whyThisMatters: "Early nutrition decline is common during cancer treatment and can worsen outcomes if not addressed.",
+      whyThisMatters: "ESPEN and NCI sources emphasize routine monitoring because nutrition decline is common during treatment and can worsen outcomes when detected late.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: [], symptomsAll: [], flagsAny: [] },
       sourceIds: ["espenCancerPractical2021Pdf", "nciNutritionCarePDQ"],
       evidenceTags: ["Guideline", "Government"]
@@ -28,13 +28,14 @@
       id: "universal_energy_protein_support",
       priority: 98,
       title: "Use protein and energy targets proactively",
-      patientTextShort: "Protein and calorie goals can support treatment tolerance and recovery.",
+      patientTextShort: "Set calorie and protein targets early and adjust quickly when intake drops.",
       patientTextActions: [
-        "Aim for balanced meals with protein each time you eat",
-        "Use snacks or supplements when meal size is reduced",
-        "Ask for oncology dietitian support when goals are not met"
+        "Use an initial energy range near 25 to 30 kcal per kg per day unless your team gives a different plan",
+        "Aim for protein at least above 1.0 g per kg per day and often closer to 1.2 to 1.5 g per kg during active treatment",
+        "Add oral nutrition supplements when regular meals are not enough",
+        "Request oncology dietitian support early instead of waiting for severe decline"
       ],
-      whyThisMatters: "Guidelines emphasize proactive nutrition support and not waiting for severe decline.",
+      whyThisMatters: "ESPEN and ASCO cachexia guidance support early nutrition intervention to reduce cumulative deficits.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: [], symptomsAll: [], flagsAny: ["protein_deficit", "calorie_deficit"] },
       sourceIds: ["espenCancerGuideline2017Pdf", "espenCancerPractical2021PubMed", "ascoCachexia2020JCO"],
       evidenceTags: ["Guideline", "PeerReviewed"]
@@ -44,13 +45,14 @@
       id: "tx_chemo_small_frequent_meals",
       priority: 90,
       title: "Chemotherapy meal pacing",
-      patientTextShort: "During chemotherapy, smaller frequent meals are often easier to tolerate.",
+      patientTextShort: "During chemotherapy, frequent small meals are usually better tolerated than large meals.",
       patientTextActions: [
-        "Eat every two to three hours while awake",
-        "Keep easy foods available for low energy periods",
-        "Use fluids between meals when fullness is a barrier"
+        "Eat 5 to 6 small meals or snacks through the day",
+        "Choose bland or cool foods when smells trigger nausea",
+        "Drink most liquids between meals if you feel full quickly",
+        "Keep ready to eat foods nearby for low energy periods"
       ],
-      whyThisMatters: "Chemotherapy side effects can reduce meal tolerance and total intake.",
+      whyThisMatters: "NCI Eating Hints and PDQ guidance show chemotherapy symptoms can reduce meal tolerance and total intake without practical meal adjustments.",
       triggers: { cancerTypes: [], treatments: ["chemotherapy"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
       sourceIds: ["nciNutritionDuringCancer", "nciEatingHintsPdf", "acsEatingProblemsHub"],
       evidenceTags: ["Government", "CancerCenter"]
@@ -61,11 +63,11 @@
       title: "Escalate care when chemotherapy intake falls",
       patientTextShort: "Do not wait for severe decline before asking for nutrition support.",
       patientTextActions: [
-        "Track days with poor intake",
-        "Report persistent deficits to your oncology team",
-        "Ask about symptom and nutrition interventions"
+        "Track number of days when intake is clearly below target",
+        "Report persistent calorie or protein deficits to your oncology team this week",
+        "Ask for symptom focused support plus dietitian referral when deficits continue"
       ],
-      whyThisMatters: "Cachexia and cumulative treatment deficits can progress quickly without early intervention.",
+      whyThisMatters: "ASCO cachexia and ESPEN recommendations support early escalation because cumulative deficits can progress quickly.",
       triggers: { cancerTypes: [], treatments: ["chemotherapy"], symptomsAny: [], symptomsAll: [], flagsAny: ["calorie_deficit", "weight_loss_concerning"] },
       sourceIds: ["ascoCachexia2020PubMed", "espenCancerPractical2021Pdf"],
       evidenceTags: ["PeerReviewed", "Guideline"]
@@ -92,11 +94,12 @@
       title: "Radiation recovery protein and energy support",
       patientTextShort: "During radiation, consistent protein and energy intake can support recovery.",
       patientTextActions: [
-        "Include protein with each meal and snack",
-        "Use easier texture foods when needed",
-        "Adjust meal timing around symptom flares"
+        "Include a protein source at every meal and snack",
+        "Use softer textures if swallowing or mouth discomfort limits intake",
+        "Shift most calories to times of day when symptoms are less intense",
+        "Use snacks or supplements to close daily calorie gaps"
       ],
-      whyThisMatters: "Radiation side effects can lower intake and increase risk of nutrition decline.",
+      whyThisMatters: "ESPEN and NCI guidance indicate radiation related symptoms can lower intake and raise malnutrition risk if deficits are not corrected.",
       triggers: { cancerTypes: [], treatments: ["radiation"], symptomsAny: [], symptomsAll: [], flagsAny: ["protein_deficit", "calorie_deficit"] },
       sourceIds: ["espenCancerPractical2021Pdf", "nciEatingHintsPdf"],
       evidenceTags: ["Guideline", "Government"]
@@ -322,11 +325,12 @@
       title: "Nausea meal pattern",
       patientTextShort: "Use symptom paced small meals and hydration when nausea is active.",
       patientTextActions: [
-        "Eat smaller amounts more often",
-        "Choose bland and tolerated foods",
-        "Sip fluids throughout the day"
+        "Eat small amounts every 2 to 3 hours instead of large meals",
+        "Choose bland and easy to digest foods first",
+        "Sip clear fluids through the day and separate fluids from meals if needed",
+        "Avoid foods with strong odors when nausea is worse"
       ],
-      whyThisMatters: "Nausea can rapidly reduce calorie and fluid intake.",
+      whyThisMatters: "NCI Eating Hints and Nutrition guidance describe nausea as a common cause of rapid calorie and fluid decline.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["nausea"], symptomsAll: [], flagsAny: [] },
       sourceIds: ["nciEatingHintsPdf", "nciNutritionDuringCancer"],
       evidenceTags: ["Government"]
@@ -337,11 +341,11 @@
       title: "Nausea with intake deficit escalation",
       patientTextShort: "If nausea causes sustained intake deficits, escalate quickly to your oncology team.",
       patientTextActions: [
-        "Track nausea episodes and intake",
-        "Use prescribed symptom control plan",
-        "Contact care team if intake remains low"
+        "Track nausea episodes, fluid intake, and missed meals each day",
+        "Use your prescribed anti nausea plan exactly as directed",
+        "Contact your care team when intake remains below target for several days"
       ],
-      whyThisMatters: "Persistent nausea can accelerate malnutrition risk.",
+      whyThisMatters: "NCI and ASCO cachexia sources support early action when symptoms keep intake below needs.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["nausea"], symptomsAll: [], flagsAny: ["calorie_deficit", "protein_deficit"] },
       sourceIds: ["nciNutritionCarePDQ", "ascoCachexia2020PubMed"],
       evidenceTags: ["Government", "PeerReviewed"]
@@ -352,11 +356,11 @@
       title: "Vomiting hydration protection",
       patientTextShort: "Vomiting can cause rapid dehydration and requires early fluid support.",
       patientTextActions: [
-        "Take small frequent sips of fluids",
-        "Track episodes and urine output",
-        "Seek urgent care if unable to keep fluids"
+        "Take very small frequent sips instead of large volumes",
+        "Track vomiting episodes, fluids kept down, and urine output",
+        "Seek urgent care if you cannot keep liquids down"
       ],
-      whyThisMatters: "Dehydration risk can increase quickly when vomiting persists.",
+      whyThisMatters: "NCI supportive care guidance highlights rapid dehydration risk when vomiting persists.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["vomiting"], symptomsAll: [], flagsAny: [] },
       sourceIds: ["nciEatingHintsPdf", "acsEatingProblemsHub"],
       evidenceTags: ["Government", "CancerCenter"]
@@ -382,11 +386,12 @@
       title: "Taste change meal adaptation",
       patientTextShort: "Taste changes can be managed with targeted food and preparation adjustments.",
       patientTextActions: [
-        "Try different temperatures and seasonings",
-        "Use oral care before meals",
-        "Rotate protein options to improve acceptance"
+        "Rinse your mouth before and after meals",
+        "Try tart flavors such as lemon or vinegar marinades unless you have mouth sores",
+        "If food tastes metallic, use plastic utensils and glass cookware",
+        "Use mild herbs and seasonings and rotate protein choices"
       ],
-      whyThisMatters: "Taste change can lower intake unless practical adjustments are used.",
+      whyThisMatters: "MSKCC, ACS, and NCI sources provide practical taste-change strategies that can improve intake consistency.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["taste_changes"], symptomsAll: [], flagsAny: [] },
       sourceIds: ["mskTasteChanges", "acsTasteSmell"],
       evidenceTags: ["CancerCenter"]
@@ -397,9 +402,9 @@
       title: "Taste changes with weight loss",
       patientTextShort: "When taste changes cause weight loss or deficits, escalate to team support.",
       patientTextActions: [
-        "Track tolerated foods",
-        "Use calorie and protein boosters",
-        "Request dietitian guidance when decline continues"
+        "Track tolerated foods and avoid repeated trial of foods you cannot keep eating",
+        "Prioritize calorie and protein add-ons in foods you can tolerate",
+        "Request oncology dietitian guidance when weight or intake keeps declining"
       ],
       whyThisMatters: "Taste driven food avoidance can lead to clinically meaningful deficits.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["taste_changes"], symptomsAll: [], flagsAny: ["weight_loss_concerning", "protein_deficit"] },
@@ -412,11 +417,12 @@
       title: "Mouth sore texture plan",
       patientTextShort: "Use soft non irritating textures when mouth sores are present.",
       patientTextActions: [
-        "Choose soft moist foods",
-        "Avoid acidic spicy and rough textures",
-        "Use mouth care routines from your team"
+        "Choose soft moist foods and cool or room temperature items",
+        "Avoid acidic spicy rough or dry foods that worsen pain",
+        "Use oral care and rinsing routines from your care team",
+        "Use liquid nutrition options if solids are too painful"
       ],
-      whyThisMatters: "Painful oral symptoms can sharply reduce intake and hydration.",
+      whyThisMatters: "Penn mucositis and NCI sources show painful oral symptoms can sharply reduce intake and hydration.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["mouth_sores", "dry_mouth", "difficulty_swallowing"], symptomsAll: [], flagsAny: [] },
       sourceIds: ["pennMucositisTipSheet", "nciEatingHintsPdf"],
       evidenceTags: ["CancerCenter", "Government"]
@@ -442,11 +448,12 @@
       title: "Diarrhea hydration and intake support",
       patientTextShort: "With diarrhea, hydration and tolerated food choices are immediate priorities.",
       patientTextActions: [
-        "Increase fluid replacement",
-        "Use tolerated lower irritation foods",
-        "Track stool frequency and symptoms"
+        "Increase fluid replacement throughout the day",
+        "Choose tolerated lower fiber and lower fat foods during active diarrhea",
+        "Track stool frequency and associated symptoms",
+        "Do not start antidiarrheal medicines without clinician guidance"
       ],
-      whyThisMatters: "Ongoing GI losses can cause dehydration and intake deficits.",
+      whyThisMatters: "NCI Eating Hints emphasizes dehydration and nutrient loss risk during persistent diarrhea.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["diarrhea"], symptomsAll: [], flagsAny: [] },
       sourceIds: ["nciEatingHintsPdf", "acsEatingProblemsHub"],
       evidenceTags: ["Government", "CancerCenter"]
@@ -472,9 +479,9 @@
       title: "Constipation supportive strategy",
       patientTextShort: "Constipation support includes fluids food pattern review and care team symptom plans.",
       patientTextActions: [
-        "Increase fluids as tolerated",
-        "Adjust fiber based on symptom tolerance",
-        "Review medications with care team"
+        "Increase fluids if your team has not restricted fluid intake",
+        "Use food pattern changes recommended by your care team for constipation",
+        "Review constipation causing medicines and bowel plan with clinicians"
       ],
       whyThisMatters: "Unmanaged constipation can reduce appetite and overall intake.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["constipation"], symptomsAll: [], flagsAny: [] },
@@ -502,11 +509,12 @@
       title: "Appetite loss immediate plan",
       patientTextShort: "Use high value foods first when appetite is reduced.",
       patientTextActions: [
-        "Start meals with protein and calorie dense foods",
-        "Use frequent small eating opportunities",
-        "Keep ready to eat options nearby"
+        "Start each eating opportunity with the most calorie and protein dense items",
+        "Use 5 to 6 smaller meals instead of waiting for hunger",
+        "Keep ready to eat high protein snacks nearby",
+        "Use liquid nutrition when solid intake is low"
       ],
-      whyThisMatters: "Appetite loss is a major driver of weight and intake decline.",
+      whyThisMatters: "NCI PDQ, Eating Hints, and ASCO cachexia guidance identify appetite loss as a major driver of nutrition decline.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["appetite_loss", "early_satiety"], symptomsAll: [], flagsAny: [] },
       sourceIds: ["nciNutritionCarePDQ", "nciEatingHintsPdf", "ascoCachexia2020PubMed"],
       evidenceTags: ["Government", "PeerReviewed"]
@@ -533,11 +541,12 @@
       title: "Pancreatic chemotherapy malabsorption prompt",
       patientTextShort: "Pancreatic cancer with GI fat malabsorption symptoms may need enzyme related evaluation.",
       patientTextActions: [
-        "Track stool changes and weight trend",
-        "Report greasy floating or urgent stools",
-        "Discuss enzyme evaluation with your care team"
+        "Track stool changes, abdominal symptoms, and weekly weight trend",
+        "Report greasy, floating, urgent, or frequent stools promptly",
+        "Discuss evaluation for pancreatic exocrine insufficiency and enzyme therapy with your care team",
+        "Ask whether fat-soluble vitamin monitoring is needed in your case"
       ],
-      whyThisMatters: "Pancreatic exocrine insufficiency can worsen nutrition deficits if not recognized.",
+      whyThisMatters: "AGA EPI guidance supports active evaluation for exocrine insufficiency in high-risk pancreatic cancer contexts.",
       triggers: { cancerTypes: ["pancreatic"], treatments: ["chemotherapy"], symptomsAny: ["diarrhea", "greasy_stools", "floating_stools"], symptomsAll: [], flagsAny: ["possible_malabsorption"] },
       sourceIds: ["agaEpi2023FullText", "agaEpi2023PubMed", "espenCancerPractical2021Pdf"],
       evidenceTags: ["PeerReviewed", "Guideline"]
@@ -548,11 +557,12 @@
       title: "Pancreatic chemotherapy cachexia support",
       patientTextShort: "Weight loss during pancreatic chemotherapy needs early cachexia informed support.",
       patientTextActions: [
-        "Track weekly weight change",
-        "Escalate early when weight drops",
-        "Use structured protein and calorie support"
+        "Track weekly weight and compare with one to three month trend",
+        "Escalate promptly if weight loss approaches or exceeds 5 percent",
+        "Use structured calorie and protein support with dietitian guidance",
+        "Request early symptom management when intake drops"
       ],
-      whyThisMatters: "Pancreatic cancer has high risk for severe nutrition decline and cachexia.",
+      whyThisMatters: "ASCO cachexia and ESPEN sources support early intervention for concerning weight loss during active therapy.",
       triggers: { cancerTypes: ["pancreatic"], treatments: ["chemotherapy"], symptomsAny: [], symptomsAll: [], flagsAny: ["weight_loss_concerning"] },
       sourceIds: ["ascoCachexia2020PubMed", "espenCancerGuideline2017Pdf"],
       evidenceTags: ["PeerReviewed", "Guideline"]
@@ -563,9 +573,10 @@
       title: "Pancreatic chemotherapy nausea strategy",
       patientTextShort: "Use nausea focused meal planning early in pancreatic chemotherapy.",
       patientTextActions: [
-        "Use small frequent low odor meals",
+        "Use small frequent low odor meals and snacks",
+        "Choose bland foods first and avoid greasy foods on bad nausea days",
         "Separate fluids from meals if fullness worsens",
-        "Ask care team for escalating symptom plan"
+        "Ask your care team early for escalation if nausea persists"
       ],
       whyThisMatters: "Nausea can compound pancreatic related intake challenges.",
       triggers: { cancerTypes: ["pancreatic"], treatments: ["chemotherapy"], symptomsAny: ["nausea"], symptomsAll: [], flagsAny: [] },
@@ -579,9 +590,10 @@
       title: "Breast radiation protein and energy support",
       patientTextShort: "During breast radiation, intake support should target protein and calorie adequacy.",
       patientTextActions: [
-        "Add protein to each meal",
-        "Use snacks to close energy gaps",
-        "Track deficits and review with your team"
+        "Add protein to every meal and snack",
+        "Use high calorie snacks or supplements to close daily gaps",
+        "Track calorie and protein deficits and share trends with your team",
+        "Shift larger meals to times of better symptom control"
       ],
       whyThisMatters: "Radiation related fatigue and symptoms can lower intake if not addressed.",
       triggers: { cancerTypes: ["breast"], treatments: ["radiation"], symptomsAny: [], symptomsAll: [], flagsAny: ["protein_deficit", "calorie_deficit"] },
@@ -594,9 +606,10 @@
       title: "Breast radiation fatigue nutrition pacing",
       patientTextShort: "Fatigue during breast radiation may require simplified high value meal routines.",
       patientTextActions: [
-        "Prepare food in advance on better days",
-        "Use ready options that contain protein",
-        "Coordinate support when fatigue is limiting"
+        "Prepare meals in batches on better energy days",
+        "Keep ready options with protein available for low energy periods",
+        "Use hydration reminders during fatigue-heavy days",
+        "Coordinate caregiver support when fatigue limits meal prep"
       ],
       whyThisMatters: "Fatigue can reduce meal preparation and intake consistency.",
       triggers: { cancerTypes: ["breast"], treatments: ["radiation"], symptomsAny: ["fatigue"], symptomsAll: [], flagsAny: [] },
