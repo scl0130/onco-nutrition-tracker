@@ -372,6 +372,10 @@
     return Math.round(value * 10) / 10;
   }
 
+  function roundTwo(value) {
+    return Math.round(value * 100) / 100;
+  }
+
   function cmToFeetInches(heightCm) {
     const totalInches = heightCm / 2.54;
     let feet = Math.floor(totalInches / 12);
@@ -677,9 +681,9 @@
     const factor = servingGrams / 100;
     return {
       calories: roundOne(macros100g.calories * factor),
-      protein: roundOne(macros100g.protein * factor),
-      carbs: roundOne(macros100g.carbs * factor),
-      fat: roundOne(macros100g.fat * factor)
+      protein: roundTwo(macros100g.protein * factor),
+      carbs: roundTwo(macros100g.carbs * factor),
+      fat: roundTwo(macros100g.fat * factor)
     };
   }
 
@@ -1003,9 +1007,9 @@
       e.preventDefault();
       state.targets = {
         calories: Number(targetCalories.value || 0),
-        protein: Number(targetProtein.value || 0),
-        carbs: Number(targetCarbs.value || 0),
-        fat: Number(targetFat.value || 0)
+        protein: roundTwo(Number(targetProtein.value || 0)),
+        carbs: roundTwo(Number(targetCarbs.value || 0)),
+        fat: roundTwo(Number(targetFat.value || 0))
       };
       saveState();
       renderMeals();
@@ -1046,9 +1050,9 @@
         name: mealNameInput.value.trim(),
         servingGrams: Number(mealServingInput.value || 100),
         calories: Number(mealCaloriesInput.value || 0),
-        protein: Number(mealProteinInput.value || 0),
-        carbs: Number(mealCarbsInput.value || 0),
-        fat: Number(mealFatInput.value || 0)
+        protein: roundTwo(Number(mealProteinInput.value || 0)),
+        carbs: roundTwo(Number(mealCarbsInput.value || 0)),
+        fat: roundTwo(Number(mealFatInput.value || 0))
       };
 
       state.meals.push(meal);

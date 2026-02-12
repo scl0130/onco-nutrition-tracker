@@ -111,9 +111,9 @@
 
         <form id="targetForm" class="grid form-grid">
           <label>Calories target <input type="number" min="0" id="targetCalories" required /></label>
-          <label>Protein target (g) <input type="number" min="0" id="targetProtein" required /></label>
-          <label>Carbs target (g) <input type="number" min="0" id="targetCarbs" required /></label>
-          <label>Fat target (g) <input type="number" min="0" id="targetFat" required /></label>
+          <label>Protein target (g) <input type="number" min="0" step="0.01" id="targetProtein" required /></label>
+          <label>Carbs target (g) <input type="number" min="0" step="0.01" id="targetCarbs" required /></label>
+          <label>Fat target (g) <input type="number" min="0" step="0.01" id="targetFat" required /></label>
           <button type="submit">Save targets</button>
         </form>
 
@@ -123,9 +123,9 @@
           <label>Serving size (g) <input type="number" min="1" id="mealServingGrams" value="100" required /></label>
           <button type="button" id="autofillFood">Autofill from food name</button>
           <label>Calories <input type="number" min="0" id="mealCalories" required /></label>
-          <label>Protein (g) <input type="number" min="0" id="mealProtein" required /></label>
-          <label>Carbs (g) <input type="number" min="0" id="mealCarbs" required /></label>
-          <label>Fat (g) <input type="number" min="0" id="mealFat" required /></label>
+          <label>Protein (g) <input type="number" min="0" step="0.01" id="mealProtein" required /></label>
+          <label>Carbs (g) <input type="number" min="0" step="0.01" id="mealCarbs" required /></label>
+          <label>Fat (g) <input type="number" min="0" step="0.01" id="mealFat" required /></label>
           <button type="submit">Add entry</button>
         </form>
         <p id="foodLookupStatus" class="muted"></p>
