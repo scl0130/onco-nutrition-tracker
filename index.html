@@ -164,6 +164,10 @@
           <h3>Your Recommendations Today</h3>
           <ul id="todayRecommendations" class="sources"></ul>
         </article>
+        <article class="mini-card">
+          <h3>Intake Trend (Last 14 Days)</h3>
+          <svg id="intakeTrendChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Calorie and protein trend chart"></svg>
+        </article>
       </section>
 
       <section class="card">
@@ -211,6 +215,8 @@
         <form id="mealForm" class="grid form-grid">
           <label>Meal/Food <input type="text" id="mealName" list="oncologyFoodOptions" required /></label>
           <datalist id="oncologyFoodOptions"></datalist>
+          <label>Barcode (UPC/EAN) <input type="text" id="mealBarcode" inputmode="numeric" /></label>
+          <button type="button" id="lookupBarcode">Lookup barcode</button>
           <label>Serving size (g) <input type="number" min="1" id="mealServingGrams" value="100" required /></label>
           <button type="button" id="autofillFood">Autofill from food name</button>
           <label>Calories <input type="number" min="0" id="mealCalories" required /></label>
@@ -258,6 +264,7 @@
       <section class="card">
         <h2>History</h2>
         <p class="muted">Recent days with calories, protein, and nutrition score.</p>
+        <button type="button" id="exportClinicianReport">Export clinician report (PDF)</button>
         <div id="historyList" class="food-library"></div>
       </section>
 
@@ -289,6 +296,7 @@
     </main>
 
     <script src="./recommendations.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

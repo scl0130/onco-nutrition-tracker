@@ -54,6 +54,8 @@
   const symptomForm = document.getElementById("symptomForm");
   const saveSymptomsButton = document.getElementById("saveSymptoms");
   const historyList = document.getElementById("historyList");
+  const exportClinicianReportButton = document.getElementById("exportClinicianReport");
+  const intakeTrendChart = document.getElementById("intakeTrendChart");
 
   const targetCalories = document.getElementById("targetCalories");
   const targetProtein = document.getElementById("targetProtein");
@@ -61,6 +63,8 @@
   const targetFat = document.getElementById("targetFat");
 
   const mealNameInput = document.getElementById("mealName");
+  const mealBarcodeInput = document.getElementById("mealBarcode");
+  const lookupBarcodeButton = document.getElementById("lookupBarcode");
   const mealServingInput = document.getElementById("mealServingGrams");
   const mealCaloriesInput = document.getElementById("mealCalories");
   const mealProteinInput = document.getElementById("mealProtein");
@@ -778,20 +782,10 @@
     }
     recent.forEach((dateStr) => {
       try {
-        const raw = localStorage.getItem(storageKeyForDate(dateStr));
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        const sum = (parsed.meals || []).reduce(
-          (acc, meal) => {
-            acc.calories += Number(meal.calories || 0);
-            acc.protein += Number(meal.protein || 0);
-            acc.carbs += Number(meal.carbs || 0);
-            acc.fat += Number(meal.fat || 0);
-            return acc;
-          },
-          { calories: 0, protein: 0, carbs: 0, fat: 0 }
-        );
-        const targets = parsed.targets || state.targets;
+        const snapshot = readDaySnapshot(dateStr);
+        if (!snapshot) return;
+        const sum = snapshot.sum;
+        const targets = snapshot.targets;
         const score = Math.round(
           Math.min(100, Math.max(0, (sum.calories / Math.max(1, targets.calories)) * 100 * 0.3 +
             (sum.protein / Math.max(1, targets.protein)) * 100 * 0.4 +
@@ -812,6 +806,148 @@
         // Skip malformed history rows.
       }
     });
+    renderIntakeTrendChart(recent.slice().reverse());
+  }
+
+  function readDaySnapshot(dateStr) {
+    const raw = localStorage.getItem(storageKeyForDate(dateStr));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const sum = (parsed.meals || []).reduce(
+      (acc, meal) => {
+        acc.calories += Number(meal.calories || 0);
+        acc.protein += Number(meal.protein || 0);
+        acc.carbs += Number(meal.carbs || 0);
+        acc.fat += Number(meal.fat || 0);
+        return acc;
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+    return {
+      date: dateStr,
+      sum,
+      targets: parsed.targets || { calories: 2000, protein: 90, carbs: 230, fat: 70 },
+      symptoms: Array.isArray(parsed.symptoms) ? parsed.symptoms : []
+    };
+  }
+
+  function listLogDates(limit) {
+    const dates = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith("oncoNutritionLog:")) continue;
+      dates.push(key.replace("oncoNutritionLog:", ""));
+    }
+    dates.sort();
+    if (limit) return dates.slice(-limit);
+    return dates;
+  }
+
+  function renderIntakeTrendChart(dateList) {
+    if (!intakeTrendChart) return;
+    const dates = Array.isArray(dateList) && dateList.length ? dateList : listLogDates(14);
+    const snapshots = dates.map((d) => readDaySnapshot(d)).filter(Boolean);
+    if (snapshots.length === 0) {
+      intakeTrendChart.innerHTML = "";
+      return;
+    }
+
+    const calVals = snapshots.map((s) => s.sum.calories);
+    const proteinVals = snapshots.map((s) => s.sum.protein);
+    const maxCal = Math.max(1, ...calVals);
+    const maxProtein = Math.max(1, ...proteinVals);
+    const buildPoints = (vals, maxV) =>
+      vals
+        .map((val, idx) => {
+          const x = 40 + (idx / Math.max(1, vals.length - 1)) * 520;
+          const y = 180 - (val / maxV) * 140;
+          return `${x},${y}`;
+        })
+        .join(" ");
+
+    const calPoints = buildPoints(calVals, maxCal);
+    const proteinPoints = buildPoints(proteinVals, maxProtein);
+    intakeTrendChart.innerHTML = `
+      <rect x="0" y="0" width="600" height="220" fill="#f8fafb"></rect>
+      <text x="20" y="24" fill="#3a86ff" font-size="12">Calories</text>
+      <text x="96" y="24" fill="#2cb1a6" font-size="12">Protein</text>
+      <polyline points="${calPoints}" fill="none" stroke="#3a86ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      <polyline points="${proteinPoints}" fill="none" stroke="#2cb1a6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    `;
+  }
+
+  async function lookupFoodByBarcode(barcode, servingGrams) {
+    const clean = String(barcode || "").trim();
+    if (!clean) throw new Error("Enter a barcode first.");
+    const response = await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(clean)}.json`
+    );
+    if (!response.ok) {
+      throw new Error(`Barcode lookup failed (${response.status})`);
+    }
+    const data = await response.json();
+    if (data.status !== 1 || !data.product) {
+      throw new Error("No product found for this barcode.");
+    }
+    const macros100g = parseProductMacros(data.product);
+    if (!macros100g) {
+      throw new Error("Barcode product found but macros are incomplete.");
+    }
+    return {
+      name: data.product.product_name || clean,
+      source: "OpenFoodFacts barcode",
+      safety: "Check package and food safety requirements for your treatment stage.",
+      macros: scaleFoodMacros(macros100g, servingGrams)
+    };
+  }
+
+  async function exportClinicianReport() {
+    const snapshots = listLogDates(30).map((d) => readDaySnapshot(d)).filter(Boolean);
+    if (!snapshots.length) {
+      setFoodLookupStatus("No daily history available to export.", true);
+      return;
+    }
+    if (!(window.jspdf && window.jspdf.jsPDF)) {
+      setFoodLookupStatus("PDF library unavailable. Refresh and try again.", true);
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    let y = 16;
+    const line = (text) => {
+      if (y > 275) {
+        pdf.addPage();
+        y = 16;
+      }
+      pdf.text(String(text), 12, y);
+      y += 7;
+    };
+
+    line("OncoNutrition Tracker - Clinician Report");
+    line(`Generated: ${new Date().toLocaleString()}`);
+    line(`Patient: ${(state.profile && state.profile.name) || "N/A"}`);
+    line(`Treatment mode: ${(state.profile && state.profile.treatmentMode) || "N/A"}`);
+    line("");
+    line("Recent Daily Intake (up to 30 days):");
+    snapshots.forEach((s) => {
+      line(
+        `${s.date} | kcal ${roundOne(s.sum.calories)} | P ${roundTwo(s.sum.protein)}g | C ${roundTwo(s.sum.carbs)}g | F ${roundTwo(s.sum.fat)}g | symptoms: ${(s.symptoms || []).join(", ") || "none"}`
+      );
+    });
+    line("");
+    line("Weight trend:");
+    if (!weightHistory.length) {
+      line("No weight entries");
+    } else {
+      [...weightHistory]
+        .sort((a, b) => (a.date > b.date ? 1 : -1))
+        .forEach((w) => line(`${w.date}: ${w.weightKg} kg`));
+    }
+
+    const filenameDate = new Date().toISOString().slice(0, 10);
+    pdf.save(`onco-nutrition-clinician-report-${filenameDate}.pdf`);
+    setFoodLookupStatus("Clinician PDF report exported.", false);
   }
 
   function shiftDate(dateStr, deltaDays) {
@@ -1462,6 +1598,25 @@
       renderProfileSummary();
     });
 
+    lookupBarcodeButton.addEventListener("click", async () => {
+      const servingGrams = Number(mealServingInput.value || 100);
+      setFoodLookupStatus("Looking up barcode...", false);
+      try {
+        const result = await lookupFoodByBarcode(mealBarcodeInput.value, servingGrams);
+        mealNameInput.value = result.name;
+        applyMealMacroValues(result.macros);
+        setFoodLookupStatus(`Autofilled from ${result.source}.`, false);
+        setFoodSafetyNote(`Food safety note: ${result.safety}`);
+      } catch (err) {
+        setFoodLookupStatus(
+          err instanceof Error ? err.message : "Barcode lookup failed.",
+          true
+        );
+      }
+    });
+
+    exportClinicianReportButton.addEventListener("click", exportClinicianReport);
+
     autofillFoodButton.addEventListener("click", runFoodAutofill);
     foodLibrarySearch.addEventListener("input", renderFoodLibrary);
     foodFilterHighProtein.addEventListener("change", renderFoodLibrary);
@@ -1522,6 +1677,7 @@
       state.meals.push(meal);
       saveState();
       mealForm.reset();
+      mealBarcodeInput.value = "";
       mealServingInput.value = 100;
       setFoodLookupStatus("", false);
       setFoodSafetyNote("");
