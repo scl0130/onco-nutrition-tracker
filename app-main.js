@@ -9,6 +9,7 @@
   const CURATED_FOODS = [
     { name: "Egg (fully cooked)", macros100g: { calories: 155, protein: 13, carbs: 1.1, fat: 11 } },
     { name: "Chicken breast (cooked)", macros100g: { calories: 165, protein: 31, carbs: 0, fat: 3.6 } },
+    { name: "Ribeye steak (cooked)", macros100g: { calories: 291, protein: 24.8, carbs: 0, fat: 21.8 } },
     { name: "White rice (cooked)", macros100g: { calories: 130, protein: 2.4, carbs: 28.2, fat: 0.3 } },
     { name: "Protein shake", macros100g: { calories: 72, protein: 12, carbs: 3, fat: 1.2 } },
     { name: "Banana", macros100g: { calories: 89, protein: 1.1, carbs: 22.8, fat: 0.3 } },
@@ -784,6 +785,16 @@
     };
   }
 
+  function findCuratedFoodByName(inputName) {
+    const query = String(inputName || "").trim().toLowerCase();
+    if (!query) return null;
+    return CURATED_FOODS.find((food) => {
+      const canonical = food.name.toLowerCase();
+      const simplified = canonical.replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim();
+      return canonical === query || simplified === query || canonical.includes(query) || query.includes(simplified);
+    }) || null;
+  }
+
   function initTrackerPage() {
     const dateInput = document.getElementById("trackerDate");
     const targetForm = document.getElementById("targetForm");
@@ -857,7 +868,7 @@
     autofillFoodButton.addEventListener("click", () => {
       const mealName = document.getElementById("mealName");
       const serving = Number(document.getElementById("mealServingGrams").value || 100);
-      const found = CURATED_FOODS.find((f) => f.name.toLowerCase() === mealName.value.trim().toLowerCase());
+      const found = findCuratedFoodByName(mealName.value);
       if (!found) {
         if (foodLookupStatus) foodLookupStatus.textContent = "Food not in curated library.";
         return;
