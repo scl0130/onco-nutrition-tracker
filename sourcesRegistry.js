@@ -88,6 +88,60 @@ const SOURCES_REGISTRY = {
     doi: "10.1016/j.clnu.2018.08.002",
     lastReviewed: "2026-02-12"
   },
+  acsSurvivorGuideline2022PubMed: {
+    title: "American Cancer Society nutrition and physical activity guideline for cancer survivors",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/35286402/",
+    pubmedId: "35286402",
+    doi: "10.3322/caac.21719",
+    lastReviewed: "2026-02-13"
+  },
+  ravascoNutritionCancer2019PubMed: {
+    title: "Nutrition in Cancer Patients",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/31394836/",
+    pubmedId: "31394836",
+    doi: "10.3390/jcm8081211",
+    lastReviewed: "2026-02-13"
+  },
+  ascoGeriatric2018PubMed: {
+    title: "ASCO guideline for geriatric oncology assessment and management",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/29337660/",
+    pubmedId: "29337660",
+    doi: "10.1200/JCO.2018.78.8687",
+    lastReviewed: "2026-02-13"
+  },
+  sabatinoHemodialysis2017PubMed: {
+    title: "Protein-energy wasting and nutritional supplementation in ESRD on hemodialysis",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/27866934/",
+    pubmedId: "27866934",
+    doi: "10.1016/j.clnu.2016.06.007",
+    lastReviewed: "2026-02-13"
+  },
+  hoshinoDialysis2021PubMed: {
+    title: "Renal rehabilitation and nutritional support in dialysis patients",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/33920948/",
+    pubmedId: "33920948",
+    doi: "10.3390/nu13051444",
+    lastReviewed: "2026-02-13"
+  },
+  diabetesDietGuideline2023PubMed: {
+    title: "Evidence-based European recommendations for dietary management of diabetes",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/37062377/",
+    pubmedId: "37062377",
+    doi: "10.1007/s00125-023-05894-8",
+    lastReviewed: "2026-02-13"
+  },
   agaEpi2023FullText: {
     title: "AGA Clinical Practice Update on Exocrine Pancreatic Insufficiency (full text)",
     publisher: "Gastroenterology (AGA)",

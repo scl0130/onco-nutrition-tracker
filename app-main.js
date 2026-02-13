@@ -531,12 +531,14 @@
 
     recs.forEach((rec) => {
       if (!Array.isArray(rec.sourceIds) || rec.sourceIds.length === 0) return;
+      const meta = recMeta(rec);
       const card = document.createElement("article");
       card.className = "rec-card";
       card.innerHTML = `<h3>${rec.title}</h3>
         <p>${rec.patientTextShort || rec.patientText || ""}</p>
         <div class="rec-meta">
           <span class="rec-chip strength">${(rec.evidenceTags || ["Guideline"]).join(", ")}</span>
+          <span class="rec-chip">${meta.confidence}</span>
         </div>
         <p class="muted">${rec.safetyNote}</p>`;
       const actions = document.createElement("details");
@@ -563,11 +565,15 @@
       showMoreButton.addEventListener("click", () => {
         const additional = allRecs.slice(6, 12);
         additional.forEach((rec) => {
+          const meta = recMeta(rec);
           const card = document.createElement("article");
           card.className = "rec-card";
           card.innerHTML = `<h3>${rec.title}</h3>
             <p>${rec.patientTextShort || rec.patientText || ""}</p>
-            <div class="rec-meta"><span class="rec-chip strength">${(rec.evidenceTags || ["Guideline"]).join(", ")}</span></div>
+            <div class="rec-meta">
+              <span class="rec-chip strength">${(rec.evidenceTags || ["Guideline"]).join(", ")}</span>
+              <span class="rec-chip">${meta.confidence}</span>
+            </div>
             <p class="muted">${rec.safetyNote}</p>`;
           const actions = document.createElement("details");
           actions.className = "rec-actions";

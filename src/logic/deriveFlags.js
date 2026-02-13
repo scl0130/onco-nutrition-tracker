@@ -65,6 +65,14 @@
       flags.add("possible_malabsorption");
     }
 
+    const kidneyCancer = profile.cancerType === "Kidney and Renal Pelvis Cancer";
+    if (kidneyCancer && profile.dialysisStatus === "on") {
+      flags.add("kidney_on_dialysis");
+    }
+    if (kidneyCancer && profile.dialysisStatus === "off") {
+      flags.add("kidney_off_dialysis");
+    }
+
     return {
       flags: Array.from(flags),
       proteinRemaining: roundOne(proteinRemaining),

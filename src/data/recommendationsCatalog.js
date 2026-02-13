@@ -40,6 +40,102 @@
       sourceIds: ["espenCancerGuideline2017Pdf", "espenCancerPractical2021PubMed", "ascoCachexia2020JCO"],
       evidenceTags: ["Guideline", "PeerReviewed"]
     }),
+    rec({
+      id: "consensus_on_treatment_macro_range",
+      priority: 97,
+      title: "On-treatment macro range anchor",
+      patientTextShort: "For active treatment, keep targets near 25 to 30 kcal/kg/day and protein 1.2 to 1.5 g/kg/day unless your team sets a different goal.",
+      patientTextActions: [
+        "Use your current body weight to estimate daily calorie and protein targets",
+        "Move toward the upper end when there is weight loss, sarcopenia, or high symptom burden",
+        "Review targets with your oncology dietitian if intake trends stay low"
+      ],
+      whyThisMatters: "The consensus evidence summary and oncology guidelines align on these ranges for adults during active treatment.",
+      confidence: "High confidence",
+      triggers: { cancerTypes: [], treatments: ["chemotherapy", "radiation", "immunotherapy", "targeted"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
+      sourceIds: ["espenCancerGuideline2017Pdf", "espenCancerPractical2021PubMed", "ravascoNutritionCancer2019PubMed"],
+      evidenceTags: ["Guideline", "PeerReviewed"]
+    }),
+    rec({
+      id: "consensus_active_treatment_carb_fat_pattern",
+      priority: 89,
+      title: "Active-treatment carbohydrate and fat pattern",
+      patientTextShort: "Use balanced macros during treatment; a practical range is about 45 to 55% carbohydrate and 25 to 35% fat when tolerated.",
+      patientTextActions: [
+        "Avoid highly restrictive macro plans during active treatment unless prescribed",
+        "Use about 50% carbohydrate and 30% fat as a practical default when symptoms are stable",
+        "Temporarily reduce insoluble fiber during active diarrhea or obstruction risk"
+      ],
+      whyThisMatters: "Evidence supports balanced patterns and symptom-based adaptation, while exact carb/fat percentages are less strongly established than energy/protein targets.",
+      confidence: "Medium confidence",
+      triggers: { cancerTypes: [], treatments: ["chemotherapy", "radiation", "immunotherapy", "targeted"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
+      sourceIds: ["nciEatingHintsPdf", "acsSurvivorGuideline2022PubMed", "espenCancerGuideline2017Pdf"],
+      evidenceTags: ["Government", "PeerReviewed", "Guideline"]
+    }),
+    rec({
+      id: "consensus_low_intake_step_up",
+      priority: 96,
+      title: "Step-up support when intake stays low",
+      patientTextShort: "If intake stays below about half of needs for more than 1 to 2 weeks, escalate support from counseling to supplements and then tube or parenteral options when needed.",
+      patientTextActions: [
+        "Track days where intake is under 50% of your target",
+        "Start oral nutrition supplements early when regular food is not enough",
+        "Ask your team when enteral or parenteral nutrition should be considered"
+      ],
+      whyThisMatters: "Consensus guidance highlights early escalation to prevent prolonged deficits and treatment interruptions.",
+      confidence: "High confidence",
+      triggers: { cancerTypes: [], treatments: [], symptomsAny: [], symptomsAll: [], flagsAny: ["calorie_deficit", "protein_deficit", "weight_loss_concerning"] },
+      sourceIds: ["espenCancerGuideline2017Pdf", "ravascoNutritionCancer2019PubMed", "ascoCachexia2020PubMed"],
+      evidenceTags: ["Guideline", "PeerReviewed"]
+    }),
+    rec({
+      id: "consensus_survivorship_pattern_weight",
+      priority: 88,
+      title: "Survivorship plant-forward pattern and weight stability",
+      patientTextShort: "Outside active treatment, prioritize weight stability and a plant-forward eating pattern over strict macro ratios.",
+      patientTextActions: [
+        "Center meals on vegetables, fruits, whole grains, legumes, and nuts",
+        "Limit added sugars, refined grains, and processed meats",
+        "Use individualized protein goals when frailty or sarcopenia risk is present"
+      ],
+      whyThisMatters: "Survivorship guidance is strongest for dietary quality and body-weight management rather than fixed kcal/kg or carb/fat ratios.",
+      confidence: "High confidence",
+      triggers: { cancerTypes: [], treatments: ["none"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
+      sourceIds: ["acsSurvivorGuideline2022PubMed", "nciNutritionDuringCancer", "diabetesDietGuideline2023PubMed"],
+      evidenceTags: ["PeerReviewed", "Government"]
+    }),
+    rec({
+      id: "kidney_dialysis_macro_override",
+      priority: 99,
+      title: "Kidney cancer on dialysis macro override",
+      patientTextShort: "If you are on dialysis, use renal-focused goals; protein around 1.2 g/kg/day with adequate energy is usually prioritized over standard oncology defaults.",
+      patientTextActions: [
+        "Confirm protein, fluid, potassium, phosphate, and sodium goals with renal and oncology teams together",
+        "Ask about oral renal supplements during dialysis if intake is low",
+        "Report poor intake and post-dialysis fatigue quickly to prevent protein-energy wasting"
+      ],
+      whyThisMatters: "Dialysis changes nutrition priorities and requires renal-specific constraints alongside cancer treatment support.",
+      confidence: "High confidence",
+      triggers: { cancerTypes: ["kidney"], treatments: [], symptomsAny: [], symptomsAll: [], flagsAny: ["kidney_on_dialysis"] },
+      sourceIds: ["sabatinoHemodialysis2017PubMed", "hoshinoDialysis2021PubMed", "espenCancerGuideline2017Pdf"],
+      evidenceTags: ["PeerReviewed", "Guideline"]
+    }),
+    rec({
+      id: "kidney_off_dialysis_protein_caution",
+      priority: 93,
+      title: "Kidney cancer off dialysis protein caution",
+      patientTextShort: "If kidney function is reduced and you are not on dialysis, protein targets may need to be lower than active-treatment oncology ranges.",
+      patientTextActions: [
+        "Request CKD-stage specific protein goals from your renal team",
+        "Avoid self-increasing protein without nephrology review",
+        "Track appetite, edema, and weight trends and bring logs to visits"
+      ],
+      whyThisMatters: "Off-dialysis CKD often requires individualized protein restriction and electrolyte management, which can conflict with standard oncology targets.",
+      confidence: "High confidence",
+      triggers: { cancerTypes: ["kidney"], treatments: [], symptomsAny: [], symptomsAll: [], flagsAny: ["kidney_off_dialysis"] },
+      sourceIds: ["sabatinoHemodialysis2017PubMed", "hoshinoDialysis2021PubMed", "diabetesDietGuideline2023PubMed"],
+      evidenceTags: ["PeerReviewed"]
+    }),
 
     rec({
       id: "tx_chemo_small_frequent_meals",
