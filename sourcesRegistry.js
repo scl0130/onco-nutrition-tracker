@@ -142,6 +142,96 @@ const SOURCES_REGISTRY = {
     doi: "10.1007/s00125-023-05894-8",
     lastReviewed: "2026-02-13"
   },
+  masccEsmoMecCinv2023PubMed: {
+    title: "MASCC/ESMO 2023 antiemetic consensus: moderately emetogenic agents",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/38114821/",
+    pubmedId: "38114821",
+    doi: "10.1007/s00520-023-08222-3",
+    lastReviewed: "2026-02-13"
+  },
+  masccEsmoRinv2023PubMed: {
+    title: "MASCC/ESMO 2023 antiemetic consensus: radiotherapy and chemoradiotherapy-induced nausea/vomiting",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/38097904/",
+    pubmedId: "38097904",
+    doi: "10.1007/s00520-023-08226-z",
+    lastReviewed: "2026-02-13"
+  },
+  masccIsooMucositis2020PubMed: {
+    title: "MASCC/ISOO clinical practice guideline for oral and GI mucositis",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/32786044/",
+    pubmedId: "32786044",
+    doi: "10.1002/cncr.33100",
+    lastReviewed: "2026-02-13"
+  },
+  ascoIsooMasccXerostomia2021PubMed: {
+    title: "ISOO/MASCC/ASCO guideline for salivary gland hypofunction and xerostomia",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/34283635/",
+    pubmedId: "34283635",
+    doi: "10.1200/JCO.21.01208",
+    lastReviewed: "2026-02-13"
+  },
+  onsConstipationGuideline2020PubMed: {
+    title: "ONS guideline for opioid and non-opioid cancer-related constipation",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/33063786/",
+    pubmedId: "33063786",
+    doi: "10.1188/20.ONF.671-691",
+    lastReviewed: "2026-02-13"
+  },
+  ascoFatigueGuideline2024PubMed: {
+    title: "ASCO-SIO guideline update: management of fatigue in adult cancer survivors",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/38754041/",
+    pubmedId: "38754041",
+    doi: "10.1200/JCO.24.00541",
+    lastReviewed: "2026-02-13"
+  },
+  tasteSystematicReview2021PubMed: {
+    title: "Taste function during chemo/radiotherapy and implications for nutrition",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/33071205/",
+    pubmedId: "33071205",
+    doi: "10.1016/j.jand.2020.08.014",
+    lastReviewed: "2026-02-13"
+  },
+  dysphagiaHncConsensus2023PubMed: {
+    title: "Expert consensus statement: dysphagia management in head and neck cancer",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/36965195/",
+    pubmedId: "36965195",
+    doi: "10.1002/ohn.302",
+    lastReviewed: "2026-02-13"
+  },
+  giSymptomsNutritionMeta2025PubMed: {
+    title: "Nutrition interventions for GI symptoms during cancer therapy: systematic review and meta-analysis",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/40706958/",
+    pubmedId: "40706958",
+    doi: "10.1016/j.advnut.2025.100485",
+    lastReviewed: "2026-02-13"
+  },
+  earlySatietyScoping2025PubMed: {
+    title: "Early satiety in cancer: scoping review",
+    publisher: "PubMed",
+    evidenceType: "PeerReviewed",
+    url: "https://pubmed.ncbi.nlm.nih.gov/41349893/",
+    pubmedId: "41349893",
+    doi: "10.1016/j.jand.2025.156250",
+    lastReviewed: "2026-02-13"
+  },
   agaEpi2023FullText: {
     title: "AGA Clinical Practice Update on Exocrine Pancreatic Insufficiency (full text)",
     publisher: "Gastroenterology (AGA)",

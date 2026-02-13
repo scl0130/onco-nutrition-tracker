@@ -426,10 +426,10 @@
         "Sip clear fluids through the day and separate fluids from meals if needed",
         "Avoid foods with strong odors when nausea is worse"
       ],
-      whyThisMatters: "NCI Eating Hints and Nutrition guidance describe nausea as a common cause of rapid calorie and fluid decline.",
+      whyThisMatters: "Antiemetic consensus guidance and oncology nutrition evidence indicate nausea rapidly lowers intake without early meal-pattern and medication support.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["nausea"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["nciEatingHintsPdf", "nciNutritionDuringCancer"],
-      evidenceTags: ["Government"]
+      sourceIds: ["masccEsmoMecCinv2023PubMed", "masccEsmoRinv2023PubMed", "nciEatingHintsPdf"],
+      evidenceTags: ["PeerReviewed", "Government"]
     }),
     rec({
       id: "symptom_nausea_with_deficit",
@@ -456,10 +456,10 @@
         "Track vomiting episodes, fluids kept down, and urine output",
         "Seek urgent care if you cannot keep liquids down"
       ],
-      whyThisMatters: "NCI supportive care guidance highlights rapid dehydration risk when vomiting persists.",
+      whyThisMatters: "Antiemetic consensus and supportive nutrition sources highlight fast dehydration and deficit risk when vomiting is sustained.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["vomiting"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["nciEatingHintsPdf", "acsEatingProblemsHub"],
-      evidenceTags: ["Government", "CancerCenter"]
+      sourceIds: ["masccEsmoMecCinv2023PubMed", "masccEsmoRinv2023PubMed", "nciEatingHintsPdf"],
+      evidenceTags: ["PeerReviewed", "Government"]
     }),
     rec({
       id: "symptom_vomiting_deficit",
@@ -487,10 +487,10 @@
         "If food tastes metallic, use plastic utensils and glass cookware",
         "Use mild herbs and seasonings and rotate protein choices"
       ],
-      whyThisMatters: "MSKCC, ACS, and NCI sources provide practical taste-change strategies that can improve intake consistency.",
+      whyThisMatters: "Systematic evidence links treatment-related taste dysfunction with poorer intake, supporting structured flavor and food-format adaptation.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["taste_changes"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["mskTasteChanges", "acsTasteSmell"],
-      evidenceTags: ["CancerCenter"]
+      sourceIds: ["tasteSystematicReview2021PubMed", "mskTasteChanges", "acsTasteSmell"],
+      evidenceTags: ["PeerReviewed", "CancerCenter"]
     }),
     rec({
       id: "symptom_taste_with_loss",
@@ -504,8 +504,8 @@
       ],
       whyThisMatters: "Taste driven food avoidance can lead to clinically meaningful deficits.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["taste_changes"], symptomsAll: [], flagsAny: ["weight_loss_concerning", "protein_deficit"] },
-      sourceIds: ["mskTasteChanges", "nciEatingHintsPdf"],
-      evidenceTags: ["CancerCenter", "Government"]
+      sourceIds: ["tasteSystematicReview2021PubMed", "nciEatingHintsPdf", "ascoCachexia2020PubMed"],
+      evidenceTags: ["PeerReviewed", "Government"]
     }),
     rec({
       id: "symptom_mouth_sores_core",
@@ -518,10 +518,10 @@
         "Use oral care and rinsing routines from your care team",
         "Use liquid nutrition options if solids are too painful"
       ],
-      whyThisMatters: "Penn mucositis and NCI sources show painful oral symptoms can sharply reduce intake and hydration.",
+      whyThisMatters: "Mucositis guidelines describe major oral intake barriers during treatment and support symptom-adapted texture and hydration strategies.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["mouth_sores", "dry_mouth", "difficulty_swallowing"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["pennMucositisTipSheet", "nciEatingHintsPdf"],
-      evidenceTags: ["CancerCenter", "Government"]
+      sourceIds: ["masccIsooMucositis2020PubMed", "pennMucositisTipSheet", "nciEatingHintsPdf"],
+      evidenceTags: ["PeerReviewed", "CancerCenter", "Government"]
     }),
     rec({
       id: "symptom_mouth_sores_deficit",
@@ -535,8 +535,8 @@
       ],
       whyThisMatters: "Oral pain can drive rapid nutrition decline without early intervention.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["mouth_sores", "difficulty_swallowing"], symptomsAll: [], flagsAny: ["calorie_deficit"] },
-      sourceIds: ["pennMucositisTipSheet", "nciNutritionCarePDQ"],
-      evidenceTags: ["CancerCenter", "Government"]
+      sourceIds: ["masccIsooMucositis2020PubMed", "nciNutritionCarePDQ"],
+      evidenceTags: ["PeerReviewed", "Government"]
     }),
     rec({
       id: "symptom_diarrhea_core",
@@ -549,10 +549,10 @@
         "Track stool frequency and associated symptoms",
         "Do not start antidiarrheal medicines without clinician guidance"
       ],
-      whyThisMatters: "NCI Eating Hints emphasizes dehydration and nutrient loss risk during persistent diarrhea.",
+      whyThisMatters: "Systematic evidence and supportive-care guidance show persistent diarrhea drives fluid and nutrient loss unless early nutrition support is applied.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["diarrhea"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["nciEatingHintsPdf", "acsEatingProblemsHub"],
-      evidenceTags: ["Government", "CancerCenter"]
+      sourceIds: ["giSymptomsNutritionMeta2025PubMed", "nciEatingHintsPdf", "acsEatingProblemsHub"],
+      evidenceTags: ["PeerReviewed", "Government", "CancerCenter"]
     }),
     rec({
       id: "symptom_diarrhea_dehydration_risk",
@@ -579,10 +579,10 @@
         "Use food pattern changes recommended by your care team for constipation",
         "Review constipation causing medicines and bowel plan with clinicians"
       ],
-      whyThisMatters: "Unmanaged constipation can reduce appetite and overall intake.",
+      whyThisMatters: "Constipation guidelines in oncology settings support early bowel-plan management to prevent appetite decline and discomfort-related intake loss.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["constipation"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["nciEatingHintsPdf", "acsEatingProblemsHub"],
-      evidenceTags: ["Government", "CancerCenter"]
+      sourceIds: ["onsConstipationGuideline2020PubMed", "nciEatingHintsPdf", "acsEatingProblemsHub"],
+      evidenceTags: ["PeerReviewed", "Government", "CancerCenter"]
     }),
     rec({
       id: "symptom_constipation_with_deficit",
@@ -596,8 +596,8 @@
       ],
       whyThisMatters: "GI discomfort can create a cycle of lower intake and worsening symptoms.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["constipation", "appetite_loss"], symptomsAll: [], flagsAny: ["calorie_deficit"] },
-      sourceIds: ["nciNutritionCarePDQ", "nciEatingHintsPdf"],
-      evidenceTags: ["Government"]
+      sourceIds: ["onsConstipationGuideline2020PubMed", "nciNutritionCarePDQ"],
+      evidenceTags: ["PeerReviewed", "Government"]
     }),
     rec({
       id: "symptom_appetite_loss_core",
@@ -610,9 +610,9 @@
         "Keep ready to eat high protein snacks nearby",
         "Use liquid nutrition when solid intake is low"
       ],
-      whyThisMatters: "NCI PDQ, Eating Hints, and ASCO cachexia guidance identify appetite loss as a major driver of nutrition decline.",
+      whyThisMatters: "Cachexia and oncology nutrition guidance consistently identify appetite loss and early satiety as key drivers of progressive deficits.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["appetite_loss", "early_satiety"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["nciNutritionCarePDQ", "nciEatingHintsPdf", "ascoCachexia2020PubMed"],
+      sourceIds: ["nciNutritionCarePDQ", "ascoCachexia2020PubMed", "earlySatietyScoping2025PubMed"],
       evidenceTags: ["Government", "PeerReviewed"]
     }),
     rec({
@@ -629,6 +629,85 @@
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["appetite_loss"], symptomsAll: [], flagsAny: ["weight_loss_concerning"] },
       sourceIds: ["ascoCachexia2020JCO", "espenCancerPractical2021Pdf", "glimMalnutrition2019"],
       evidenceTags: ["Guideline", "PeerReviewed"]
+    }),
+    rec({
+      id: "symptom_dry_mouth_core",
+      priority: 90,
+      title: "Dry mouth hydration and texture strategy",
+      patientTextShort: "Dry mouth can reduce swallowing comfort and intake; use moisture-focused food and fluid tactics.",
+      patientTextActions: [
+        "Use sauces, gravies, and moist textures with meals",
+        "Sip fluids regularly during and between meals if not fluid-restricted",
+        "Avoid very dry, crumbly, or irritating foods when symptoms flare",
+        "Ask your team about saliva-support options for persistent symptoms"
+      ],
+      whyThisMatters: "Xerostomia guideline recommendations support early symptom management to preserve oral intake and reduce treatment burden.",
+      triggers: { cancerTypes: [], treatments: [], symptomsAny: ["dry_mouth"], symptomsAll: [], flagsAny: [] },
+      sourceIds: ["ascoIsooMasccXerostomia2021PubMed", "nciEatingHintsPdf"],
+      evidenceTags: ["PeerReviewed", "Government"]
+    }),
+    rec({
+      id: "symptom_dysphagia_core",
+      priority: 92,
+      title: "Difficulty swallowing safety and nutrition plan",
+      patientTextShort: "When swallowing is difficult, texture modification and early escalation are important to protect intake and safety.",
+      patientTextActions: [
+        "Use soft, smooth, and easy-to-swallow textures",
+        "Take small bites and frequent sips while eating",
+        "Stop eating and seek urgent review if choking or aspiration symptoms occur",
+        "Request speech/swallow specialist and dietitian input early"
+      ],
+      whyThisMatters: "Head and neck dysphagia consensus guidance emphasizes early multidisciplinary management to reduce complications and preserve nutrition.",
+      triggers: { cancerTypes: [], treatments: [], symptomsAny: ["difficulty_swallowing"], symptomsAll: [], flagsAny: [] },
+      sourceIds: ["dysphagiaHncConsensus2023PubMed", "masccIsooMucositis2020PubMed"],
+      evidenceTags: ["PeerReviewed"]
+    }),
+    rec({
+      id: "symptom_fatigue_core",
+      priority: 85,
+      title: "Fatigue low-effort nutrition planning",
+      patientTextShort: "With fatigue, simplify meal prep and preserve intake using low-effort high-value foods.",
+      patientTextActions: [
+        "Batch prepare meals on better-energy days",
+        "Use ready-to-eat protein options and oral supplements as needed",
+        "Set reminder-based meal timing when appetite cues are weak"
+      ],
+      whyThisMatters: "Fatigue guideline updates support structured activity and symptom management; practical nutrition simplification helps prevent avoidable deficits.",
+      triggers: { cancerTypes: [], treatments: [], symptomsAny: ["fatigue"], symptomsAll: [], flagsAny: [] },
+      sourceIds: ["ascoFatigueGuideline2024PubMed", "nciEatingHintsPdf"],
+      evidenceTags: ["PeerReviewed", "Government"]
+    }),
+    rec({
+      id: "symptom_bloating_core",
+      priority: 83,
+      title: "Bloating symptom-directed intake adjustment",
+      patientTextShort: "Bloating may reduce meal tolerance; use smaller portions and symptom-linked food pattern adjustments.",
+      patientTextActions: [
+        "Shift to smaller and more frequent meals on bloating days",
+        "Limit foods that repeatedly worsen abdominal distension",
+        "Track bloating with stool pattern and appetite to identify triggers",
+        "Contact your team if bloating persists or worsens"
+      ],
+      whyThisMatters: "Recent oncology nutrition meta-analysis supports symptom-targeted dietary strategies for GI symptom burden during treatment.",
+      triggers: { cancerTypes: [], treatments: [], symptomsAny: ["bloating"], symptomsAll: [], flagsAny: [] },
+      sourceIds: ["giSymptomsNutritionMeta2025PubMed", "nciNutritionDuringCancer"],
+      evidenceTags: ["PeerReviewed", "Government"]
+    }),
+    rec({
+      id: "symptom_pain_affecting_eating_core",
+      priority: 91,
+      title: "Pain affecting eating escalation",
+      patientTextShort: "Pain that limits eating should trigger rapid symptom control and nutrition support.",
+      patientTextActions: [
+        "Document pain timing relative to meals and foods",
+        "Use soft and easy-to-chew foods during pain flares",
+        "Ask for pain-plan adjustment if pain is reducing daily intake",
+        "Escalate same week when pain and intake deficits overlap"
+      ],
+      whyThisMatters: "Pain and GI symptom burden are linked with lower intake; early symptom control is needed to prevent cumulative nutrition decline.",
+      triggers: { cancerTypes: [], treatments: [], symptomsAny: ["pain"], symptomsAll: [], flagsAny: [] },
+      sourceIds: ["giSymptomsNutritionMeta2025PubMed", "nciNutritionCarePDQ"],
+      evidenceTags: ["PeerReviewed", "Government"]
     }),
 
     rec({
