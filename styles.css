@@ -1229,6 +1229,15 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+#symptomForm.severity-grid label {
+  display: grid;
+  gap: 6px;
+}
+
+#symptomForm.severity-grid select {
+  max-width: 120px;
+}
+
 #dashboardWeightForm.form-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

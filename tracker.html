@@ -43,6 +43,7 @@
           <label>Protein target (g) <input type="number" min="0" step="0.01" id="targetProtein" required /></label>
           <label>Carbs target (g) <input type="number" min="0" step="0.01" id="targetCarbs" required /></label>
           <label>Fat target (g) <input type="number" min="0" step="0.01" id="targetFat" required /></label>
+          <label>Fluids target (mL) <input type="number" min="0" id="targetFluidsMl" required /></label>
           <button type="submit">Save targets</button>
         </form>
 
@@ -58,6 +59,11 @@
           <label>Carbs (g) <input type="number" min="0" step="0.01" id="mealCarbs" required /></label>
           <label>Fat (g) <input type="number" min="0" step="0.01" id="mealFat" required /></label>
           <button type="submit">Add entry</button>
+        </form>
+
+        <form id="fluidForm" class="grid form-grid">
+          <label>Fluids consumed today (mL) <input type="number" min="0" step="1" id="fluidIntakeMl" value="0" required /></label>
+          <button type="submit" class="secondary">Save fluid intake</button>
         </form>
 
         <div class="quick-add" id="quickAddFoods"></div>

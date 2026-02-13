@@ -3,6 +3,11 @@
   const PROFILE_EXISTS_KEY_BASE = "profileExists";
   const WEIGHT_HISTORY_KEY_BASE = "oncoNutritionWeightHistory:v1";
   const DAY_LOG_KEY_BASE = "oncoNutritionLog";
+  const SYMPTOM_LOG_KEY_BASE = "symptom_log";
+  const TREATMENT_CYCLE_LOG_KEY_BASE = "treatment_cycle_log";
+  const FLUID_INTAKE_LOG_KEY_BASE = "fluid_intake_log";
+  const NUTRITION_LOG_KEY_BASE = "nutrition_log";
+  const RECOMMENDATION_LOG_KEY_BASE = "recommendation_log";
   const USDA_API_KEY_STORAGE_KEY = "oncoNutritionUsdaApiKey:v1";
   const USDA_DEFAULT_API_KEY = "DEMO_KEY";
   const SUPABASE_URL_STORAGE_KEY = "oncoNutritionSupabaseUrl:v1";
@@ -42,7 +47,13 @@
     const raw = localStorage.getItem(scopedKey(PROFILE_KEY_BASE));
     if (!raw) return null;
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      const symptomSeverity = normalizeSymptomSeverity(parsed.symptomSeverity, parsed.symptoms);
+      return {
+        ...parsed,
+        symptomSeverity,
+        symptoms: severityToSymptoms(symptomSeverity)
+      };
     } catch (_err) {
       return null;
     }
@@ -51,6 +62,98 @@
   function saveProfile(profile) {
     localStorage.setItem(scopedKey(PROFILE_KEY_BASE), JSON.stringify(profile));
     localStorage.setItem(scopedKey(PROFILE_EXISTS_KEY_BASE), "true");
+  }
+
+  function readArray(baseKey) {
+    const raw = localStorage.getItem(scopedKey(baseKey));
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_err) {
+      return [];
+    }
+  }
+
+  function writeArray(baseKey, value) {
+    localStorage.setItem(scopedKey(baseKey), JSON.stringify(value));
+  }
+
+  function upsertLogByDate(baseKey, date, payload) {
+    const rows = readArray(baseKey);
+    const idx = rows.findIndex((row) => row && row.date === date);
+    const row = { ...payload, date, created_at: new Date().toISOString() };
+    if (idx >= 0) rows[idx] = row;
+    else rows.push(row);
+    writeArray(baseKey, rows);
+  }
+
+  function symptomSeverityDefaults() {
+    return {
+      nausea_severity: 0,
+      vomiting_severity: 0,
+      diarrhea_severity: 0,
+      constipation_severity: 0,
+      mucositis_severity: 0,
+      taste_change_severity: 0,
+      dry_mouth_severity: 0,
+      appetite_loss_severity: 0,
+      early_satiety_severity: 0,
+      fatigue_severity: 0,
+      difficulty_swallowing_severity: 0,
+      bloating_severity: 0,
+      greasy_stools_severity: 0,
+      floating_stools_severity: 0,
+      pain_severity: 0
+    };
+  }
+
+  function severityToSymptoms(severityObj) {
+    const severity = { ...symptomSeverityDefaults(), ...(severityObj || {}) };
+    const map = {
+      nausea_severity: "nausea",
+      vomiting_severity: "vomiting",
+      diarrhea_severity: "diarrhea",
+      constipation_severity: "constipation",
+      mucositis_severity: "mouth_sores",
+      taste_change_severity: "taste_changes",
+      dry_mouth_severity: "dry_mouth",
+      appetite_loss_severity: "appetite_loss",
+      early_satiety_severity: "early_satiety",
+      fatigue_severity: "fatigue",
+      difficulty_swallowing_severity: "difficulty_swallowing",
+      bloating_severity: "bloating",
+      greasy_stools_severity: "greasy_stools",
+      floating_stools_severity: "floating_stools",
+      pain_severity: "pain"
+    };
+    return Object.keys(map).filter((key) => Number(severity[key] || 0) >= 1).map((key) => map[key]);
+  }
+
+  function symptomSeverityFromLegacySymptoms(symptoms) {
+    const severity = symptomSeverityDefaults();
+    const set = new Set(Array.isArray(symptoms) ? symptoms : []);
+    if (set.has("nausea")) severity.nausea_severity = 1;
+    if (set.has("vomiting")) severity.vomiting_severity = 1;
+    if (set.has("diarrhea")) severity.diarrhea_severity = 1;
+    if (set.has("constipation")) severity.constipation_severity = 1;
+    if (set.has("mouth_sores")) severity.mucositis_severity = 1;
+    if (set.has("taste_changes")) severity.taste_change_severity = 1;
+    if (set.has("dry_mouth")) severity.dry_mouth_severity = 1;
+    if (set.has("appetite_loss")) severity.appetite_loss_severity = 1;
+    if (set.has("early_satiety")) severity.early_satiety_severity = 1;
+    if (set.has("fatigue")) severity.fatigue_severity = 1;
+    if (set.has("difficulty_swallowing")) severity.difficulty_swallowing_severity = 1;
+    if (set.has("bloating")) severity.bloating_severity = 1;
+    if (set.has("greasy_stools")) severity.greasy_stools_severity = 1;
+    if (set.has("floating_stools")) severity.floating_stools_severity = 1;
+    if (set.has("pain")) severity.pain_severity = 1;
+    return severity;
+  }
+
+  function normalizeSymptomSeverity(severityObj, legacySymptoms) {
+    const fromLegacy = symptomSeverityFromLegacySymptoms(legacySymptoms);
+    return { ...symptomSeverityDefaults(), ...fromLegacy, ...(severityObj || {}) };
   }
 
   function storageKeyForDate(date) {
@@ -327,30 +430,86 @@
     return Math.round(v * 100) / 100;
   }
 
+  function calculateBMI(profile) {
+    const weight = Number(profile && profile.weight);
+    const heightCm = Number(profile && profile.heightCm);
+    if (weight <= 0 || heightCm <= 0) return null;
+    const heightM = heightCm / 100;
+    const bmi = weight / (heightM * heightM);
+    return roundOne(bmi);
+  }
+
+  function bmiCategory(bmi) {
+    if (!Number.isFinite(bmi)) return "unknown";
+    if (bmi < 18.5) return "underweight";
+    if (bmi < 25) return "normal";
+    if (bmi < 30) return "overweight";
+    return "obese";
+  }
+
+  function symptomScore(profile) {
+    const severity = normalizeSymptomSeverity(profile && profile.symptomSeverity, profile && profile.symptoms);
+    return Object.values(severity).reduce((acc, v) => acc + Number(v || 0), 0);
+  }
+
+  function malnutritionRiskLevel(profile, dayTotals, dayTargets) {
+    const bmi = calculateBMI(profile);
+    let points = 0;
+    if (Number.isFinite(bmi) && bmi < 18.5) points += 3;
+    else if (Number.isFinite(bmi) && bmi < 20) points += 2;
+    else if (Number.isFinite(bmi) && bmi >= 30) points += 1;
+
+    const weightLoss = String((profile && profile.weightLoss) || "none");
+    if (weightLoss === "mild") points += 1;
+    if (weightLoss === "moderate") points += 2;
+    if (weightLoss === "severe") points += 3;
+
+    const severity = normalizeSymptomSeverity(profile && profile.symptomSeverity, profile && profile.symptoms);
+    const appetiteSeverity = Number(severity.appetite_loss_severity || 0);
+    points += appetiteSeverity;
+
+    const calorieTarget = Number(dayTargets && dayTargets.calories);
+    const calories = Number(dayTotals && dayTotals.calories);
+    if (calorieTarget > 0) {
+      const deficitPct = (calorieTarget - calories) / calorieTarget;
+      if (deficitPct > 0.4) points += 3;
+      else if (deficitPct > 0.25) points += 2;
+      else if (deficitPct > 0.1) points += 1;
+    }
+
+    if (points >= 8) return "severe";
+    if (points >= 5) return "high";
+    if (points >= 3) return "moderate";
+    return "low";
+  }
+
   function readDay(date) {
     const raw = localStorage.getItem(storageKeyForDate(date));
     if (!raw) {
       return {
-        targets: { calories: 2000, protein: 90, carbs: 230, fat: 70 },
+        targets: { calories: 2000, protein: 90, carbs: 230, fat: 70, fluidsMl: 2000 },
         targetsManual: false,
         meals: [],
-        symptoms: []
+        symptoms: [],
+        fluidsMl: 0
       };
     }
     try {
       const parsed = JSON.parse(raw);
       return {
-        targets: parsed.targets || { calories: 2000, protein: 90, carbs: 230, fat: 70 },
+        targets: parsed.targets || { calories: 2000, protein: 90, carbs: 230, fat: 70, fluidsMl: 2000 },
         targetsManual: Boolean(parsed.targetsManual),
         meals: Array.isArray(parsed.meals) ? parsed.meals : [],
-        symptoms: Array.isArray(parsed.symptoms) ? parsed.symptoms : []
+        symptoms: Array.isArray(parsed.symptoms) ? parsed.symptoms : [],
+        fluidsMl: Number(parsed.fluidsMl || 0)
       };
     } catch (_err) {
       return {
-        targets: { calories: 2000, protein: 90, carbs: 230, fat: 70 },
+        targets: { calories: 2000, protein: 90, carbs: 230, fat: 70, fluidsMl: 2000 },
         targetsManual: false,
         meals: [],
-        symptoms: []
+        symptoms: [],
+        fluidsMl: 0
       };
     }
   }
@@ -391,22 +550,15 @@
   }
 
   function riskLabel(profile, sum, targets) {
-    let risk = 0;
-    if ((profile.symptoms || []).includes("appetite_loss")) risk += 1;
-    if ((profile.appetite || "normal") === "reduced") risk += 1;
-    if ((profile.appetite || "normal") === "very_low") risk += 2;
-    if ((profile.weightLoss || "none") === "moderate") risk += 1;
-    if ((profile.weightLoss || "none") === "severe") risk += 2;
-    if (targets.calories > 0 && sum.calories < targets.calories * 0.75) risk += 1;
-    if (targets.protein > 0 && sum.protein < targets.protein * 0.75) risk += 1;
-
-    if (risk >= 4) return "High risk";
-    if (risk >= 2) return "Moderate risk";
+    const level = malnutritionRiskLevel(profile, sum, targets);
+    if (level === "severe") return "Severe risk";
+    if (level === "high") return "High risk";
+    if (level === "moderate") return "Moderate risk";
     return "Low risk";
   }
 
   function statusFromScore(score, risk) {
-    if (score < 50 || risk === "High risk") return "CRITICAL";
+    if (score < 50 || risk === "High risk" || risk === "Severe risk") return "CRITICAL";
     if (score < 75 || risk === "Moderate risk") return "WARNING";
     return "GOOD";
   }
@@ -598,6 +750,19 @@
     if (!allRecs.length) {
       recList.innerHTML = "<p class='muted'>No source-qualified recommendations matched your current profile and symptoms.</p>";
     }
+
+    const recLogRows = readArray(RECOMMENDATION_LOG_KEY_BASE).filter((row) => row.date !== (document.getElementById("dashboardDate") ? document.getElementById("dashboardDate").value || isoToday() : isoToday()));
+    allRecs.forEach((rec) => {
+      recLogRows.push({
+        user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+        date: document.getElementById("dashboardDate") ? document.getElementById("dashboardDate").value || isoToday() : isoToday(),
+        recommendation_type: "symptom_driven",
+        recommendation_text: rec.title,
+        created_at: new Date().toISOString()
+      });
+    });
+    writeArray(RECOMMENDATION_LOG_KEY_BASE, recLogRows);
+
     renderReferencesPanel();
   }
 
@@ -646,6 +811,36 @@
       <polyline points="${points.join(" ")}" fill="none" stroke="#2cb1a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>`;
   }
 
+  function renderIntakeTrendChart(summaryNodeId, chartNodeId) {
+    const summaryNode = document.getElementById(summaryNodeId);
+    const chart = document.getElementById(chartNodeId);
+    if (!summaryNode || !chart) return;
+
+    const dates = [];
+    for (let i = 6; i >= 0; i -= 1) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      dates.push(d.toISOString().slice(0, 10));
+    }
+    const rows = dates.map((date) => ({ date, day: readDay(date), sum: totals(readDay(date).meals) }));
+    const caloriePcts = rows.map((r) => percentage(r.sum.calories, r.day.targets.calories));
+    const proteinPcts = rows.map((r) => percentage(r.sum.protein, r.day.targets.protein));
+    const fluidPcts = rows.map((r) => percentage(Number(r.day.fluidsMl || 0), Number(r.day.targets.fluidsMl || 0)));
+    const toPoints = (arr) => arr.map((v, idx) => {
+      const x = 40 + (idx / Math.max(1, arr.length - 1)) * 520;
+      const y = 190 - (Math.max(0, Math.min(150, v)) / 150) * 150;
+      return `${x},${y}`;
+    }).join(" ");
+    summaryNode.textContent = "Last 7 days: line = percent of target (100% means target met).";
+    chart.innerHTML = `<rect x="0" y="0" width="600" height="220" fill="#f8fafb"></rect>
+      <polyline points="${toPoints(caloriePcts)}" fill="none" stroke="#2cb1a6" stroke-width="3"></polyline>
+      <polyline points="${toPoints(proteinPcts)}" fill="none" stroke="#2d6cdf" stroke-width="3"></polyline>
+      <polyline points="${toPoints(fluidPcts)}" fill="none" stroke="#9a640c" stroke-width="3"></polyline>
+      <text x="46" y="20" fill="#2cb1a6" font-size="12">Calories</text>
+      <text x="120" y="20" fill="#2d6cdf" font-size="12">Protein</text>
+      <text x="184" y="20" fill="#9a640c" font-size="12">Fluids</text>`;
+  }
+
   function requireProfileGate() {
     return true;
   }
@@ -667,8 +862,11 @@
 
     const cancerSelect = document.getElementById("cancerSelect");
     const dialysisField = document.getElementById("dialysisField");
-    const symptomInputs = Array.from(document.querySelectorAll('#symptomForm input[type="checkbox"]'));
-    const noneSymptomInput = symptomInputs.find((input) => input.value === "none");
+    const symptomSeverityInputs = Array.from(document.querySelectorAll("#symptomForm select[data-symptom-key]"));
+    const cycleLengthInput = document.getElementById("profileCycleLengthDays");
+    const cycleDayInput = document.getElementById("profileCycleDay");
+    const lastTxInput = document.getElementById("profileLastTreatmentDate");
+    const nextTxInput = document.getElementById("profileNextTreatmentDate");
     populateCancerOptions(cancerSelect);
 
     cancerSelect.addEventListener("change", () => {
@@ -689,43 +887,44 @@
       cancerSelect.value = saved.cancerType || TOP_CANCERS[0];
       document.getElementById("profileTreatmentType").value = saved.treatmentType || "chemotherapy";
       document.getElementById("profileTreatmentMode").value = saved.treatmentMode || "on";
+      const cycle = saved.treatmentCycle || {};
+      if (cycleLengthInput) cycleLengthInput.value = String(cycle.cycle_length_days || 21);
+      if (cycleDayInput) cycleDayInput.value = String(cycle.cycle_day || 1);
+      if (lastTxInput) lastTxInput.value = cycle.last_treatment_date || "";
+      if (nextTxInput) nextTxInput.value = cycle.next_treatment_date || "";
       if (dialysisField) {
         dialysisField.classList.toggle("hidden", cancerSelect.value !== "Kidney and Renal Pelvis Cancer");
       }
-      const sym = new Set(saved.symptoms || []);
-      symptomInputs.forEach((input) => {
-        input.checked = sym.has(input.value);
+      const severity = normalizeSymptomSeverity(saved.symptomSeverity, saved.symptoms);
+      symptomSeverityInputs.forEach((input) => {
+        input.value = String(Number(severity[input.getAttribute("data-symptom-key")] || 0));
       });
       if (saved.dialysisStatus) {
         const radio = document.querySelector(`input[name="dialysisStatus"][value="${saved.dialysisStatus}"]`);
         if (radio) radio.checked = true;
       }
+    } else {
+      if (lastTxInput) lastTxInput.value = isoToday();
     }
-
-    function enforceSymptomSelectionBehavior(changedInput) {
-      if (!noneSymptomInput) return;
-      if (changedInput === noneSymptomInput && noneSymptomInput.checked) {
-        symptomInputs.forEach((input) => {
-          if (input !== noneSymptomInput) input.checked = false;
-        });
-        return;
-      }
-      if (changedInput !== noneSymptomInput && changedInput.checked) {
-        noneSymptomInput.checked = false;
-      }
-    }
-
-    symptomInputs.forEach((input) => {
-      input.addEventListener("change", () => enforceSymptomSelectionBehavior(input));
-    });
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const symptoms = [];
-      symptomInputs.forEach((input) => {
-        if (input.checked) symptoms.push(input.value);
+
+      const symptomSeverity = symptomSeverityDefaults();
+      symptomSeverityInputs.forEach((input) => {
+        const key = input.getAttribute("data-symptom-key");
+        if (!key) return;
+        symptomSeverity[key] = Math.max(0, Math.min(3, Number(input.value || 0)));
       });
+      const symptoms = severityToSymptoms(symptomSeverity);
       const selectedDialysis = document.querySelector('input[name="dialysisStatus"]:checked');
+      const treatmentCycle = {
+        treatment_type: document.getElementById("profileTreatmentType").value,
+        cycle_length_days: Math.max(1, Number(cycleLengthInput ? cycleLengthInput.value : 21)),
+        cycle_day: Math.max(1, Number(cycleDayInput ? cycleDayInput.value : 1)),
+        last_treatment_date: lastTxInput ? lastTxInput.value : "",
+        next_treatment_date: nextTxInput ? nextTxInput.value : ""
+      };
       const profile = {
         age: Number(document.getElementById("profileAge").value),
         sex: document.getElementById("profileSex").value,
@@ -738,9 +937,43 @@
         treatmentType: document.getElementById("profileTreatmentType").value,
         treatmentMode: document.getElementById("profileTreatmentMode").value,
         symptoms: symptoms,
-        dialysisStatus: selectedDialysis ? selectedDialysis.value : "off"
+        symptomSeverity,
+        dialysisStatus: selectedDialysis ? selectedDialysis.value : "off",
+        treatmentCycle,
+        bmi: calculateBMI({
+          weight: Number(document.getElementById("profileWeightKg").value),
+          heightCm: Number(document.getElementById("profileHeightCm").value)
+        })
       };
+      profile.bmiCategory = bmiCategory(profile.bmi);
       saveProfile(profile);
+
+      const today = isoToday();
+      const symptomRows = readArray(SYMPTOM_LOG_KEY_BASE).filter((row) => row.date !== today);
+      Object.keys(symptomSeverity).forEach((name) => {
+        symptomRows.push({
+          user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+          symptom_name: name,
+          severity: Number(symptomSeverity[name] || 0),
+          date: today,
+          created_at: new Date().toISOString()
+        });
+      });
+      writeArray(SYMPTOM_LOG_KEY_BASE, symptomRows);
+
+      const treatmentCycleRows = readArray(TREATMENT_CYCLE_LOG_KEY_BASE);
+      treatmentCycleRows.push({
+        user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+        treatment_type: treatmentCycle.treatment_type,
+        cycle_length_days: treatmentCycle.cycle_length_days,
+        cycle_day: treatmentCycle.cycle_day,
+        last_treatment_date: treatmentCycle.last_treatment_date,
+        next_treatment_date: treatmentCycle.next_treatment_date,
+        date: today,
+        created_at: new Date().toISOString()
+      });
+      writeArray(TREATMENT_CYCLE_LOG_KEY_BASE, treatmentCycleRows);
+
       const profileStatus = document.getElementById("profileStatus");
       if (profileStatus) {
         profileStatus.textContent = "Profile saved. Redirecting to dashboard...";
@@ -751,7 +984,7 @@
     });
   }
 
-  function renderRings(sum, targets) {
+  function renderRings(sum, targets, fluidsMl) {
     const node = document.getElementById("macroRings");
     if (!node) return;
     node.innerHTML = "";
@@ -760,7 +993,8 @@
       { label: "Calories", consumed: sum.calories, target: targets.calories, unit: "kcal" },
       { label: "Protein", consumed: sum.protein, target: targets.protein, unit: "g" },
       { label: "Carbs", consumed: sum.carbs, target: targets.carbs, unit: "g" },
-      { label: "Fat", consumed: sum.fat, target: targets.fat, unit: "g" }
+      { label: "Fat", consumed: sum.fat, target: targets.fat, unit: "g" },
+      { label: "Fluids", consumed: Number(fluidsMl || 0), target: Number(targets.fluidsMl || 0), unit: "mL" }
     ].forEach((it) => {
       const pct = Math.max(0, Math.min(100, percentage(it.consumed, it.target)));
       const card = document.createElement("article");
@@ -813,7 +1047,8 @@
       weight: "-",
       weightLoss: "none",
       appetite: "normal",
-      symptoms: ["none"],
+      symptoms: [],
+      symptomSeverity: symptomSeverityDefaults(),
       cancerType: TOP_CANCERS[0],
       dialysisStatus: "off"
     };
@@ -843,17 +1078,43 @@
 
       const nutritionScoreNode = document.getElementById("nutritionScore");
       const malnutritionRiskNode = document.getElementById("malnutritionRisk");
+      const hydrationRiskNode = document.getElementById("hydrationRisk");
+      const calorieDeficitRiskNode = document.getElementById("calorieDeficitRisk");
+      const weightLossRiskNode = document.getElementById("weightLossRisk");
+      const clinicalSummaryNode = document.getElementById("clinicalSummaryCard");
       const profileSummaryNode = document.getElementById("profileSummaryCard");
+      const bmi = calculateBMI(profile);
+      const severity = normalizeSymptomSeverity(profile.symptomSeverity, profile.symptoms);
+      const activeSymptoms = severityToSymptoms(severity);
+      const hydrationRisk = Number(day.targets.fluidsMl || 0) > 0 && Number(day.fluidsMl || 0) < Number(day.targets.fluidsMl || 0) * 0.75
+        ? "high"
+        : "low";
+      const calorieDeficitRisk = Number(day.targets.calories || 0) > 0 && sum.calories < day.targets.calories * 0.8 ? "high" : "low";
+      const weightLossRisk = (profile.weightLoss === "moderate" || profile.weightLoss === "severe") ? "high" : "low";
 
       if (nutritionScoreNode) {
         nutritionScoreNode.innerHTML = `<p><strong>${score}/100</strong></p><p class="muted">Daily nutrition score</p>`;
       }
       if (malnutritionRiskNode) {
-        malnutritionRiskNode.innerHTML = `<p><strong>${risk}</strong></p>`;
+        malnutritionRiskNode.innerHTML = `<p><strong>Malnutrition: ${risk}</strong></p>`;
+      }
+      if (hydrationRiskNode) {
+        hydrationRiskNode.innerHTML = `<p><strong>Hydration risk: ${hydrationRisk}</strong></p>`;
+      }
+      if (calorieDeficitRiskNode) {
+        calorieDeficitRiskNode.innerHTML = `<p><strong>Calorie deficit risk: ${calorieDeficitRisk}</strong></p>`;
+      }
+      if (weightLossRiskNode) {
+        weightLossRiskNode.innerHTML = `<p><strong>Weight loss risk: ${weightLossRisk}</strong></p>`;
+      }
+      if (clinicalSummaryNode) {
+        clinicalSummaryNode.innerHTML = `
+          <p>BMI: <strong>${Number.isFinite(bmi) ? bmi : "Not set"}</strong> (${bmiCategory(bmi)})</p>
+          <p>Cycle: <strong>${profile.treatmentCycle ? `${profile.treatmentCycle.cycle_day || "-"} / ${profile.treatmentCycle.cycle_length_days || "-"}` : "Not set"}</strong></p>
+          <p>Target fluids: <strong>${day.targets.fluidsMl || 0} mL</strong></p>`;
       }
       if (profileSummaryNode) {
-        const symptoms = (profile.symptoms || []).filter((value) => value !== "none");
-        const symptomText = symptoms.length ? symptoms.map(symptomLabel).join(", ") : "No particular symptoms";
+        const symptomText = activeSymptoms.length ? activeSymptoms.map(symptomLabel).join(", ") : "No particular symptoms";
         const weightText = typeof profile.weight === "number" ? `${profile.weight} kg` : "Not set";
         profileSummaryNode.innerHTML = `
           <p>Treatment: <strong>${profile.treatmentType} (${profile.treatmentMode})</strong></p>
@@ -864,11 +1125,12 @@
           ${hasProfile ? "" : "<p class=\"muted\">Profile not complete yet. You can still use dashboard and tracker.</p>"}`;
       }
 
-      renderRings(sum, day.targets);
+      renderRings(sum, day.targets, day.fluidsMl);
 
       const actions = [];
       if (sum.protein < day.targets.protein * 0.8) actions.push("Increase protein at next meal (eggs, yogurt, shake, tofu).");
       if (sum.calories < day.targets.calories * 0.8) actions.push("Add one calorie-dense snack in the next 4 hours.");
+      if (Number(day.targets.fluidsMl || 0) > 0 && Number(day.fluidsMl || 0) < Number(day.targets.fluidsMl || 0) * 0.8) actions.push("Increase fluid intake today unless your team has fluid restrictions.");
       if ((profile.appetite || "normal") !== "normal") actions.push("Use 5-6 smaller meals and include liquid calories between meals.");
       if ((profile.weightLoss || "none") === "moderate" || (profile.weightLoss || "none") === "severe") {
         actions.push("Escalate to your care team dietitian this week due to meaningful recent weight loss.");
@@ -887,6 +1149,7 @@
 
       renderRecommendations(profile);
       renderWeightChart(loadWeightHistory(), "weightTrendSummary", "weightChart");
+      renderIntakeTrendChart("intakeTrendSummary", "intakeTrendChart");
     };
 
     if (saveWeightButton) {
@@ -918,7 +1181,7 @@
   }
 
   function defaultTargets() {
-    return { calories: 2000, protein: 90, carbs: 230, fat: 70 };
+    return { calories: 2000, protein: 90, carbs: 230, fat: 70, fluidsMl: 2000 };
   }
 
   function calculateRecommendedTargets(profile) {
@@ -936,20 +1199,34 @@
 
     const treatmentMode = String(profile.treatmentMode || "normal");
     const treatmentFactor = treatmentMode === "on" ? 1.15 : treatmentMode === "off" ? 1.05 : 1.0;
-    const calories = Math.round(Math.max(1200, Math.min(4200, bmr * activity * treatmentFactor)));
+    const severity = normalizeSymptomSeverity(profile.symptomSeverity, profile.symptoms);
+    const symptomBurden = symptomScore(profile);
+    const malnutritionRisk = malnutritionRiskLevel(profile, { calories: 0, protein: 0 }, { calories: Math.round(bmr * activity), protein: 90 });
+    const riskFactor = malnutritionRisk === "severe" ? 1.12 : malnutritionRisk === "high" ? 1.08 : malnutritionRisk === "moderate" ? 1.04 : 1.0;
+    const calories = Math.round(Math.max(1200, Math.min(4200, bmr * activity * treatmentFactor * riskFactor)));
 
     let proteinPerKg = 1.2;
     if (profile.weightLoss === "moderate") proteinPerKg = 1.4;
     if (profile.weightLoss === "severe") proteinPerKg = 1.6;
     if (profile.appetite === "reduced") proteinPerKg = Math.max(proteinPerKg, 1.3);
     if (profile.appetite === "very_low") proteinPerKg = Math.max(proteinPerKg, 1.5);
+    if (profile.dialysisStatus === "on") proteinPerKg = Math.max(1.2, Math.min(1.4, proteinPerKg));
+    if (profile.dialysisStatus === "off" && profile.cancerType === "Kidney and Renal Pelvis Cancer") {
+      proteinPerKg = Math.min(proteinPerKg, 1.0);
+    }
     const protein = roundTwo(Math.max(65, weight * proteinPerKg));
 
     const fatRatio = profile.appetite === "very_low" ? 0.35 : 0.30;
     const fat = roundTwo(Math.max(35, (calories * fatRatio) / 9));
     const carbs = roundTwo(Math.max(50, (calories - protein * 4 - fat * 9) / 4));
 
-    return { calories, protein, carbs, fat };
+    let fluidsMl = Math.round(weight * 30);
+    if (severity.diarrhea_severity >= 2 || severity.vomiting_severity >= 2) fluidsMl += 300;
+    if (profile.dialysisStatus === "on") fluidsMl = Math.round(Math.max(1000, Math.min(1800, weight * 20)));
+    if (symptomBurden >= 12) fluidsMl += 200;
+    fluidsMl = Math.max(1000, Math.min(4000, fluidsMl));
+
+    return { calories, protein, carbs, fat, fluidsMl };
   }
 
   function findCuratedFoodByName(inputName) {
@@ -1220,6 +1497,7 @@
     const dateInput = document.getElementById("trackerDate");
     const targetForm = document.getElementById("targetForm");
     const mealForm = document.getElementById("mealForm");
+    const fluidForm = document.getElementById("fluidForm");
     const mealList = document.getElementById("mealList");
     const macroSummary = document.getElementById("macroSummary");
     const foodLookupStatus = document.getElementById("foodLookupStatus");
@@ -1234,9 +1512,11 @@
     const mealProteinInput = document.getElementById("mealProtein");
     const mealCarbsInput = document.getElementById("mealCarbs");
     const mealFatInput = document.getElementById("mealFat");
+    const targetFluidsInput = document.getElementById("targetFluidsMl");
+    const fluidIntakeInput = document.getElementById("fluidIntakeMl");
     const foodSuggestions = document.getElementById("foodSuggestions");
 
-    if (!dateInput || !targetForm || !mealForm || !mealList || !macroSummary || !options || !quickAddFoods || !autofillFoodButton || !mealNameInput || !mealServingInput || !mealCaloriesInput || !mealProteinInput || !mealCarbsInput || !mealFatInput) {
+    if (!dateInput || !targetForm || !mealForm || !mealList || !macroSummary || !options || !quickAddFoods || !autofillFoodButton || !mealNameInput || !mealServingInput || !mealCaloriesInput || !mealProteinInput || !mealCarbsInput || !mealFatInput || !targetFluidsInput || !fluidIntakeInput || !fluidForm) {
       return;
     }
 
@@ -1360,13 +1640,16 @@
       document.getElementById("targetProtein").value = day.targets.protein;
       document.getElementById("targetCarbs").value = day.targets.carbs;
       document.getElementById("targetFat").value = day.targets.fat;
+      targetFluidsInput.value = Number(day.targets.fluidsMl || 0);
+      fluidIntakeInput.value = Number(day.fluidsMl || 0);
 
       const sum = totals(day.meals);
       macroSummary.innerHTML = `
         <p>Calories: <strong>${roundOne(sum.calories)} / ${day.targets.calories}</strong></p>
         <p>Protein: <strong>${roundTwo(sum.protein)} / ${day.targets.protein} g</strong></p>
         <p>Carbs: <strong>${roundTwo(sum.carbs)} / ${day.targets.carbs} g</strong></p>
-        <p>Fat: <strong>${roundTwo(sum.fat)} / ${day.targets.fat} g</strong></p>`;
+        <p>Fat: <strong>${roundTwo(sum.fat)} / ${day.targets.fat} g</strong></p>
+        <p>Fluids: <strong>${Number(day.fluidsMl || 0)} / ${Number(day.targets.fluidsMl || 0)} mL</strong></p>`;
 
       mealList.innerHTML = "";
       if (!day.meals.length) {
@@ -1386,15 +1669,29 @@
 
     targetForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const day = readDay(dateInput.value || isoToday());
+      const selectedDate = dateInput.value || isoToday();
+      const day = readDay(selectedDate);
       day.targets = {
         calories: Number(document.getElementById("targetCalories").value || 0),
         protein: roundTwo(Number(document.getElementById("targetProtein").value || 0)),
         carbs: roundTwo(Number(document.getElementById("targetCarbs").value || 0)),
-        fat: roundTwo(Number(document.getElementById("targetFat").value || 0))
+        fat: roundTwo(Number(document.getElementById("targetFat").value || 0)),
+        fluidsMl: Math.max(0, Number(targetFluidsInput.value || 0))
       };
       day.targetsManual = true;
-      writeDay(dateInput.value, day);
+      writeDay(selectedDate, day);
+      render();
+    });
+
+    fluidForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const day = readDay(dateInput.value || isoToday());
+      day.fluidsMl = Math.max(0, Number(fluidIntakeInput.value || 0));
+      writeDay(dateInput.value || isoToday(), day);
+      upsertLogByDate(FLUID_INTAKE_LOG_KEY_BASE, dateInput.value || isoToday(), {
+        user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+        total_fluids_ml: day.fluidsMl
+      });
       render();
     });
 
@@ -1471,6 +1768,7 @@
 
     mealForm.addEventListener("submit", (e) => {
       e.preventDefault();
+      const selectedDate = dateInput.value || isoToday();
       const day = readDay(dateInput.value || isoToday());
       day.meals.push({
         name: document.getElementById("mealName").value.trim(),
@@ -1480,8 +1778,18 @@
         carbs: roundTwo(Number(document.getElementById("mealCarbs").value || 0)),
         fat: roundTwo(Number(document.getElementById("mealFat").value || 0))
       });
-      writeDay(dateInput.value, day);
+      writeDay(selectedDate, day);
+      const sum = totals(day.meals);
+      upsertLogByDate(NUTRITION_LOG_KEY_BASE, selectedDate, {
+        user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+        calories_kcal: roundOne(sum.calories),
+        protein_g: roundTwo(sum.protein),
+        carbs_g: roundTwo(sum.carbs),
+        fat_g: roundTwo(sum.fat),
+        fluids_ml: Number(day.fluidsMl || 0)
+      });
       mealForm.reset();
+      dateInput.value = selectedDate;
       document.getElementById("mealServingGrams").value = 100;
       render();
     });
@@ -1491,18 +1799,37 @@
       if (!(target instanceof HTMLElement)) return;
       const idx = target.getAttribute("data-remove");
       if (idx == null) return;
-      const day = readDay(dateInput.value || isoToday());
+      const selectedDate = dateInput.value || isoToday();
+      const day = readDay(selectedDate);
       day.meals.splice(Number(idx), 1);
-      writeDay(dateInput.value, day);
+      writeDay(selectedDate, day);
+      const sum = totals(day.meals);
+      upsertLogByDate(NUTRITION_LOG_KEY_BASE, selectedDate, {
+        user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+        calories_kcal: roundOne(sum.calories),
+        protein_g: roundTwo(sum.protein),
+        carbs_g: roundTwo(sum.carbs),
+        fat_g: roundTwo(sum.fat),
+        fluids_ml: Number(day.fluidsMl || 0)
+      });
       render();
     });
 
     const clearEntriesButton = document.getElementById("clearEntries");
     if (clearEntriesButton) {
       clearEntriesButton.addEventListener("click", () => {
-        const day = readDay(dateInput.value || isoToday());
+        const selectedDate = dateInput.value || isoToday();
+        const day = readDay(selectedDate);
         day.meals = [];
-        writeDay(dateInput.value, day);
+        writeDay(selectedDate, day);
+        upsertLogByDate(NUTRITION_LOG_KEY_BASE, selectedDate, {
+          user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+          calories_kcal: 0,
+          protein_g: 0,
+          carbs_g: 0,
+          fat_g: 0,
+          fluids_ml: Number(day.fluidsMl || 0)
+        });
         render();
       });
     }

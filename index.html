@@ -36,11 +36,15 @@
           <div id="nutritionScore" class="muted"></div>
         </article>
         <article class="mini-card panel panel-soft overview-risk">
-          <h3>Risk Level</h3>
+          <h3>Risk Dashboard</h3>
           <div id="malnutritionRisk" class="muted"></div>
+          <div id="hydrationRisk" class="muted"></div>
+          <div id="calorieDeficitRisk" class="muted"></div>
+          <div id="weightLossRisk" class="muted"></div>
         </article>
         <article class="mini-card panel panel-soft overview-recommendations">
-          <h3>Profile Summary</h3>
+          <h3>Clinical Summary</h3>
+          <div id="clinicalSummaryCard" class="muted"></div>
           <div id="profileSummaryCard" class="muted"></div>
           <a class="cta cta-secondary" href="./profile.html">Edit Profile</a>
         </article>
@@ -53,6 +57,12 @@
       <section class="card panel">
         <h2>Progress Rings</h2>
         <div id="macroRings" class="ring-grid"></div>
+      </section>
+
+      <section class="card panel">
+        <h2>Daily Intake Trend</h2>
+        <div id="intakeTrendSummary" class="muted"></div>
+        <svg id="intakeTrendChart" viewBox="0 0 600 220" class="weight-chart" role="img" aria-label="Daily intake trend chart"></svg>
       </section>
 
       <section class="card panel" id="recommendations">
