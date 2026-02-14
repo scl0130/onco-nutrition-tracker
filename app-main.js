@@ -842,13 +842,12 @@
     if (!summaryNode || !chart) return;
 
     const sorted = [...items].sort((a, b) => (a.date > b.date ? 1 : -1));
-    if (!sorted.length) {
+    const hasData = sorted.length > 0;
+    if (!hasData) {
       summaryNode.textContent = "No weight history yet.";
-      chart.innerHTML = "";
-      return;
     }
 
-    const values = sorted.map((x) => Number(x.weightKg));
+    const values = hasData ? sorted.map((x) => Number(x.weightKg)) : [50, 90];
     const minW = Math.min.apply(null, values);
     const maxW = Math.max.apply(null, values);
     const span = Math.max(1, maxW - minW);
@@ -862,29 +861,38 @@
       return `${x},${y}`;
     });
 
-    const latest = sorted[sorted.length - 1];
-    const first = sorted[0];
-    const delta = roundOne(latest.weightKg - first.weightKg);
-    summaryNode.textContent = `Latest ${latest.weightKg} kg (${latest.date}) | Change ${delta >= 0 ? "+" : ""}${delta} kg`;
+    if (hasData) {
+      const latest = sorted[sorted.length - 1];
+      const first = sorted[0];
+      const delta = roundOne(latest.weightKg - first.weightKg);
+      summaryNode.textContent = `Latest ${latest.weightKg} kg (${latest.date}) | Change ${delta >= 0 ? "+" : ""}${delta} kg`;
+    }
     const yTicks = [0, 0.5, 1].map((ratio) => {
       const y = y0 - ratio * chartH;
       const value = roundOne(minW + ratio * span);
-      return `<line x1="${x0}" y1="${y}" x2="${x0 + chartW}" y2="${y}" stroke="#e3e8ef" stroke-width="1"></line>
-        <text x="${x0 - 8}" y="${y + 4}" text-anchor="end" fill="#5f6b7a" font-size="11">${value}</text>`;
+      return `<line x1="${x0}" y1="${y}" x2="${x0 + chartW}" y2="${y}" stroke="#d7deea" stroke-width="1"></line>
+        <text x="${x0 - 8}" y="${y + 4}" text-anchor="end" fill="#334155" font-size="11" font-weight="600">${value}</text>`;
     }).join("");
-    const xTicks = sorted.map((entry, idx) => {
-      const x = x0 + (idx / Math.max(1, sorted.length - 1)) * chartW;
-      const label = entry.date.slice(5);
+    const defaultDates = [];
+    for (let i = 6; i >= 0; i -= 1) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      defaultDates.push(d.toISOString().slice(0, 10));
+    }
+    const tickDates = hasData ? sorted.map((entry) => entry.date) : defaultDates;
+    const xTicks = tickDates.map((dateLabel, idx) => {
+      const x = x0 + (idx / Math.max(1, tickDates.length - 1)) * chartW;
+      const label = dateLabel.slice(5);
       return `<text x="${x}" y="${y0 + 16}" text-anchor="middle" fill="#5f6b7a" font-size="10">${label}</text>`;
     }).join("");
     chart.innerHTML = `<rect x="0" y="0" width="600" height="220" fill="#f8fafb"></rect>
       ${yTicks}
-      <line x1="${x0}" y1="${y0}" x2="${x0 + chartW}" y2="${y0}" stroke="#8a94a6" stroke-width="1.5"></line>
-      <line x1="${x0}" y1="${y0 - chartH}" x2="${x0}" y2="${y0}" stroke="#8a94a6" stroke-width="1.5"></line>
-      <polyline points="${points.join(" ")}" fill="none" stroke="#2cb1a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      <line x1="${x0}" y1="${y0}" x2="${x0 + chartW}" y2="${y0}" stroke="#334155" stroke-width="2"></line>
+      <line x1="${x0}" y1="${y0 - chartH}" x2="${x0}" y2="${y0}" stroke="#334155" stroke-width="2"></line>
+      ${hasData ? `<polyline points="${points.join(" ")}" fill="none" stroke="#2cb1a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>` : ""}
       ${xTicks}
-      <text x="${x0 + chartW / 2}" y="214" text-anchor="middle" fill="#5f6b7a" font-size="11">Date (MM-DD)</text>
-      <text x="14" y="${y0 - chartH / 2}" transform="rotate(-90 14 ${y0 - chartH / 2})" text-anchor="middle" fill="#5f6b7a" font-size="11">Weight (kg)</text>`;
+      <text x="${x0 + chartW / 2}" y="214" text-anchor="middle" fill="#334155" font-size="12" font-weight="600">X-axis: Date (MM-DD)</text>
+      <text x="14" y="${y0 - chartH / 2}" transform="rotate(-90 14 ${y0 - chartH / 2})" text-anchor="middle" fill="#334155" font-size="12" font-weight="600">Y-axis: Weight (kg)</text>`;
   }
 
   function renderIntakeTrendChart(summaryNodeId, chartNodeId) {
@@ -913,8 +921,8 @@
     }).join(" ");
     const yTicks = [0, 50, 100, 150].map((value) => {
       const y = y0 - (value / 150) * chartH;
-      return `<line x1="${x0}" y1="${y}" x2="${x0 + chartW}" y2="${y}" stroke="#e3e8ef" stroke-width="1"></line>
-        <text x="${x0 - 8}" y="${y + 4}" text-anchor="end" fill="#5f6b7a" font-size="11">${value}%</text>`;
+      return `<line x1="${x0}" y1="${y}" x2="${x0 + chartW}" y2="${y}" stroke="#d7deea" stroke-width="1"></line>
+        <text x="${x0 - 8}" y="${y + 4}" text-anchor="end" fill="#334155" font-size="11" font-weight="600">${value}%</text>`;
     }).join("");
     const xTicks = rows.map((r, idx) => {
       const x = x0 + (idx / Math.max(1, rows.length - 1)) * chartW;
@@ -923,8 +931,8 @@
     summaryNode.textContent = "Last 7 days: line = percent of target (100% means target met).";
     chart.innerHTML = `<rect x="0" y="0" width="600" height="220" fill="#f8fafb"></rect>
       ${yTicks}
-      <line x1="${x0}" y1="${y0}" x2="${x0 + chartW}" y2="${y0}" stroke="#8a94a6" stroke-width="1.5"></line>
-      <line x1="${x0}" y1="${y0 - chartH}" x2="${x0}" y2="${y0}" stroke="#8a94a6" stroke-width="1.5"></line>
+      <line x1="${x0}" y1="${y0}" x2="${x0 + chartW}" y2="${y0}" stroke="#334155" stroke-width="2"></line>
+      <line x1="${x0}" y1="${y0 - chartH}" x2="${x0}" y2="${y0}" stroke="#334155" stroke-width="2"></line>
       <polyline points="${toPoints(caloriePcts)}" fill="none" stroke="#2cb1a6" stroke-width="3"></polyline>
       <polyline points="${toPoints(proteinPcts)}" fill="none" stroke="#2d6cdf" stroke-width="3"></polyline>
       <polyline points="${toPoints(fluidPcts)}" fill="none" stroke="#9a640c" stroke-width="3"></polyline>
@@ -932,8 +940,8 @@
       <text x="46" y="20" fill="#2cb1a6" font-size="12">Calories</text>
       <text x="120" y="20" fill="#2d6cdf" font-size="12">Protein</text>
       <text x="184" y="20" fill="#9a640c" font-size="12">Fluids</text>
-      <text x="${x0 + chartW / 2}" y="214" text-anchor="middle" fill="#5f6b7a" font-size="11">Date (MM-DD)</text>
-      <text x="14" y="${y0 - chartH / 2}" transform="rotate(-90 14 ${y0 - chartH / 2})" text-anchor="middle" fill="#5f6b7a" font-size="11">% of Target</text>`;
+      <text x="${x0 + chartW / 2}" y="214" text-anchor="middle" fill="#334155" font-size="12" font-weight="600">X-axis: Date (MM-DD)</text>
+      <text x="14" y="${y0 - chartH / 2}" transform="rotate(-90 14 ${y0 - chartH / 2})" text-anchor="middle" fill="#334155" font-size="12" font-weight="600">Y-axis: % of Target</text>`;
   }
 
   function requireProfileGate() {
