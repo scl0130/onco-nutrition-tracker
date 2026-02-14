@@ -83,6 +83,9 @@
             </label>
             <label>Height (cm) <input type="number" min="100" max="250" id="profileHeightCm" required /></label>
             <label>Weight (kg) <input type="number" min="30" max="300" step="0.1" id="profileWeightKg" required /></label>
+            <label>Optional lean body mass (kg)
+              <input type="number" min="0" max="250" step="0.1" id="profileLeanBodyMassKg" />
+            </label>
             <label>Activity level
               <select id="profileActivity" required>
                 <option value="1.2">Low / mostly sedentary</option>
@@ -191,6 +194,7 @@
 
     <script src="./sourcesRegistry.js"></script>
     <script src="./recommendations.js"></script>
+    <script src="./src/data/strictTwoSourceRules.js"></script>
     <script src="./src/data/recommendationsCatalog.js"></script>
     <script src="./src/logic/deriveFlags.js"></script>
     <script src="./src/logic/getRecommendationsForUser.js"></script>

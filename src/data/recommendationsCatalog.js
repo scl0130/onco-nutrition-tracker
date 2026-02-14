@@ -486,11 +486,15 @@
         "Eat small amounts every 2 to 3 hours instead of large meals",
         "Choose bland and easy to digest foods first",
         "Sip clear fluids through the day and separate fluids from meals if needed",
-        "Avoid foods with strong odors when nausea is worse"
+        "Avoid foods with strong odors when nausea is worse",
+        "For mild chemotherapy-related nausea, ask your team whether ginger lozenges or candy can be used as an adjunct"
       ],
       whyThisMatters: "Antiemetic consensus guidance and oncology nutrition evidence indicate nausea rapidly lowers intake without early meal-pattern and medication support.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["nausea"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["masccEsmoMecCinv2023PubMed", "masccEsmoRinv2023PubMed", "nciEatingHintsPdf"],
+      sourceIds: ["masccEsmoMecCinv2023PubMed", "masccEsmoRinv2023PubMed", "nciEatingHintsPdf", "nutritionalOncology2022Book"],
+      sourceLocators: {
+        nutritionalOncology2022Book: "p. 411 (ginger adjunct discussed for chemotherapy-related nausea/vomiting)"
+      },
       evidenceTags: ["PeerReviewed", "Government"]
     }),
     rec({
@@ -551,7 +555,10 @@
       ],
       whyThisMatters: "Systematic evidence links treatment-related taste dysfunction with poorer intake, supporting structured flavor and food-format adaptation.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["taste_changes"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["tasteSystematicReview2021PubMed", "mskTasteChanges", "acsTasteSmell"],
+      sourceIds: ["tasteSystematicReview2021PubMed", "mskTasteChanges", "acsTasteSmell", "nutritionalOncology2022Book"],
+      sourceLocators: {
+        nutritionalOncology2022Book: "pp. 348-349 (taste/smell changes in cancer and treatment, metallic/bad taste, intake impact)"
+      },
       evidenceTags: ["PeerReviewed", "CancerCenter"]
     }),
     rec({
@@ -728,7 +735,10 @@
       ],
       whyThisMatters: "Xerostomia guideline recommendations support early symptom management to preserve oral intake and reduce treatment burden.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["dry_mouth"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["ascoIsooMasccXerostomia2021PubMed", "nciEatingHintsPdf"],
+      sourceIds: ["ascoIsooMasccXerostomia2021PubMed", "nciEatingHintsPdf", "nutritionalOncology2022Book"],
+      sourceLocators: {
+        nutritionalOncology2022Book: "p. 349 (chemo cohort reported dry mouth association with bad taste/loss of taste perception)"
+      },
       evidenceTags: ["PeerReviewed", "Government"]
     }),
     rec({

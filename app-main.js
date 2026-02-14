@@ -586,6 +586,23 @@
     );
   }
 
+  function countRecentDaysBelowHalfEnergy(referenceDate, lookbackDays) {
+    const days = Math.max(1, Number(lookbackDays || 14));
+    const base = new Date(`${referenceDate}T00:00:00`);
+    if (Number.isNaN(base.getTime())) return 0;
+    let count = 0;
+    for (let i = 0; i < days; i += 1) {
+      const d = new Date(base);
+      d.setDate(base.getDate() - i);
+      const iso = d.toISOString().slice(0, 10);
+      const day = readDay(iso);
+      const sum = totals(day.meals);
+      const target = Number(day.targets && day.targets.calories || 0);
+      if (target > 0 && sum.calories < target * 0.5) count += 1;
+    }
+    return count;
+  }
+
   function percentage(consumed, target) {
     if (!target || target <= 0) return 0;
     return Math.round((consumed / target) * 100);
@@ -986,6 +1003,8 @@
       document.getElementById("profileSex").value = saved.sex || "female";
       document.getElementById("profileHeightCm").value = saved.heightCm || "";
       document.getElementById("profileWeightKg").value = saved.weight || "";
+      const leanMassInput = document.getElementById("profileLeanBodyMassKg");
+      if (leanMassInput) leanMassInput.value = saved.leanBodyMassKg || "";
       document.getElementById("profileActivity").value = String(saved.activityLevel || "1.2");
       document.getElementById("profileWeightLoss").value = saved.weightLoss || "none";
       document.getElementById("profileAppetite").value = saved.appetite || "normal";
@@ -1037,6 +1056,7 @@
         sex: document.getElementById("profileSex").value,
         heightCm: Number(document.getElementById("profileHeightCm").value),
         weight: Number(document.getElementById("profileWeightKg").value),
+        leanBodyMassKg: Number(document.getElementById("profileLeanBodyMassKg") ? document.getElementById("profileLeanBodyMassKg").value : 0) || 0,
         activityLevel: Number(document.getElementById("profileActivity").value),
         weightLoss: document.getElementById("profileWeightLoss").value,
         appetite: document.getElementById("profileAppetite").value,
@@ -1356,9 +1376,11 @@
       if (profileSummaryNode) {
         const symptomText = activeSymptoms.length ? activeSymptoms.map(symptomLabel).join(", ") : "No particular symptoms";
         const weightText = typeof profile.weight === "number" ? `${profile.weight} kg` : "Not set";
+        const leanMassText = Number(profile.leanBodyMassKg || 0) > 0 ? `${roundOne(Number(profile.leanBodyMassKg || 0))} kg` : "Not set";
         profileSummaryNode.innerHTML = `
           <p>Treatment: <strong>${profile.treatmentType} (${profile.treatmentMode})</strong></p>
           <p>Weight: <strong>${weightText}</strong></p>
+          <p>Lean body mass: <strong>${leanMassText}</strong></p>
           <p>Weight change: <strong>${weightLossLabel(profile.weightLoss || "none")}</strong></p>
           <p>Appetite: <strong>${appetiteLabel(profile.appetite || "normal")}</strong></p>
           <p>Symptoms: <strong>${symptomText}</strong></p>
@@ -1368,12 +1390,24 @@
       renderRings(sum, day.targets, day.fluidsMl);
 
       const actions = [];
+      const strictRules = window.STRICT_TWO_SOURCE_RULES || {};
+      const escalation = strictRules.intake_escalation || {};
+      const belowHalfLast14 = countRecentDaysBelowHalfEnergy(dateInput.value || isoToday(), 14);
       if (sum.protein < day.targets.protein * 0.8) actions.push("Increase protein at next meal (eggs, yogurt, shake, tofu).");
       if (sum.calories < day.targets.calories * 0.8) actions.push("Add one calorie-dense snack in the next 4 hours.");
       if (Number(day.targets.fluidsMl || 0) > 0 && Number(day.fluidsMl || 0) < Number(day.targets.fluidsMl || 0) * 0.8) actions.push("Increase fluid intake today unless your team has fluid restrictions.");
       if ((profile.appetite || "normal") !== "normal") actions.push("Use 5-6 smaller meals and include liquid calories between meals.");
+      if (Number(day.targets.protein || 0) > 0) actions.push("Distribute protein across meals instead of concentrating it in one meal.");
+      if ((profile.treatmentMode || "normal") === "on" && activeSymptoms.includes("nausea")) {
+        actions.push("For mild treatment-related nausea, ask your team whether ginger lozenges or candy can be used as an adjunct.");
+      }
       if ((profile.weightLoss || "none") === "moderate" || (profile.weightLoss || "none") === "severe") {
         actions.push("Escalate to your care team dietitian this week due to meaningful recent weight loss.");
+      }
+      if (belowHalfLast14 >= Number(escalation.actual_days_threshold || 14)) {
+        actions.push("Intake has been under 50% of needs for prolonged periods; discuss nutrition support route escalation now.");
+      } else if (belowHalfLast14 >= Number(escalation.anticipated_days_threshold || 10)) {
+        actions.push("Intake has frequently been under 50% of energy needs; ask your team whether enteral/parenteral nutrition escalation is needed.");
       }
       if (!actions.length) actions.push("Maintain current plan and continue logging intake.");
 
@@ -1426,9 +1460,14 @@
 
   function calculateRecommendedTargets(profile) {
     if (!profile) return defaultTargets();
+    const strictRules = window.STRICT_TWO_SOURCE_RULES || {};
+    const strictEnergyRules = strictRules.energy_rules || {};
+    const strictProteinRules = strictRules.protein_rules || {};
     const age = Number(profile.age || 0);
     const weight = Number(profile.weight || 0);
     const heightCm = Number(profile.heightCm || 0);
+    const leanBodyMassKg = Number(profile.leanBodyMassKg || 0);
+    const leanBodyMassLb = leanBodyMassKg > 0 ? leanBodyMassKg * 2.20462 : 0;
     const activity = Number(profile.activityLevel || 1.2);
 
     if (age <= 0 || weight <= 0 || heightCm <= 0) return defaultTargets();
@@ -1455,7 +1494,14 @@
     kcalPerKg = Math.max(23, Math.min(32, kcalPerKg));
     const weightBasedCalories = weight * kcalPerKg;
     const mifflinCalories = bmr * activity;
-    const calories = Math.round(Math.max(1200, Math.min(4200, Math.max(weightBasedCalories, mifflinCalories * 0.95))));
+    let calories = Math.round(Math.max(1200, Math.min(4200, Math.max(weightBasedCalories, mifflinCalories * 0.95))));
+    // Strict two-source rule: lean mass energy fact (~30 kcal/kg LBM/day) is context anchor, not universal prescription.
+    if (leanBodyMassKg > 0 && Number(strictEnergyRules.lean_mass_energy_context_kcal_per_kg || 0) > 0) {
+      const leanMassEnergyContext = leanBodyMassKg * Number(strictEnergyRules.lean_mass_energy_context_kcal_per_kg);
+      if ((treatmentMode === "on" || malnutritionRisk === "high" || malnutritionRisk === "severe") && calories < leanMassEnergyContext * 0.8) {
+        calories = Math.round(Math.max(calories, leanMassEnergyContext * 0.8));
+      }
+    }
 
     let proteinPerKg = 1.2;
     if (treatmentType === "surgery") proteinPerKg = Math.max(proteinPerKg, 1.3);
@@ -1480,7 +1526,11 @@
       proteinPerKg = Math.min(proteinPerKg, 1.0);
     }
     proteinPerKg = Math.min(1.8, proteinPerKg);
-    const protein = roundTwo(Math.max(65, weight * proteinPerKg));
+    let protein = roundTwo(Math.max(65, weight * proteinPerKg));
+    // Strict two-source rule: if LBM is available, UCLA-style anchor is 1 g per lb LBM.
+    if (leanBodyMassLb > 0 && strictProteinRules.lean_mass_primary_prescription_g_per_lb_lbm === 1) {
+      protein = roundTwo(Math.max(protein, leanBodyMassLb));
+    }
 
     // In surgical recovery, prioritize achieving protein goals before chasing exact carb/fat splits.
     const fatRatio = treatmentType === "surgery" ? 0.32 : (profile.appetite === "very_low" ? 0.35 : 0.30);
