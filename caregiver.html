@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Caregiver | OncoNutrition Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="app-shell" data-page="caregiver">
+    <header class="top-nav">
+      <a class="brand" href="./index.html">OncoNutrition Tracker</a>
+      <nav aria-label="Primary navigation">
+        <a class="nav-link" href="./index.html">Dashboard</a>
+        <a class="nav-link" href="./tracker.html">Track Food</a>
+        <a class="nav-link" href="./profile.html">Profile</a>
+        <a class="nav-link is-active" href="./caregiver.html" aria-current="page">Caregiver</a>
+      </nav>
+      <div class="auth-inline">
+        <span id="authUserBadge" class="muted">Guest mode</span>
+        <button type="button" id="logoutButton" class="secondary hidden">Log out</button>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="card panel">
+        <h1>Caregiver Management</h1>
+        <p class="muted">Create caregiver-patient relationships and switch active patient context for dashboard, profile, and tracker.</p>
+      </section>
+
+      <section class="card panel">
+        <h2>Active Context</h2>
+        <p id="caregiverActivePatient" class="muted">Active patient: self</p>
+        <button type="button" id="caregiverSwitchSelf" class="secondary">Switch to self</button>
+      </section>
+
+      <section class="card panel">
+        <h2>Add Patient Relationship</h2>
+        <form id="caregiverRelationshipForm" class="grid form-grid">
+          <label>Patient user id
+            <input type="text" id="caregiverPatientUserId" required />
+          </label>
+          <label>Relationship type
+            <select id="caregiverRelationshipType">
+              <option value="caregiver">Caregiver</option>
+              <option value="family">Family</option>
+              <option value="spouse">Spouse</option>
+              <option value="guardian">Guardian</option>
+            </select>
+          </label>
+          <button type="submit">Add relationship</button>
+        </form>
+        <p id="caregiverStatus" class="muted"></p>
+      </section>
+
+      <section class="card panel">
+        <h2>Linked Patients</h2>
+        <div id="caregiverRelationshipsList" class="meals"></div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>Educational only, not medical advice. If you have rapid weight loss, dehydration, inability to eat or drink, fever, or worsening symptoms, contact your oncology team or urgent care.</p>
+    </footer>
+
+    <script src="./sourcesRegistry.js"></script>
+    <script src="./recommendations.js"></script>
+    <script src="./src/data/recommendationsCatalog.js"></script>
+    <script src="./src/logic/deriveFlags.js"></script>
+    <script src="./src/logic/getRecommendationsForUser.js"></script>
+    <script src="./recommendationValidator.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./app-main.js"></script>
+  </body>
+</html>

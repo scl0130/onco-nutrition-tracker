@@ -3,6 +3,8 @@
   const PROFILE_EXISTS_KEY_BASE = "profileExists";
   const WEIGHT_HISTORY_KEY_BASE = "oncoNutritionWeightHistory:v1";
   const DAY_LOG_KEY_BASE = "oncoNutritionLog";
+  const CAREGIVER_RELATIONSHIPS_KEY_BASE = "caregiver_relationships";
+  const ACTIVE_PATIENT_ID_KEY_BASE = "active_patient_id";
   const SYMPTOM_LOG_KEY_BASE = "symptom_log";
   const TREATMENT_CYCLE_LOG_KEY_BASE = "treatment_cycle_log";
   const FLUID_INTAKE_LOG_KEY_BASE = "fluid_intake_log";
@@ -34,9 +36,57 @@
     return String(email || "").trim().toLowerCase();
   }
 
+  function viewerUserId() {
+    return currentUser && currentUser.id ? currentUser.id : "guest";
+  }
+
+  function viewerScopedKey(base) {
+    return `${base}:${viewerUserId()}`;
+  }
+
+  function getCaregiverRelationships() {
+    const raw = localStorage.getItem(viewerScopedKey(CAREGIVER_RELATIONSHIPS_KEY_BASE));
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_err) {
+      return [];
+    }
+  }
+
+  function saveCaregiverRelationships(rows) {
+    localStorage.setItem(viewerScopedKey(CAREGIVER_RELATIONSHIPS_KEY_BASE), JSON.stringify(rows));
+  }
+
+  function getActivePatientId() {
+    const raw = localStorage.getItem(viewerScopedKey(ACTIVE_PATIENT_ID_KEY_BASE));
+    return raw && raw.trim() ? raw.trim() : "";
+  }
+
+  function setActivePatientId(patientId) {
+    if (!patientId) {
+      localStorage.removeItem(viewerScopedKey(ACTIVE_PATIENT_ID_KEY_BASE));
+      return;
+    }
+    localStorage.setItem(viewerScopedKey(ACTIVE_PATIENT_ID_KEY_BASE), patientId);
+  }
+
+  function canManagePatient(patientId) {
+    if (!patientId) return false;
+    const relationships = getCaregiverRelationships();
+    return relationships.some((row) => row && row.patient_user_id === patientId);
+  }
+
+  function dataOwnerId() {
+    const viewer = viewerUserId();
+    const activePatientId = getActivePatientId();
+    if (activePatientId && canManagePatient(activePatientId)) return activePatientId;
+    return viewer;
+  }
+
   function scopedKey(base) {
-    const uid = currentUser && currentUser.id ? currentUser.id : "guest";
-    return `${base}:${uid}`;
+    return `${base}:${dataOwnerId()}`;
   }
 
   function profileExists() {
@@ -161,7 +211,7 @@
   }
 
   function getUsdaApiKey() {
-    const saved = localStorage.getItem(scopedKey(USDA_API_KEY_STORAGE_KEY));
+    const saved = localStorage.getItem(viewerScopedKey(USDA_API_KEY_STORAGE_KEY));
     return saved && saved.trim() ? saved.trim() : USDA_DEFAULT_API_KEY;
   }
 
@@ -175,7 +225,7 @@
   function syncUsdaApiKeyInput() {
     const input = document.getElementById("usdaApiKey");
     if (!input) return;
-    const saved = localStorage.getItem(scopedKey(USDA_API_KEY_STORAGE_KEY)) || "";
+    const saved = localStorage.getItem(viewerScopedKey(USDA_API_KEY_STORAGE_KEY)) || "";
     input.value = saved;
     if (saved) {
       setUsdaKeyStatus("USDA API key saved.");
@@ -274,6 +324,8 @@
   function renderAuthVisibility() {
     const loggedIn = Boolean(currentUser && currentUser.email);
     const secureAuthReady = Boolean(supabaseClient);
+    const activePatientId = getActivePatientId();
+    const inCaregiverMode = Boolean(loggedIn && activePatientId && canManagePatient(activePatientId));
 
     const authUserBadge = document.getElementById("authUserBadge");
     const logoutButton = document.getElementById("logoutButton");
@@ -281,7 +333,9 @@
     const authFormsWrap = document.getElementById("authFormsWrap");
 
     if (authUserBadge) {
-      authUserBadge.textContent = loggedIn ? currentUser.email : "Guest mode";
+      if (!loggedIn) authUserBadge.textContent = "Guest mode";
+      else if (inCaregiverMode) authUserBadge.textContent = `${currentUser.email} (caregiver -> ${activePatientId})`;
+      else authUserBadge.textContent = currentUser.email;
     }
     if (logoutButton) {
       logoutButton.classList.toggle("hidden", !loggedIn);
@@ -291,7 +345,7 @@
     }
     if (authModeStatus) {
       if (loggedIn) {
-        authModeStatus.textContent = "Authenticated session active.";
+        authModeStatus.textContent = inCaregiverMode ? "Authenticated caregiver mode active." : "Authenticated session active.";
       } else if (!secureAuthReady) {
         authModeStatus.textContent = "Guest mode active. Configure Supabase to enable secure sign up and log in.";
       } else {
@@ -354,6 +408,7 @@
     if (supabaseClient) {
       await supabaseClient.auth.signOut();
     }
+    setActivePatientId("");
     clearCurrentUser();
     renderAuthVisibility();
     setAuthStatus("Logged out.", false);
@@ -754,7 +809,7 @@
     const recLogRows = readArray(RECOMMENDATION_LOG_KEY_BASE).filter((row) => row.date !== (document.getElementById("dashboardDate") ? document.getElementById("dashboardDate").value || isoToday() : isoToday()));
     allRecs.forEach((rec) => {
       recLogRows.push({
-        user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+        user_id: dataOwnerId(),
         date: document.getElementById("dashboardDate") ? document.getElementById("dashboardDate").value || isoToday() : isoToday(),
         recommendation_type: "symptom_driven",
         recommendation_text: rec.title,
@@ -952,7 +1007,7 @@
       const symptomRows = readArray(SYMPTOM_LOG_KEY_BASE).filter((row) => row.date !== today);
       Object.keys(symptomSeverity).forEach((name) => {
         symptomRows.push({
-          user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+          user_id: dataOwnerId(),
           symptom_name: name,
           severity: Number(symptomSeverity[name] || 0),
           date: today,
@@ -963,7 +1018,7 @@
 
       const treatmentCycleRows = readArray(TREATMENT_CYCLE_LOG_KEY_BASE);
       treatmentCycleRows.push({
-        user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+        user_id: dataOwnerId(),
         treatment_type: treatmentCycle.treatment_type,
         cycle_length_days: treatmentCycle.cycle_length_days,
         cycle_day: treatmentCycle.cycle_day,
@@ -982,6 +1037,121 @@
         window.location.assign("./index.html");
       }, 250);
     });
+  }
+
+  function initCaregiverPage() {
+    const relationshipsList = document.getElementById("caregiverRelationshipsList");
+    const relationshipForm = document.getElementById("caregiverRelationshipForm");
+    const patientIdInput = document.getElementById("caregiverPatientUserId");
+    const relationshipTypeInput = document.getElementById("caregiverRelationshipType");
+    const caregiverStatus = document.getElementById("caregiverStatus");
+    const activePatientNode = document.getElementById("caregiverActivePatient");
+
+    if (!relationshipsList || !relationshipForm || !patientIdInput || !relationshipTypeInput || !caregiverStatus || !activePatientNode) return;
+
+    if (!(currentUser && currentUser.id)) {
+      caregiverStatus.textContent = "Log in with a secure account to use caregiver mode.";
+      relationshipsList.innerHTML = "";
+      return;
+    }
+
+    function setStatus(message, isError) {
+      caregiverStatus.textContent = message;
+      caregiverStatus.style.color = isError ? "var(--danger)" : "var(--muted)";
+    }
+
+    function renderRelationships() {
+      const rows = getCaregiverRelationships();
+      const activePatientId = getActivePatientId();
+      activePatientNode.textContent = activePatientId && canManagePatient(activePatientId)
+        ? `Active patient: ${activePatientId}`
+        : "Active patient: self";
+      relationshipsList.innerHTML = "";
+      if (!rows.length) {
+        relationshipsList.innerHTML = "<p class='muted'>No linked patients yet.</p>";
+        return;
+      }
+      rows.forEach((row, idx) => {
+        const item = document.createElement("div");
+        item.className = "meal";
+        const activeLabel = activePatientId === row.patient_user_id ? " (active)" : "";
+        item.innerHTML = `<div><strong>${row.patient_user_id}</strong><br><span class="muted">${row.relationship_type}${activeLabel}</span></div>
+          <div class="inline-actions">
+            <button type="button" class="secondary" data-switch="${idx}">Switch</button>
+            <button type="button" class="danger" data-remove-rel="${idx}">Remove</button>
+          </div>`;
+        relationshipsList.appendChild(item);
+      });
+    }
+
+    relationshipForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const patientUserId = String(patientIdInput.value || "").trim();
+      if (!patientUserId) {
+        setStatus("Enter a patient user id.", true);
+        return;
+      }
+      if (patientUserId === viewerUserId()) {
+        setStatus("Patient id cannot match your own user id.", true);
+        return;
+      }
+      const rows = getCaregiverRelationships();
+      if (rows.some((row) => row.patient_user_id === patientUserId)) {
+        setStatus("Relationship already exists for this patient.", true);
+        return;
+      }
+      rows.push({
+        caregiver_user_id: viewerUserId(),
+        patient_user_id: patientUserId,
+        relationship_type: relationshipTypeInput.value || "caregiver",
+        created_at: new Date().toISOString()
+      });
+      saveCaregiverRelationships(rows);
+      setStatus("Patient relationship added.", false);
+      patientIdInput.value = "";
+      renderRelationships();
+      renderAuthVisibility();
+    });
+
+    relationshipsList.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      const switchIdx = target.getAttribute("data-switch");
+      if (switchIdx != null) {
+        const rows = getCaregiverRelationships();
+        const row = rows[Number(switchIdx)];
+        if (!row) return;
+        setActivePatientId(row.patient_user_id);
+        setStatus(`Switched to patient ${row.patient_user_id}.`, false);
+        renderRelationships();
+        renderAuthVisibility();
+        return;
+      }
+      const removeIdx = target.getAttribute("data-remove-rel");
+      if (removeIdx != null) {
+        const rows = getCaregiverRelationships();
+        const row = rows[Number(removeIdx)];
+        if (!row) return;
+        rows.splice(Number(removeIdx), 1);
+        saveCaregiverRelationships(rows);
+        if (getActivePatientId() === row.patient_user_id) setActivePatientId("");
+        setStatus("Relationship removed.", false);
+        renderRelationships();
+        renderAuthVisibility();
+      }
+    });
+
+    const selfButton = document.getElementById("caregiverSwitchSelf");
+    if (selfButton) {
+      selfButton.addEventListener("click", () => {
+        setActivePatientId("");
+        setStatus("Switched back to your own account data.", false);
+        renderRelationships();
+        renderAuthVisibility();
+      });
+    }
+
+    renderRelationships();
   }
 
   function renderRings(sum, targets, fluidsMl) {
@@ -1527,11 +1697,11 @@
       saveUsdaApiKeyButton.addEventListener("click", () => {
         const value = usdaApiKeyInput.value.trim();
         if (!value) {
-          localStorage.removeItem(scopedKey(USDA_API_KEY_STORAGE_KEY));
+          localStorage.removeItem(viewerScopedKey(USDA_API_KEY_STORAGE_KEY));
           setUsdaKeyStatus("USDA key cleared. Using DEMO_KEY (lower limits).");
           return;
         }
-        localStorage.setItem(scopedKey(USDA_API_KEY_STORAGE_KEY), value);
+        localStorage.setItem(viewerScopedKey(USDA_API_KEY_STORAGE_KEY), value);
         setUsdaKeyStatus("USDA API key saved.");
       });
     }
@@ -1689,7 +1859,7 @@
       day.fluidsMl = Math.max(0, Number(fluidIntakeInput.value || 0));
       writeDay(dateInput.value || isoToday(), day);
       upsertLogByDate(FLUID_INTAKE_LOG_KEY_BASE, dateInput.value || isoToday(), {
-        user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+        user_id: dataOwnerId(),
         total_fluids_ml: day.fluidsMl
       });
       render();
@@ -1781,7 +1951,7 @@
       writeDay(selectedDate, day);
       const sum = totals(day.meals);
       upsertLogByDate(NUTRITION_LOG_KEY_BASE, selectedDate, {
-        user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+        user_id: dataOwnerId(),
         calories_kcal: roundOne(sum.calories),
         protein_g: roundTwo(sum.protein),
         carbs_g: roundTwo(sum.carbs),
@@ -1805,7 +1975,7 @@
       writeDay(selectedDate, day);
       const sum = totals(day.meals);
       upsertLogByDate(NUTRITION_LOG_KEY_BASE, selectedDate, {
-        user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+        user_id: dataOwnerId(),
         calories_kcal: roundOne(sum.calories),
         protein_g: roundTwo(sum.protein),
         carbs_g: roundTwo(sum.carbs),
@@ -1823,7 +1993,7 @@
         day.meals = [];
         writeDay(selectedDate, day);
         upsertLogByDate(NUTRITION_LOG_KEY_BASE, selectedDate, {
-          user_id: currentUser && currentUser.id ? currentUser.id : "guest",
+          user_id: dataOwnerId(),
           calories_kcal: 0,
           protein_g: 0,
           carbs_g: 0,
@@ -1849,6 +2019,7 @@
     if (page === "profile") initProfilePage();
     if (page === "dashboard") initDashboardPage();
     if (page === "tracker") initTrackerPage();
+    if (page === "caregiver") initCaregiverPage();
   }
 
   init();
