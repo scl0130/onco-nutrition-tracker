@@ -72,36 +72,47 @@
   function triggerMatch(rec, context) {
     const t = rec.triggers || {};
     let score = 0;
+    const reasons = [];
+    let profileSelectionMatch = false;
 
     if (Array.isArray(t.cancerTypes) && t.cancerTypes.length > 0) {
       if (!t.cancerTypes.includes(context.cancerType)) return { matched: false, score: 0 };
       score += 4;
+      reasons.push(`Cancer type: ${context.cancerType}`);
+      profileSelectionMatch = true;
     }
 
     if (Array.isArray(t.treatments) && t.treatments.length > 0) {
       if (!t.treatments.includes(context.treatmentType)) return { matched: false, score: 0 };
       score += 3;
+      reasons.push(`Treatment: ${context.treatmentType}`);
+      profileSelectionMatch = true;
     }
 
     if (Array.isArray(t.symptomsAny) && t.symptomsAny.length > 0) {
       const overlap = t.symptomsAny.filter((s) => context.symptoms.includes(s));
       if (!overlap.length) return { matched: false, score: 0 };
       score += Math.min(3, overlap.length);
+      reasons.push(`Symptoms: ${overlap.join(", ")}`);
+      profileSelectionMatch = true;
     }
 
     if (Array.isArray(t.symptomsAll) && t.symptomsAll.length > 0) {
       const allPresent = t.symptomsAll.every((s) => context.symptoms.includes(s));
       if (!allPresent) return { matched: false, score: 0 };
       score += 2;
+      reasons.push(`Symptoms (all): ${t.symptomsAll.join(", ")}`);
+      profileSelectionMatch = true;
     }
 
     if (Array.isArray(t.flagsAny) && t.flagsAny.length > 0) {
       const overlap = t.flagsAny.filter((f) => context.flags.includes(f));
       if (!overlap.length) return { matched: false, score: 0 };
       score += Math.min(4, overlap.length);
+      reasons.push(`Risk flags: ${overlap.join(", ")}`);
     }
 
-    return { matched: true, score };
+    return { matched: true, score, reasons, profileSelectionMatch };
   }
 
   function getRecommendationsForUser(input) {
@@ -139,7 +150,10 @@
       }
       const match = triggerMatch(rec, context);
       if (!match.matched) return;
-      validRecs.push({ ...rec, _matchScore: match.score });
+      // User preference: show recommendations only for profile-selected context
+      // (cancer type, treatment, and selected symptoms), not generic/global cards.
+      if (!match.profileSelectionMatch) return;
+      validRecs.push({ ...rec, _matchScore: match.score, _matchReasons: match.reasons || [] });
     });
 
     if (validationErrors.length) {

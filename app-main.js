@@ -751,7 +751,8 @@
     }
 
     if (recMetaNode) {
-      recMetaNode.textContent = `Cancer: ${profile.cancerType} | Treatment mode: ${profile.treatmentMode}`;
+      const strictMode = window.STRICT_TWO_SOURCE_RULES ? "ON" : "OFF";
+      recMetaNode.textContent = `Cancer: ${profile.cancerType} | Treatment mode: ${profile.treatmentMode} | Strict 2-source supplement: ${strictMode}`;
     }
 
     recs.forEach((rec) => {
@@ -765,6 +766,7 @@
           <span class="rec-chip strength">${(rec.evidenceTags || ["Guideline"]).join(", ")}</span>
           <span class="rec-chip">${meta.confidence}</span>
         </div>
+        <p class="muted">Matched on: ${(rec._matchReasons && rec._matchReasons.length) ? rec._matchReasons.join(" | ") : "profile context"}</p>
         <p class="muted">${rec.safetyNote}</p>`;
       const actions = document.createElement("details");
       actions.className = "rec-actions";
@@ -799,6 +801,7 @@
               <span class="rec-chip strength">${(rec.evidenceTags || ["Guideline"]).join(", ")}</span>
               <span class="rec-chip">${meta.confidence}</span>
             </div>
+            <p class="muted">Matched on: ${(rec._matchReasons && rec._matchReasons.length) ? rec._matchReasons.join(" | ") : "profile context"}</p>
             <p class="muted">${rec.safetyNote}</p>`;
           const actions = document.createElement("details");
           actions.className = "rec-actions";
@@ -1463,6 +1466,7 @@
     const strictRules = window.STRICT_TWO_SOURCE_RULES || {};
     const strictEnergyRules = strictRules.energy_rules || {};
     const strictProteinRules = strictRules.protein_rules || {};
+    const ruleNotes = [];
     const age = Number(profile.age || 0);
     const weight = Number(profile.weight || 0);
     const heightCm = Number(profile.heightCm || 0);
@@ -1492,6 +1496,7 @@
     if (activeSymptoms.has("appetite_loss") || activeSymptoms.has("early_satiety") || activeSymptoms.has("nausea")) kcalPerKg += 1;
     kcalPerKg += riskBump;
     kcalPerKg = Math.max(23, Math.min(32, kcalPerKg));
+    ruleNotes.push(`Energy anchor: ${roundOne(kcalPerKg)} kcal/kg/day (profile/treatment adjusted).`);
     const weightBasedCalories = weight * kcalPerKg;
     const mifflinCalories = bmr * activity;
     let calories = Math.round(Math.max(1200, Math.min(4200, Math.max(weightBasedCalories, mifflinCalories * 0.95))));
@@ -1500,6 +1505,7 @@
       const leanMassEnergyContext = leanBodyMassKg * Number(strictEnergyRules.lean_mass_energy_context_kcal_per_kg);
       if ((treatmentMode === "on" || malnutritionRisk === "high" || malnutritionRisk === "severe") && calories < leanMassEnergyContext * 0.8) {
         calories = Math.round(Math.max(calories, leanMassEnergyContext * 0.8));
+        ruleNotes.push(`Strict 2-source LBM energy context applied (${strictEnergyRules.lean_mass_energy_context_kcal_per_kg} kcal/kg LBM/day anchor).`);
       }
     }
 
@@ -1520,6 +1526,7 @@
       if (Number.isFinite(bmi) && bmi < 23) proteinPerKg = Math.max(proteinPerKg, 1.7);
       else if (Number.isFinite(bmi) && bmi <= 27) proteinPerKg = Math.max(proteinPerKg, 1.4);
       else if (Number.isFinite(bmi) && bmi > 27) proteinPerKg = Math.max(proteinPerKg, 1.1);
+      ruleNotes.push("Older-adult BMI-based protein band considered (strict 2-source dataset).");
     }
     if (profile.dialysisStatus === "on") proteinPerKg = Math.max(1.2, Math.min(1.4, proteinPerKg));
     if (profile.dialysisStatus === "off" && profile.cancerType === "Kidney and Renal Pelvis Cancer") {
@@ -1530,6 +1537,7 @@
     // Strict two-source rule: if LBM is available, UCLA-style anchor is 1 g per lb LBM.
     if (leanBodyMassLb > 0 && strictProteinRules.lean_mass_primary_prescription_g_per_lb_lbm === 1) {
       protein = roundTwo(Math.max(protein, leanBodyMassLb));
+      ruleNotes.push("Strict 2-source protein anchor applied (1 g/lb lean body mass).");
     }
 
     // In surgical recovery, prioritize achieving protein goals before chasing exact carb/fat splits.
@@ -1547,10 +1555,11 @@
     if (severity.diarrhea_severity >= 2 || severity.vomiting_severity >= 2) fluidsMl += 200;
     if (activeSymptoms.has("diarrhea") && activeSymptoms.has("vomiting")) fluidsMl += 250;
     if (profile.dialysisStatus === "on") fluidsMl = Math.round(Math.max(1000, Math.min(1800, weight * 20)));
+    if (profile.dialysisStatus === "on") ruleNotes.push("Dialysis fluid target remains conservative and individualized (strict two-source dataset has no fixed dialysis macro/fluid targets).");
     if (symptomBurden >= 12) fluidsMl += 200;
     fluidsMl = Math.max(1000, Math.min(4000, fluidsMl));
 
-    return { calories, protein, carbs, fat, fluidsMl };
+    return { calories, protein, carbs, fat, fluidsMl, ruleNotes };
   }
 
   function findCuratedFoodByName(inputName) {
@@ -1973,7 +1982,10 @@
         <p>Protein: <strong>${roundTwo(sum.protein)} / ${day.targets.protein} g</strong></p>
         <p>Carbs: <strong>${roundTwo(sum.carbs)} / ${day.targets.carbs} g</strong></p>
         <p>Fat: <strong>${roundTwo(sum.fat)} / ${day.targets.fat} g</strong></p>
-        <p>Fluids: <strong>${Number(day.fluidsMl || 0)} / ${Number(day.targets.fluidsMl || 0)} mL</strong></p>`;
+        <p>Fluids: <strong>${Number(day.fluidsMl || 0)} / ${Number(day.targets.fluidsMl || 0)} mL</strong></p>
+        ${(Array.isArray(day.targets.ruleNotes) && day.targets.ruleNotes.length)
+          ? `<p class="muted">Target rules fired: ${day.targets.ruleNotes.slice(0, 3).join(" | ")}</p>`
+          : ""}`;
 
       mealList.innerHTML = "";
       if (!day.meals.length) {
