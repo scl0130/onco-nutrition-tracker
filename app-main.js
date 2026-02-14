@@ -852,9 +852,13 @@
     const minW = Math.min.apply(null, values);
     const maxW = Math.max.apply(null, values);
     const span = Math.max(1, maxW - minW);
+    const x0 = 50;
+    const y0 = 190;
+    const chartW = 520;
+    const chartH = 140;
     const points = sorted.map((entry, idx) => {
-      const x = 40 + (idx / Math.max(1, sorted.length - 1)) * 520;
-      const y = 180 - ((entry.weightKg - minW) / span) * 140;
+      const x = x0 + (idx / Math.max(1, sorted.length - 1)) * chartW;
+      const y = y0 - ((entry.weightKg - minW) / span) * chartH;
       return `${x},${y}`;
     });
 
@@ -862,8 +866,25 @@
     const first = sorted[0];
     const delta = roundOne(latest.weightKg - first.weightKg);
     summaryNode.textContent = `Latest ${latest.weightKg} kg (${latest.date}) | Change ${delta >= 0 ? "+" : ""}${delta} kg`;
+    const yTicks = [0, 0.5, 1].map((ratio) => {
+      const y = y0 - ratio * chartH;
+      const value = roundOne(minW + ratio * span);
+      return `<line x1="${x0}" y1="${y}" x2="${x0 + chartW}" y2="${y}" stroke="#e3e8ef" stroke-width="1"></line>
+        <text x="${x0 - 8}" y="${y + 4}" text-anchor="end" fill="#5f6b7a" font-size="11">${value}</text>`;
+    }).join("");
+    const xTicks = sorted.map((entry, idx) => {
+      const x = x0 + (idx / Math.max(1, sorted.length - 1)) * chartW;
+      const label = entry.date.slice(5);
+      return `<text x="${x}" y="${y0 + 16}" text-anchor="middle" fill="#5f6b7a" font-size="10">${label}</text>`;
+    }).join("");
     chart.innerHTML = `<rect x="0" y="0" width="600" height="220" fill="#f8fafb"></rect>
-      <polyline points="${points.join(" ")}" fill="none" stroke="#2cb1a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>`;
+      ${yTicks}
+      <line x1="${x0}" y1="${y0}" x2="${x0 + chartW}" y2="${y0}" stroke="#8a94a6" stroke-width="1.5"></line>
+      <line x1="${x0}" y1="${y0 - chartH}" x2="${x0}" y2="${y0}" stroke="#8a94a6" stroke-width="1.5"></line>
+      <polyline points="${points.join(" ")}" fill="none" stroke="#2cb1a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      ${xTicks}
+      <text x="${x0 + chartW / 2}" y="214" text-anchor="middle" fill="#5f6b7a" font-size="11">Date (MM-DD)</text>
+      <text x="14" y="${y0 - chartH / 2}" transform="rotate(-90 14 ${y0 - chartH / 2})" text-anchor="middle" fill="#5f6b7a" font-size="11">Weight (kg)</text>`;
   }
 
   function renderIntakeTrendChart(summaryNodeId, chartNodeId) {
@@ -881,19 +902,38 @@
     const caloriePcts = rows.map((r) => percentage(r.sum.calories, r.day.targets.calories));
     const proteinPcts = rows.map((r) => percentage(r.sum.protein, r.day.targets.protein));
     const fluidPcts = rows.map((r) => percentage(Number(r.day.fluidsMl || 0), Number(r.day.targets.fluidsMl || 0)));
+    const x0 = 50;
+    const y0 = 190;
+    const chartW = 520;
+    const chartH = 150;
     const toPoints = (arr) => arr.map((v, idx) => {
-      const x = 40 + (idx / Math.max(1, arr.length - 1)) * 520;
-      const y = 190 - (Math.max(0, Math.min(150, v)) / 150) * 150;
+      const x = x0 + (idx / Math.max(1, arr.length - 1)) * chartW;
+      const y = y0 - (Math.max(0, Math.min(150, v)) / 150) * chartH;
       return `${x},${y}`;
     }).join(" ");
+    const yTicks = [0, 50, 100, 150].map((value) => {
+      const y = y0 - (value / 150) * chartH;
+      return `<line x1="${x0}" y1="${y}" x2="${x0 + chartW}" y2="${y}" stroke="#e3e8ef" stroke-width="1"></line>
+        <text x="${x0 - 8}" y="${y + 4}" text-anchor="end" fill="#5f6b7a" font-size="11">${value}%</text>`;
+    }).join("");
+    const xTicks = rows.map((r, idx) => {
+      const x = x0 + (idx / Math.max(1, rows.length - 1)) * chartW;
+      return `<text x="${x}" y="${y0 + 16}" text-anchor="middle" fill="#5f6b7a" font-size="10">${r.date.slice(5)}</text>`;
+    }).join("");
     summaryNode.textContent = "Last 7 days: line = percent of target (100% means target met).";
     chart.innerHTML = `<rect x="0" y="0" width="600" height="220" fill="#f8fafb"></rect>
+      ${yTicks}
+      <line x1="${x0}" y1="${y0}" x2="${x0 + chartW}" y2="${y0}" stroke="#8a94a6" stroke-width="1.5"></line>
+      <line x1="${x0}" y1="${y0 - chartH}" x2="${x0}" y2="${y0}" stroke="#8a94a6" stroke-width="1.5"></line>
       <polyline points="${toPoints(caloriePcts)}" fill="none" stroke="#2cb1a6" stroke-width="3"></polyline>
       <polyline points="${toPoints(proteinPcts)}" fill="none" stroke="#2d6cdf" stroke-width="3"></polyline>
       <polyline points="${toPoints(fluidPcts)}" fill="none" stroke="#9a640c" stroke-width="3"></polyline>
+      ${xTicks}
       <text x="46" y="20" fill="#2cb1a6" font-size="12">Calories</text>
       <text x="120" y="20" fill="#2d6cdf" font-size="12">Protein</text>
-      <text x="184" y="20" fill="#9a640c" font-size="12">Fluids</text>`;
+      <text x="184" y="20" fill="#9a640c" font-size="12">Fluids</text>
+      <text x="${x0 + chartW / 2}" y="214" text-anchor="middle" fill="#5f6b7a" font-size="11">Date (MM-DD)</text>
+      <text x="14" y="${y0 - chartH / 2}" transform="rotate(-90 14 ${y0 - chartH / 2})" text-anchor="middle" fill="#5f6b7a" font-size="11">% of Target</text>`;
   }
 
   function requireProfileGate() {
@@ -917,7 +957,8 @@
 
     const cancerSelect = document.getElementById("cancerSelect");
     const dialysisField = document.getElementById("dialysisField");
-    const symptomSeverityInputs = Array.from(document.querySelectorAll("#symptomForm select[data-symptom-key]"));
+    const symptomInputs = Array.from(document.querySelectorAll('#symptomForm input[type="checkbox"]'));
+    const noneSymptomInput = symptomInputs.find((input) => input.value === "none");
     const cycleLengthInput = document.getElementById("profileCycleLengthDays");
     const cycleDayInput = document.getElementById("profileCycleDay");
     const lastTxInput = document.getElementById("profileLastTreatmentDate");
@@ -950,10 +991,13 @@
       if (dialysisField) {
         dialysisField.classList.toggle("hidden", cancerSelect.value !== "Kidney and Renal Pelvis Cancer");
       }
-      const severity = normalizeSymptomSeverity(saved.symptomSeverity, saved.symptoms);
-      symptomSeverityInputs.forEach((input) => {
-        input.value = String(Number(severity[input.getAttribute("data-symptom-key")] || 0));
+      const sym = new Set(saved.symptoms || []);
+      symptomInputs.forEach((input) => {
+        input.checked = sym.has(input.value);
       });
+      if (!sym.size && noneSymptomInput) {
+        noneSymptomInput.checked = true;
+      }
       if (saved.dialysisStatus) {
         const radio = document.querySelector(`input[name="dialysisStatus"][value="${saved.dialysisStatus}"]`);
         if (radio) radio.checked = true;
@@ -965,13 +1009,12 @@
     form.addEventListener("submit", (e) => {
       e.preventDefault();
 
-      const symptomSeverity = symptomSeverityDefaults();
-      symptomSeverityInputs.forEach((input) => {
-        const key = input.getAttribute("data-symptom-key");
-        if (!key) return;
-        symptomSeverity[key] = Math.max(0, Math.min(3, Number(input.value || 0)));
+      const symptoms = [];
+      symptomInputs.forEach((input) => {
+        if (input.checked) symptoms.push(input.value);
       });
-      const symptoms = severityToSymptoms(symptomSeverity);
+      if (!symptoms.length) symptoms.push("none");
+      const symptomSeverity = symptomSeverityFromLegacySymptoms(symptoms);
       const selectedDialysis = document.querySelector('input[name="dialysisStatus"]:checked');
       const treatmentCycle = {
         treatment_type: document.getElementById("profileTreatmentType").value,
@@ -1036,6 +1079,23 @@
       window.setTimeout(() => {
         window.location.assign("./index.html");
       }, 250);
+    });
+
+    function enforceSymptomSelectionBehavior(changedInput) {
+      if (!noneSymptomInput) return;
+      if (changedInput === noneSymptomInput && noneSymptomInput.checked) {
+        symptomInputs.forEach((input) => {
+          if (input !== noneSymptomInput) input.checked = false;
+        });
+        return;
+      }
+      if (changedInput !== noneSymptomInput && changedInput.checked) {
+        noneSymptomInput.checked = false;
+      }
+    }
+
+    symptomInputs.forEach((input) => {
+      input.addEventListener("change", () => enforceSymptomSelectionBehavior(input));
     });
   }
 

@@ -152,53 +152,23 @@
 
         <section class="card panel">
           <h2>Section 3: Symptoms</h2>
-          <p class="muted">Severity scale: 0 none, 1 mild, 2 moderate, 3 severe.</p>
-          <div id="symptomForm" class="grid form-grid severity-grid">
-            <label>Nausea
-              <select data-symptom-key="nausea_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Vomiting
-              <select data-symptom-key="vomiting_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Diarrhea
-              <select data-symptom-key="diarrhea_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Constipation
-              <select data-symptom-key="constipation_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Mucositis / mouth sores
-              <select data-symptom-key="mucositis_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Taste changes
-              <select data-symptom-key="taste_change_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Dry mouth
-              <select data-symptom-key="dry_mouth_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Difficulty swallowing
-              <select data-symptom-key="difficulty_swallowing_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Appetite loss
-              <select data-symptom-key="appetite_loss_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Early satiety
-              <select data-symptom-key="early_satiety_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Fatigue
-              <select data-symptom-key="fatigue_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Bloating
-              <select data-symptom-key="bloating_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Greasy stools
-              <select data-symptom-key="greasy_stools_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Floating stools
-              <select data-symptom-key="floating_stools_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
-            <label>Pain affecting eating
-              <select data-symptom-key="pain_severity"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-            </label>
+          <div id="symptomForm" class="grid form-grid">
+            <label><input type="checkbox" value="none" /> No particular symptoms</label>
+            <label><input type="checkbox" value="nausea" /> Nausea</label>
+            <label><input type="checkbox" value="vomiting" /> Vomiting</label>
+            <label><input type="checkbox" value="fatigue" /> Fatigue</label>
+            <label><input type="checkbox" value="appetite_loss" /> Appetite loss</label>
+            <label><input type="checkbox" value="taste_changes" /> Taste changes</label>
+            <label><input type="checkbox" value="mouth_sores" /> Mouth sores</label>
+            <label><input type="checkbox" value="dry_mouth" /> Dry mouth</label>
+            <label><input type="checkbox" value="difficulty_swallowing" /> Difficulty swallowing</label>
+            <label><input type="checkbox" value="constipation" /> Constipation</label>
+            <label><input type="checkbox" value="diarrhea" /> Diarrhea</label>
+            <label><input type="checkbox" value="greasy_stools" /> Greasy stools</label>
+            <label><input type="checkbox" value="floating_stools" /> Floating stools</label>
+            <label><input type="checkbox" value="bloating" /> Bloating</label>
+            <label><input type="checkbox" value="early_satiety" /> Early satiety</label>
+            <label><input type="checkbox" value="pain" /> Pain affecting eating</label>
           </div>
         </section>
 
