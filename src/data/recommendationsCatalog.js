@@ -103,6 +103,10 @@
       confidence: "High confidence",
       triggers: { cancerTypes: [], treatments: ["none"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
       sourceIds: ["acsSurvivorGuideline2022PubMed", "nciNutritionDuringCancer", "diabetesDietGuideline2023PubMed", "esmoCancerPreventionHandbook2008", "nutritionalOncology2022Book"],
+      sourceLocators: {
+        esmoCancerPreventionHandbook2008: "pp. 100-103 (vegetable/fruit targets, minimally processed plant foods, red meat avoidance), p. 178 (alcohol moderation)",
+        nutritionalOncology2022Book: "pp. 126-127, 130 (low-GI whole-food pattern; fruits/vegetables and minimally refined grains; fiber-rich plant pattern)"
+      },
       evidenceTags: ["PeerReviewed", "Government", "Guideline"]
     }),
     rec({
@@ -120,6 +124,9 @@
       confidence: "Medium confidence",
       triggers: { cancerTypes: [], treatments: ["none"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
       sourceIds: ["esmoCancerPreventionHandbook2008", "acsSurvivorGuideline2022PubMed"],
+      sourceLocators: {
+        esmoCancerPreventionHandbook2008: "pp. 100, 103 (400-800 g vegetables + at least 2 fruit pieces; 600-800 g minimally processed grains/legumes/nuts/seeds), p. 178 (alcohol moderation)"
+      },
       evidenceTags: ["Guideline", "PeerReviewed"]
     }),
     rec({
@@ -400,6 +407,9 @@
       whyThisMatters: "Long term monitoring helps identify new nutrition concerns early.",
       triggers: { cancerTypes: [], treatments: ["none"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
       sourceIds: ["nciNutritionDuringCancer", "espenCancerPractical2021Pdf", "esmoCancerPreventionHandbook2008"],
+      sourceLocators: {
+        esmoCancerPreventionHandbook2008: "pp. 100-103, 177 (healthy dietary pattern and prevention-oriented lifestyle guidance)"
+      },
       evidenceTags: ["Government", "Guideline"]
     }),
     rec({
@@ -601,6 +611,9 @@
       whyThisMatters: "Constipation guidelines in oncology settings support early bowel-plan management to prevent appetite decline and discomfort-related intake loss.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["constipation"], symptomsAll: [], flagsAny: [] },
       sourceIds: ["onsConstipationGuideline2020PubMed", "nciEatingHintsPdf", "acsEatingProblemsHub", "nutritionalOncology2022Book"],
+      sourceLocators: {
+        nutritionalOncology2022Book: "p. 127 (low-fiber patterns linked with constipation; higher-fiber plant intake context)"
+      },
       evidenceTags: ["PeerReviewed", "Government", "CancerCenter"]
     }),
     rec({
@@ -617,6 +630,9 @@
       whyThisMatters: "Evidence in nutrition oncology supports gradual, paired fiber and fluid adjustments to improve tolerance and bowel regularity.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["constipation"], symptomsAll: [], flagsAny: [] },
       sourceIds: ["nutritionalOncology2022Book", "onsConstipationGuideline2020PubMed"],
+      sourceLocators: {
+        nutritionalOncology2022Book: "p. 127 (higher fiber intake context and constipation association)"
+      },
       evidenceTags: ["Guideline", "PeerReviewed"]
     }),
     rec({

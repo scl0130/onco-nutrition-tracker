@@ -643,10 +643,11 @@
     return banner;
   }
 
-  function sourceLinkHtml(sourceId) {
+  function sourceLinkHtml(sourceId, locatorText) {
     const source = (window.SOURCES_REGISTRY || {})[sourceId];
     if (!source) return "";
-    return `<li><a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.title}</a> <span class="muted">(${source.evidenceType}, reviewed ${source.lastReviewed})</span></li>`;
+    const locator = locatorText ? `, ${locatorText}` : "";
+    return `<li><a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.title}</a> <span class="muted">(${source.evidenceType}, reviewed ${source.lastReviewed}${locator})</span></li>`;
   }
 
   function renderReferencesPanel() {
@@ -759,7 +760,7 @@
       card.appendChild(why);
       const details = document.createElement("details");
       details.className = "rec-sources";
-      details.innerHTML = `<summary>Sources</summary><ul class="sources">${rec.sourceIds.map(sourceLinkHtml).join("")}</ul>`;
+      details.innerHTML = `<summary>Sources</summary><ul class="sources">${rec.sourceIds.map((sourceId) => sourceLinkHtml(sourceId, rec.sourceLocators && rec.sourceLocators[sourceId])).join("")}</ul>`;
       card.appendChild(details);
       recList.appendChild(card);
     });
@@ -793,7 +794,7 @@
           card.appendChild(why);
           const src = document.createElement("details");
           src.className = "rec-sources";
-          src.innerHTML = `<summary>Sources</summary><ul class="sources">${rec.sourceIds.map(sourceLinkHtml).join("")}</ul>`;
+          src.innerHTML = `<summary>Sources</summary><ul class="sources">${rec.sourceIds.map((sourceId) => sourceLinkHtml(sourceId, rec.sourceLocators && rec.sourceLocators[sourceId])).join("")}</ul>`;
           card.appendChild(src);
           recList.appendChild(card);
         });
