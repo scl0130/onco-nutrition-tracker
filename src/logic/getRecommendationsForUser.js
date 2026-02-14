@@ -18,6 +18,35 @@
     return (Array.isArray(symptoms) ? symptoms : []).filter((s) => s && s !== "none");
   }
 
+  function isGenericTrackingRecommendation(rec) {
+    const id = String(rec && rec.id || "");
+    if (id === "universal_monitor_intake_weight") return true;
+    if (/_specific_[123]$/.test(id)) return true;
+    const actions = Array.isArray(rec && rec.patientTextActions) ? rec.patientTextActions : [];
+    const text = actions.join(" ").toLowerCase();
+    const hasTrackingVerbs = text.includes("track ") || text.includes("log ") || text.includes("record ");
+    const hasSpecificClinicalContent =
+      text.includes("g/kg") ||
+      text.includes("kcal") ||
+      text.includes("ons") ||
+      text.includes("enteral") ||
+      text.includes("parenteral") ||
+      text.includes("epa") ||
+      text.includes("carbohydrate loading") ||
+      text.includes("mucositis");
+    return hasTrackingVerbs && !hasSpecificClinicalContent;
+  }
+
+  function recommendationSpecificity(rec) {
+    const t = rec.triggers || {};
+    const symptomsAny = Array.isArray(t.symptomsAny) ? t.symptomsAny.length : 0;
+    const symptomsAll = Array.isArray(t.symptomsAll) ? t.symptomsAll.length : 0;
+    const flagsAny = Array.isArray(t.flagsAny) ? t.flagsAny.length : 0;
+    const hasTreatment = Array.isArray(t.treatments) && t.treatments.length > 0 ? 1 : 0;
+    const hasCancerType = Array.isArray(t.cancerTypes) && t.cancerTypes.length > 0 ? 1 : 0;
+    return symptomsAny * 2 + symptomsAll * 2 + flagsAny * 2 + hasTreatment + hasCancerType;
+  }
+
   function validateSourcesForRecommendation(rec) {
     const registry = window.SOURCES_REGISTRY || {};
     const allowlist = window.ALLOWED_SOURCE_DOMAINS || [];
@@ -118,15 +147,34 @@
     }
 
     validRecs.sort((a, b) => {
+      const aScore = Number(a.priority || 0) + Number(a._matchScore || 0) + recommendationSpecificity(a) - (isGenericTrackingRecommendation(a) ? 6 : 0);
+      const bScore = Number(b.priority || 0) + Number(b._matchScore || 0) + recommendationSpecificity(b) - (isGenericTrackingRecommendation(b) ? 6 : 0);
+      if (bScore !== aScore) return bScore - aScore;
       if (b.priority !== a.priority) return b.priority - a.priority;
       return b._matchScore - a._matchScore;
+    });
+
+    const diversified = [];
+    let genericCancerSpecificCount = 0;
+    let universalGenericCount = 0;
+    validRecs.forEach((rec) => {
+      const id = String(rec.id || "");
+      if (/_specific_[123]$/.test(id)) {
+        if (genericCancerSpecificCount >= 1) return;
+        genericCancerSpecificCount += 1;
+      }
+      if (id === "universal_monitor_intake_weight") {
+        if (universalGenericCount >= 1) return;
+        universalGenericCount += 1;
+      }
+      diversified.push(rec);
     });
 
     const maxResults = Math.min(12, Math.max(1, Number(input.maxResults || 6)));
 
     return {
-      recommendations: validRecs.slice(0, maxResults),
-      allRecommendations: validRecs.slice(0, 12),
+      recommendations: diversified.slice(0, maxResults),
+      allRecommendations: diversified.slice(0, 12),
       validationErrors
     };
   }

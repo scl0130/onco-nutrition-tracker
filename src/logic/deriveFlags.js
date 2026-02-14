@@ -54,6 +54,10 @@
       flags.add("weight_loss_concerning");
     }
 
+    if (Number(profile.age || 0) >= 65) {
+      flags.add("older_adult");
+    }
+
     const hasGiLossSymptom = symptoms.includes("diarrhea") || symptoms.includes("vomiting");
     if (hasGiLossSymptom && (flags.has("calorie_deficit") || profile.appetite === "very_low" || profile.appetite === "reduced")) {
       flags.add("dehydration_risk");

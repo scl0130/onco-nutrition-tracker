@@ -1441,19 +1441,21 @@
     const treatmentType = String(profile.treatmentType || "none");
     const activeSymptoms = new Set(Array.isArray(profile.symptoms) ? profile.symptoms.filter((s) => s && s !== "none") : []);
 
-    let treatmentFactor = treatmentMode === "on" ? 1.15 : treatmentMode === "off" ? 1.05 : 1.0;
-    if (treatmentType === "chemotherapy") treatmentFactor += 0.02;
-    if (treatmentType === "radiation") treatmentFactor += 0.02;
-    if (treatmentType === "immunotherapy") treatmentFactor += 0.01;
-    if (treatmentType === "targeted") treatmentFactor += 0.01;
-    if (treatmentType === "surgery") treatmentFactor += 0.05;
-
     const severity = normalizeSymptomSeverity(profile.symptomSeverity, profile.symptoms);
     const symptomBurden = symptomScore(profile);
     const malnutritionRisk = malnutritionRiskLevel(profile, { calories: 0, protein: 0 }, { calories: Math.round(bmr * activity), protein: 90 });
-    const riskFactor = malnutritionRisk === "severe" ? 1.12 : malnutritionRisk === "high" ? 1.08 : malnutritionRisk === "moderate" ? 1.04 : 1.0;
-    const symptomCalorieFactor = (activeSymptoms.has("appetite_loss") || activeSymptoms.has("early_satiety") || activeSymptoms.has("nausea")) ? 1.05 : 1.0;
-    const calories = Math.round(Math.max(1200, Math.min(4200, bmr * activity * treatmentFactor * riskFactor * symptomCalorieFactor)));
+    const bmi = calculateBMI(profile);
+    const riskBump = malnutritionRisk === "severe" ? 2 : malnutritionRisk === "high" ? 1.5 : malnutritionRisk === "moderate" ? 1 : 0;
+    let kcalPerKg = 25;
+    if (["chemotherapy", "radiation", "immunotherapy", "targeted"].includes(treatmentType) || treatmentMode === "on") kcalPerKg = 27;
+    if (treatmentType === "surgery") kcalPerKg = 28;
+    if (profile.weightLoss === "moderate" || profile.weightLoss === "severe") kcalPerKg += 1;
+    if (activeSymptoms.has("appetite_loss") || activeSymptoms.has("early_satiety") || activeSymptoms.has("nausea")) kcalPerKg += 1;
+    kcalPerKg += riskBump;
+    kcalPerKg = Math.max(23, Math.min(32, kcalPerKg));
+    const weightBasedCalories = weight * kcalPerKg;
+    const mifflinCalories = bmr * activity;
+    const calories = Math.round(Math.max(1200, Math.min(4200, Math.max(weightBasedCalories, mifflinCalories * 0.95))));
 
     let proteinPerKg = 1.2;
     if (treatmentType === "surgery") proteinPerKg = Math.max(proteinPerKg, 1.3);
@@ -1467,13 +1469,21 @@
     if (activeSymptoms.has("diarrhea") || activeSymptoms.has("vomiting") || activeSymptoms.has("mouth_sores")) {
       proteinPerKg = Math.max(proteinPerKg, 1.3);
     }
+    // Nutritional Oncology (p. 317): older post-discharge adults showed higher protein goals by BMI group.
+    if (age >= 65 && (treatmentType === "surgery" || treatmentMode === "off")) {
+      if (Number.isFinite(bmi) && bmi < 23) proteinPerKg = Math.max(proteinPerKg, 1.7);
+      else if (Number.isFinite(bmi) && bmi <= 27) proteinPerKg = Math.max(proteinPerKg, 1.4);
+      else if (Number.isFinite(bmi) && bmi > 27) proteinPerKg = Math.max(proteinPerKg, 1.1);
+    }
     if (profile.dialysisStatus === "on") proteinPerKg = Math.max(1.2, Math.min(1.4, proteinPerKg));
     if (profile.dialysisStatus === "off" && profile.cancerType === "Kidney and Renal Pelvis Cancer") {
       proteinPerKg = Math.min(proteinPerKg, 1.0);
     }
+    proteinPerKg = Math.min(1.8, proteinPerKg);
     const protein = roundTwo(Math.max(65, weight * proteinPerKg));
 
-    const fatRatio = profile.appetite === "very_low" ? 0.35 : 0.30;
+    // In surgical recovery, prioritize achieving protein goals before chasing exact carb/fat splits.
+    const fatRatio = treatmentType === "surgery" ? 0.32 : (profile.appetite === "very_low" ? 0.35 : 0.30);
     const fat = roundTwo(Math.max(35, (calories * fatRatio) / 9));
     const carbs = roundTwo(Math.max(50, (calories - protein * 4 - fat * 9) / 4));
 
@@ -1485,6 +1495,7 @@
     if (activeSymptoms.has("mouth_sores")) fluidsMl += 200;
     if (activeSymptoms.has("difficulty_swallowing")) fluidsMl += 200;
     if (severity.diarrhea_severity >= 2 || severity.vomiting_severity >= 2) fluidsMl += 200;
+    if (activeSymptoms.has("diarrhea") && activeSymptoms.has("vomiting")) fluidsMl += 250;
     if (profile.dialysisStatus === "on") fluidsMl = Math.round(Math.max(1000, Math.min(1800, weight * 20)));
     if (symptomBurden >= 12) fluidsMl += 200;
     fluidsMl = Math.max(1000, Math.min(4000, fluidsMl));

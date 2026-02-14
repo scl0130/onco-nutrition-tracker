@@ -38,7 +38,7 @@
       whyThisMatters: "ESPEN and ASCO cachexia guidance support early nutrition intervention to reduce cumulative deficits.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: [], symptomsAll: [], flagsAny: ["protein_deficit", "calorie_deficit"] },
       sourceIds: ["espenCancerGuideline2017Pdf", "espenCancerPractical2021PubMed", "ascoCachexia2020JCO"],
-      evidenceTags: ["Guideline", "PeerReviewed"]
+      evidenceTags: ["Government", "Guideline"]
     }),
     rec({
       id: "consensus_on_treatment_macro_range",
@@ -85,7 +85,10 @@
       whyThisMatters: "Consensus guidance highlights early escalation to prevent prolonged deficits and treatment interruptions.",
       confidence: "High confidence",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: [], symptomsAll: [], flagsAny: ["calorie_deficit", "protein_deficit", "weight_loss_concerning"] },
-      sourceIds: ["espenCancerGuideline2017Pdf", "ravascoNutritionCancer2019PubMed", "ascoCachexia2020PubMed"],
+      sourceIds: ["espenCancerGuideline2017Pdf", "ravascoNutritionCancer2019PubMed", "ascoCachexia2020PubMed", "nutritionalOncology2022Book"],
+      sourceLocators: {
+        nutritionalOncology2022Book: "p. 298 (Table 14.2: <50% energy requirement thresholds for escalation)"
+      },
       evidenceTags: ["Guideline", "PeerReviewed"]
     }),
     rec({
@@ -223,7 +226,7 @@
       whyThisMatters: "ESPEN and NCI guidance indicate radiation related symptoms can lower intake and raise malnutrition risk if deficits are not corrected.",
       triggers: { cancerTypes: [], treatments: ["radiation"], symptomsAny: [], symptomsAll: [], flagsAny: ["protein_deficit", "calorie_deficit"] },
       sourceIds: ["espenCancerPractical2021Pdf", "nciEatingHintsPdf"],
-      evidenceTags: ["Guideline", "Government"]
+      evidenceTags: ["Guideline"]
     }),
     rec({
       id: "tx_radiation_fatigue_support",
@@ -258,48 +261,79 @@
 
     rec({
       id: "tx_surgery_prehab_nutrition",
-      priority: 80,
-      title: "Surgery phase nutrition preparation",
-      patientTextShort: "Before surgery, optimize intake and hydration with your care team plan.",
+      priority: 92,
+      title: "Pre-op carbohydrate and fasting protocol check",
+      patientTextShort: "Before planned surgery, confirm carbohydrate loading and fasting timing with your surgical team instead of prolonged fasting.",
       patientTextActions: [
-        "Prioritize protein and consistent meals",
-        "Report low intake before surgery dates",
-        "Follow procedure specific fasting instructions"
+        "Ask whether your protocol uses carbohydrate loading (example regimen in literature: 100 g the night before and 50 g 2 to 3 hours before anesthesia)",
+        "Confirm fasting windows (clear liquids up to 2 hours and solids up to 6 hours pre-op when clinically appropriate)",
+        "Do not self-start carbohydrate loading if your team advises against it (for example some diabetes scenarios)",
+        "If pre-op intake is low, request urgent dietitian review before surgery"
       ],
-      whyThisMatters: "Nutrition status before surgery can affect recovery trajectory.",
+      whyThisMatters: "Perioperative oncology nutrition literature links modern fasting and carbohydrate protocols with better comfort and metabolic control than unnecessary prolonged fasting.",
       triggers: { cancerTypes: [], treatments: ["surgery"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["espenCancerPractical2021Pdf", "nciNutritionDuringCancer"],
-      evidenceTags: ["Guideline", "Government"]
+      sourceIds: ["nutritionalOncology2022Book", "espenCancerPractical2021Pdf"],
+      sourceLocators: {
+        nutritionalOncology2022Book: "pp. 310-311 (pre-op fasting windows and carbohydrate-loading regimen details)"
+      },
+      evidenceTags: ["Guideline"]
     }),
     rec({
       id: "tx_surgery_postop_progression",
-      priority: 79,
-      title: "Postoperative intake progression",
-      patientTextShort: "After surgery, advance intake according to your surgical and oncology team guidance.",
+      priority: 91,
+      title: "Post-op protein-priority recovery plan",
+      patientTextShort: "After cancer surgery, prioritize early nutrition and protein goals rather than prolonged low-intake progression.",
       patientTextActions: [
-        "Start with tolerated textures",
-        "Add protein sources as tolerated",
-        "Escalate if nausea pain or low intake persists"
+        "Discuss starting nutrition within 24 to 48 hours after surgery when clinically feasible",
+        "Prioritize protein goals first if total intake is limited in early recovery",
+        "If oral intake remains low, use high-protein oral nutrition supplements for at least 4 to 8 weeks",
+        "For severe malnutrition or prolonged recovery, ask if 3 to 6 months of ONS support is appropriate"
       ],
-      whyThisMatters: "Early postoperative deficits can delay recovery and functional return.",
+      whyThisMatters: "Surgical oncology guidance emphasizes early feeding and protein-priority recovery to reduce muscle loss and treatment disruption.",
       triggers: { cancerTypes: [], treatments: ["surgery"], symptomsAny: ["nausea", "pain"], symptomsAll: [], flagsAny: ["calorie_deficit"] },
-      sourceIds: ["nciEatingHintsPdf", "espenCancerGuideline2017Pdf"],
-      evidenceTags: ["Government", "Guideline"]
+      sourceIds: ["nutritionalOncology2022Book", "espenCancerGuideline2017Pdf"],
+      sourceLocators: {
+        nutritionalOncology2022Book: "pp. 315-317 (early post-op nutrition, protein-priority guidance, and ONS duration recommendations)"
+      },
+      evidenceTags: ["Guideline"]
+    }),
+    rec({
+      id: "older_adult_postop_protein_band",
+      priority: 90,
+      title: "Older-adult protein band by BMI in recovery",
+      patientTextShort: "For older adults in recovery, protein targets may need to scale with BMI category rather than using one fixed number.",
+      patientTextActions: [
+        "If age 65+ and BMI <23, discuss targets near 1.7 g/kg/day with your team",
+        "If BMI 23-27, discuss targets near 1.4 g/kg/day",
+        "If BMI >27, discuss targets near 1.1 g/kg/day",
+        "Use these as clinician discussion anchors, not self-prescribed rigid targets"
+      ],
+      whyThisMatters: "Post-discharge older-adult data in oncology nutrition supports BMI-stratified protein planning instead of one-size-fits-all protein goals.",
+      triggers: { cancerTypes: [], treatments: ["surgery"], symptomsAny: [], symptomsAll: [], flagsAny: ["older_adult"] },
+      sourceIds: ["nutritionalOncology2022Book"],
+      sourceLocators: {
+        nutritionalOncology2022Book: "p. 317 (older adults post-discharge protein intake by BMI group)"
+      },
+      evidenceTags: ["Guideline"]
     }),
     rec({
       id: "tx_surgery_high_risk_loss",
-      priority: 78,
-      title: "Surgery phase weight loss escalation",
-      patientTextShort: "Concerning weight loss around surgery should be escalated early.",
+      priority: 90,
+      title: "Surgery/chemo/radiation low-intake escalation thresholds",
+      patientTextShort: "Escalate nutrition support when intake stays below half of needs for prolonged periods.",
       patientTextActions: [
-        "Track weight weekly",
-        "Share trends with care team",
-        "Request dietitian follow up when losses continue"
+        "Flag if intake is expected to remain under 50% of needs for more than 10 days",
+        "Flag if intake has already remained under 50% for more than 2 weeks",
+        "Ask your team whether enteral nutrition or parenteral support should be started",
+        "Escalate immediately if tumor location or treatment effects are blocking oral intake"
       ],
-      whyThisMatters: "Unintentional weight loss around procedures can worsen outcomes.",
+      whyThisMatters: "Oncology nutrition support frameworks use prolonged sub-50% intake as a practical threshold for advancing beyond counseling and ONS alone.",
       triggers: { cancerTypes: [], treatments: ["surgery"], symptomsAny: [], symptomsAll: [], flagsAny: ["weight_loss_concerning"] },
-      sourceIds: ["espenCancerPractical2021Pdf", "glimMalnutrition2019"],
-      evidenceTags: ["Guideline", "PeerReviewed"]
+      sourceIds: ["nutritionalOncology2022Book", "espenCancerPractical2021Pdf", "glimMalnutrition2019"],
+      sourceLocators: {
+        nutritionalOncology2022Book: "p. 298 (Table 14.2 intake threshold questions: <50% energy for >10 days or >2 weeks)"
+      },
+      evidenceTags: ["Government", "Guideline"]
     }),
 
     rec({
