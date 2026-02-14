@@ -151,6 +151,14 @@ const SOURCES_REGISTRY = {
     isbn13: "9780415390859",
     lastReviewed: "2026-02-14"
   },
+  nutritionalOncology2022Book: {
+    title: "Nutritional Oncology: Nutrition in Cancer Prevention, Treatment, and Survivorship (2022)",
+    publisher: "CRC Press / Routledge",
+    evidenceType: "Guideline",
+    url: "https://www.routledge.com/Nutritional-Oncology-Nutrition-in-Cancer-Prevention-Treatment-and-Survivorship/Heber-Li-Go/p/book/9780367272494",
+    isbn13: "9780367272494",
+    lastReviewed: "2026-02-14"
+  },
   masccEsmoMecCinv2023PubMed: {
     title: "MASCC/ESMO 2023 antiemetic consensus: moderately emetogenic agents",
     publisher: "PubMed",

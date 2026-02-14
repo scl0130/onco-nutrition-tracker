@@ -96,12 +96,13 @@
       patientTextActions: [
         "Center meals on vegetables, fruits, whole grains, legumes, and nuts",
         "Limit added sugars, refined grains, and processed meats",
-        "Use individualized protein goals when frailty or sarcopenia risk is present"
+        "Use individualized protein goals when frailty or sarcopenia risk is present",
+        "Spread protein intake across meals rather than concentrating it in one meal"
       ],
       whyThisMatters: "Survivorship guidance is strongest for dietary quality and body-weight management rather than fixed kcal/kg or carb/fat ratios.",
       confidence: "High confidence",
       triggers: { cancerTypes: [], treatments: ["none"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["acsSurvivorGuideline2022PubMed", "nciNutritionDuringCancer", "diabetesDietGuideline2023PubMed", "esmoCancerPreventionHandbook2008"],
+      sourceIds: ["acsSurvivorGuideline2022PubMed", "nciNutritionDuringCancer", "diabetesDietGuideline2023PubMed", "esmoCancerPreventionHandbook2008", "nutritionalOncology2022Book"],
       evidenceTags: ["PeerReviewed", "Government", "Guideline"]
     }),
     rec({
@@ -593,13 +594,30 @@
       patientTextShort: "Constipation support includes fluids food pattern review and care team symptom plans.",
       patientTextActions: [
         "Increase fluids if your team has not restricted fluid intake",
+        "Increase fiber gradually and pair fiber changes with fluid increases",
         "Use food pattern changes recommended by your care team for constipation",
         "Review constipation causing medicines and bowel plan with clinicians"
       ],
       whyThisMatters: "Constipation guidelines in oncology settings support early bowel-plan management to prevent appetite decline and discomfort-related intake loss.",
       triggers: { cancerTypes: [], treatments: [], symptomsAny: ["constipation"], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["onsConstipationGuideline2020PubMed", "nciEatingHintsPdf", "acsEatingProblemsHub"],
+      sourceIds: ["onsConstipationGuideline2020PubMed", "nciEatingHintsPdf", "acsEatingProblemsHub", "nutritionalOncology2022Book"],
       evidenceTags: ["PeerReviewed", "Government", "CancerCenter"]
+    }),
+    rec({
+      id: "symptom_constipation_fiber_titration",
+      priority: 85,
+      title: "Constipation fiber titration plan",
+      patientTextShort: "When constipation is present, step fiber up gradually and monitor tolerance rather than making abrupt large increases.",
+      patientTextActions: [
+        "Increase fiber in small increments over several days",
+        "Track stool pattern, bloating, and fluid intake together",
+        "Pause or slow fiber increases if bloating worsens",
+        "Escalate to your care team when constipation persists despite plan"
+      ],
+      whyThisMatters: "Evidence in nutrition oncology supports gradual, paired fiber and fluid adjustments to improve tolerance and bowel regularity.",
+      triggers: { cancerTypes: [], treatments: [], symptomsAny: ["constipation"], symptomsAll: [], flagsAny: [] },
+      sourceIds: ["nutritionalOncology2022Book", "onsConstipationGuideline2020PubMed"],
+      evidenceTags: ["Guideline", "PeerReviewed"]
     }),
     rec({
       id: "symptom_constipation_with_deficit",
