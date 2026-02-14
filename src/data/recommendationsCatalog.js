@@ -101,8 +101,25 @@
       whyThisMatters: "Survivorship guidance is strongest for dietary quality and body-weight management rather than fixed kcal/kg or carb/fat ratios.",
       confidence: "High confidence",
       triggers: { cancerTypes: [], treatments: ["none"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["acsSurvivorGuideline2022PubMed", "nciNutritionDuringCancer", "diabetesDietGuideline2023PubMed"],
-      evidenceTags: ["PeerReviewed", "Government"]
+      sourceIds: ["acsSurvivorGuideline2022PubMed", "nciNutritionDuringCancer", "diabetesDietGuideline2023PubMed", "esmoCancerPreventionHandbook2008"],
+      evidenceTags: ["PeerReviewed", "Government", "Guideline"]
+    }),
+    rec({
+      id: "survivorship_esmo_prevention_portions",
+      priority: 87,
+      title: "ESMO prevention-pattern portion targets (off treatment)",
+      patientTextShort: "Use practical portion anchors from ESMO prevention guidance when building daily meals in survivorship.",
+      patientTextActions: [
+        "Aim for about 400 to 800 g vegetables daily plus at least two pieces of fruit",
+        "Use about 600 to 800 g per day of minimally processed grains, legumes, nuts, and seeds",
+        "Limit or avoid red and processed meat, and prefer low-charring cooking methods",
+        "If alcohol is used, keep intake low and discuss individualized limits with your care team"
+      ],
+      whyThisMatters: "ESMO prevention guidance provides concrete food-pattern targets that can make survivorship nutrition plans more specific and easier to implement.",
+      confidence: "Medium confidence",
+      triggers: { cancerTypes: [], treatments: ["none"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
+      sourceIds: ["esmoCancerPreventionHandbook2008", "acsSurvivorGuideline2022PubMed"],
+      evidenceTags: ["Guideline", "PeerReviewed"]
     }),
     rec({
       id: "kidney_dialysis_macro_override",
@@ -381,7 +398,7 @@
       ],
       whyThisMatters: "Long term monitoring helps identify new nutrition concerns early.",
       triggers: { cancerTypes: [], treatments: ["none"], symptomsAny: [], symptomsAll: [], flagsAny: [] },
-      sourceIds: ["nciNutritionDuringCancer", "espenCancerPractical2021Pdf"],
+      sourceIds: ["nciNutritionDuringCancer", "espenCancerPractical2021Pdf", "esmoCancerPreventionHandbook2008"],
       evidenceTags: ["Government", "Guideline"]
     }),
     rec({

@@ -8,7 +8,8 @@ const ALLOWED_SOURCE_DOMAINS = [
   "www.cancer.org",
   "www.mskcc.org",
   "www.med.upenn.edu",
-  "www.gastrojournal.org"
+  "www.gastrojournal.org",
+  "www.routledge.com"
 ];
 
 const SOURCES_REGISTRY = {
@@ -141,6 +142,14 @@ const SOURCES_REGISTRY = {
     pubmedId: "37062377",
     doi: "10.1007/s00125-023-05894-8",
     lastReviewed: "2026-02-13"
+  },
+  esmoCancerPreventionHandbook2008: {
+    title: "ESMO Handbook of Cancer Prevention (2008)",
+    publisher: "CRC Press / Routledge",
+    evidenceType: "Guideline",
+    url: "https://www.routledge.com/ESMO-Handbook-of-Cancer-Prevention/Schrijvers-Senn-Mellstedt-Zakotnik/p/book/9780415390859",
+    isbn13: "9780415390859",
+    lastReviewed: "2026-02-14"
   },
   masccEsmoMecCinv2023PubMed: {
     title: "MASCC/ESMO 2023 antiemetic consensus: moderately emetogenic agents",
